@@ -1,0 +1,36 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Página no encontrada">
+  <section class="shell flex flex-col items-start gap-5 py-24 sm:py-32">
+    <p class="font-mono text-xs uppercase tracking-[0.2em] text-dim">Error 404</p>
+    <h1 class="max-w-2xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+      Esta capa no existe.
+    </h1>
+    <p class="max-w-xl text-base leading-relaxed text-muted">
+      El enlace apunta a un concepto que no está en el atlas, o cambió de slug. Prueba desde una de
+      las dos pilas.
+    </p>
+    <div class="flex flex-wrap gap-3 pt-2">
+      <a
+        href="/software"
+        class="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium transition-colors hover:bg-white/10"
+      >
+        Explorar software
+      </a>
+      <a
+        href="/ia"
+        class="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-muted transition-colors hover:text-ink"
+      >
+        Explorar IA
+      </a>
+      <a
+        href="/conexiones"
+        class="rounded-lg px-4 py-2 text-sm font-medium text-muted transition-colors hover:text-ink"
+      >
+        Ver conexiones
+      </a>
+    </div>
+  </section>
+</Base>

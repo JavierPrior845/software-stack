@@ -26,6 +26,7 @@ const { concept, layer, stack } = location;
   title={`${concept.name} · ${layer.title}`}
   description={`${concept.tagline} ${concept.summary.slice(0, 140)}`}
   mode={stack.id}
+  og={concept.slug}
 >
   <Explorer stack={stack} location={location} />
 </Base>

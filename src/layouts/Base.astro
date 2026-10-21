@@ -9,17 +9,28 @@ interface Props {
   title?: string;
   description?: string;
   mode?: 'software' | 'ai' | 'bridges' | 'home';
+  og?: string;
 }
 
-const { title, description = site.description, mode } = Astro.props;
+const { title, description = site.description, mode, og } = Astro.props;
 const pageTitle = title ? `${title} · ${site.name}` : `${site.name} — ${site.tagline}`;
 
 const path = Astro.url.pathname;
 const currentMode =
   mode ??
-  (path === '/' ? 'home' : path.startsWith('/ia') ? 'ai' : path.startsWith('/conexiones') ? 'bridges' : 'software');
+  (path === '/'
+    ? 'home'
+    : path.startsWith('/software')
+      ? 'software'
+      : path.startsWith('/ia')
+        ? 'ai'
+        : path.startsWith('/conexiones')
+          ? 'bridges'
+          : undefined);
 
 const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).toString() : undefined;
+const ogImage =
+  og && Astro.site ? new URL(`/og/${og}.png`, Astro.site).toString() : undefined;
 ---
 
 <!doctype html>
@@ -33,15 +44,21 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).toString(
     <meta name="theme-color" content="#0a0b10" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     {canonical && <link rel="canonical" href={canonical} />}
+    {canonical && <meta property="og:url" content={canonical} />}
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={site.name} />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:locale" content="es_ES" />
-    <meta name="twitter:card" content="summary" />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    {ogImage && <meta property="og:image:width" content="1200" />}
+    {ogImage && <meta property="og:image:height" content="630" />}
+    {ogImage && <meta property="og:image:alt" content={pageTitle} />}
+    <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={description} />
+    {ogImage && <meta name="twitter:image" content={ogImage} />}
   </head>
 
   <body class="min-h-dvh flex flex-col">
@@ -58,7 +75,7 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).toString(
         <p>
           {site.name} · 5 capas de software, 6 de IA, y las conexiones entre ambas.
         </p>
-        <p class="font-mono">v0.1 · fase 1</p>
+        <p class="font-mono">v0.2 · fase 2</p>
       </div>
     </footer>
   </body>
