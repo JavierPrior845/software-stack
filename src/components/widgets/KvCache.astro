@@ -1,0 +1,461 @@
+---
+import {
+  KV_DTYPES,
+  KV_MODEL,
+  KV_VARIANTS,
+  formatBytes,
+  formatTokens,
+  kvBytesPerToken,
+  kvCacheBytes,
+  pagedKvBytes,
+  type KvDtype,
+  type KvVariant,
+} from '../../lib/kv';
+
+const DEFAULT = {
+  context: 8192,
+  batch: 1,
+  variant: 'gqa' as KvVariant,
+  dtype: 'fp16' as KvDtype,
+  occupancy: 50,
+};
+
+function heads(id: KvVariant): string {
+  const count = KV_VARIANTS[id].kvHeads;
+  return `${count} ${count === 1 ? 'cabeza' : 'cabezas'} K/V`;
+}
+
+const options = {
+  context: DEFAULT.context,
+  batch: DEFAULT.batch,
+  variant: DEFAULT.variant,
+  dtype: DEFAULT.dtype,
+};
+
+const total = kvCacheBytes(options);
+const perToken = kvBytesPerToken(options);
+const perRequest = perToken * DEFAULT.context;
+const weightsBytes = KV_MODEL.weightsGiB * 1024 ** 3;
+
+const variants = (Object.keys(KV_VARIANTS) as KvVariant[]).map((id) => ({
+  id,
+  label: KV_VARIANTS[id].label,
+  bytes: kvCacheBytes({ ...options, variant: id }),
+}));
+
+const maxVariant = Math.max(...variants.map((item) => item.bytes));
+const paged = pagedKvBytes(options, DEFAULT.occupancy);
+const savings = total > 0 ? 1 - paged / total : 0;
+
+function shareLabel(ratio: number): string {
+  if (ratio >= 1) {
+    const times = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 }).format(ratio);
+    return `${times}× los ${KV_MODEL.weightsGiB} GiB de pesos`;
+  }
+  return `${Math.round(ratio * 100)} % de los ${KV_MODEL.weightsGiB} GiB de pesos`;
+}
+
+const variantRows = variants.map((item) => ({
+  ...item,
+  width: Math.max(2, (item.bytes / maxVariant) * 100),
+  value: formatBytes(item.bytes),
+  isActive: item.id === DEFAULT.variant,
+}));
+---
+
+<div class="widget" data-kv-widget>
+  <div class="flex flex-wrap items-baseline justify-between gap-2">
+    <p class="font-mono text-[10px] text-dim">
+      {KV_MODEL.name} · {KV_MODEL.layers} capas · {KV_MODEL.queryHeads} cabezas · head_dim
+      {KV_MODEL.headDim}
+    </p>
+    <p class="font-mono text-[10px] text-dim">pesos: {KV_MODEL.weightsGiB} GiB</p>
+  </div>
+
+  <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div>
+      <div class="flex items-baseline justify-between">
+        <label class="text-xs text-muted" for="kv-context">Contexto</label>
+        <output class="font-mono text-[11px] text-ink" for="kv-context" data-context-out>
+          {formatTokens(DEFAULT.context)}
+        </output>
+      </div>
+      <input
+        id="kv-context"
+        type="range"
+        min="1024"
+        max="131072"
+        step="1024"
+        value={DEFAULT.context}
+        class="range mt-2 w-full"
+        data-context
+      />
+      <div class="mt-1 flex justify-between font-mono text-[9px] text-dim">
+        <span>1K</span><span>128K</span>
+      </div>
+    </div>
+
+    <div>
+      <div class="flex items-baseline justify-between">
+        <label class="text-xs text-muted" for="kv-batch">Batch concurrente</label>
+        <output class="font-mono text-[11px] text-ink" for="kv-batch" data-batch-out>
+          {DEFAULT.batch}
+        </output>
+      </div>
+      <input
+        id="kv-batch"
+        type="range"
+        min="1"
+        max="32"
+        step="1"
+        value={DEFAULT.batch}
+        class="range mt-2 w-full"
+        data-batch
+      />
+      <div class="mt-1 flex justify-between font-mono text-[9px] text-dim">
+        <span>1</span><span>32</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <fieldset>
+      <legend class="text-xs text-muted">Atención</legend>
+      <div class="mt-2 flex rounded-lg border border-white/10 bg-black/20 p-0.5">
+        {
+          (Object.keys(KV_VARIANTS) as KvVariant[]).map((id) => (
+            <div class="flex-1">
+              <input
+                id={`kv-variant-${id}`}
+                class="peer sr-only"
+                type="radio"
+                name="kv-variant"
+                value={id}
+                checked={id === DEFAULT.variant}
+                data-variant
+              />
+              <label
+                for={`kv-variant-${id}`}
+                class="block cursor-pointer rounded-md px-2 py-1.5 text-center font-mono text-[11px] text-dim transition-colors peer-checked:bg-white/10 peer-checked:text-ink peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-white/40"
+              >
+                {KV_VARIANTS[id].label}
+              </label>
+            </div>
+          ))
+        }
+      </div>
+      <p class="mt-1.5 font-mono text-[9px] text-dim" data-variant-note>
+        {heads(DEFAULT.variant)} · {KV_VARIANTS[DEFAULT.variant].note}
+      </p>
+    </fieldset>
+
+    <fieldset>
+      <legend class="text-xs text-muted">Precisión</legend>
+      <div class="mt-2 flex rounded-lg border border-white/10 bg-black/20 p-0.5">
+        {
+          (Object.keys(KV_DTYPES) as KvDtype[]).map((id) => (
+            <div class="flex-1">
+              <input
+                id={`kv-dtype-${id}`}
+                class="peer sr-only"
+                type="radio"
+                name="kv-dtype"
+                value={id}
+                checked={id === DEFAULT.dtype}
+                data-dtype
+              />
+              <label
+                for={`kv-dtype-${id}`}
+                class="block cursor-pointer rounded-md px-2 py-1.5 text-center font-mono text-[11px] text-dim transition-colors peer-checked:bg-white/10 peer-checked:text-ink peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-white/40"
+              >
+                {KV_DTYPES[id].label}
+              </label>
+            </div>
+          ))
+        }
+      </div>
+      <p class="mt-1.5 font-mono text-[9px] text-dim" data-dtype-note>
+        {KV_DTYPES[DEFAULT.dtype].bytes} bytes por valor · K y V
+      </p>
+    </fieldset>
+  </div>
+
+  <div class="mt-5 rounded-xl border border-white/8 bg-black/25 p-4">
+    <div class="flex flex-wrap items-end justify-between gap-3">
+      <div aria-live="polite">
+        <p class="text-[10px] uppercase tracking-widest text-dim">KV-cache residente</p>
+        <p class="mt-1 font-mono text-3xl font-semibold text-ink" data-total>{formatBytes(total)}</p>
+        <p class="mt-1 font-mono text-[10px] text-dim" data-sub>
+          {formatTokens(DEFAULT.context)} tokens · batch {DEFAULT.batch} ·{' '}
+          {KV_VARIANTS[DEFAULT.variant].label} · {KV_DTYPES[DEFAULT.dtype].label}
+        </p>
+      </div>
+      <p class="font-mono text-[10px] text-dim" data-share>
+        {shareLabel(total / weightsBytes)}
+      </p>
+    </div>
+
+    <div class="mt-4 grid grid-cols-2 gap-3 border-t border-white/5 pt-3">
+      <div>
+        <p class="font-mono text-[9px] uppercase tracking-wider text-dim">Por token</p>
+        <p class="mt-0.5 font-mono text-sm text-muted" data-per-token>{formatBytes(perToken)}</p>
+      </div>
+      <div>
+        <p class="font-mono text-[9px] uppercase tracking-wider text-dim">Por petición</p>
+        <p class="mt-0.5 font-mono text-sm text-muted" data-per-request>
+          {formatBytes(perRequest)}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <p class="text-[10px] uppercase tracking-widest text-dim">Misma memoria, distinta elección</p>
+    <ul class="mt-2 space-y-2">
+      {
+        variantRows.map((row) => (
+          <li data-variant-row={row.id}>
+            <div class="flex items-baseline justify-between gap-2">
+              <span class="variant-label font-mono text-[10px] text-muted">
+                {row.label}
+                <span class="text-dim">· {heads(row.id)}</span>
+              </span>
+              <span class="font-mono text-[10px] text-dim" data-variant-value>
+                {row.value}
+              </span>
+            </div>
+            <div class="mt-1 h-1 overflow-hidden rounded-full bg-white/5">
+              <div
+                class="variant-bar h-full rounded-full"
+                style={`width:${row.width}%`}
+                data-variant-bar
+              >
+              </div>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+
+  <div class="mt-5 rounded-xl border border-white/8 p-4">
+    <div class="flex flex-wrap items-baseline justify-between gap-2">
+      <p class="text-[10px] uppercase tracking-widest text-dim">
+        Ocupación media del contexto
+      </p>
+      <div class="flex items-center gap-3">
+        <label class="sr-only" for="kv-occupancy">Ocupación media del contexto</label>
+        <output class="font-mono text-[10px] text-muted" for="kv-occupancy" data-occupancy-out>
+          {DEFAULT.occupancy} %
+        </output>
+        <input
+          id="kv-occupancy"
+          type="range"
+          min="10"
+          max="100"
+          step="5"
+          value={DEFAULT.occupancy}
+          class="range w-28"
+          data-occupancy
+        />
+      </div>
+    </div>
+
+    <div class="mt-3 space-y-2">
+      <div>
+        <div class="flex items-baseline justify-between">
+          <span class="font-mono text-[10px] text-muted">Reserva contigua</span>
+          <span class="font-mono text-[10px] text-dim" data-contiguous>{formatBytes(total)}</span>
+        </div>
+        <div class="mt-1 h-1 overflow-hidden rounded-full bg-white/5">
+          <div class="h-full w-full rounded-full bg-rose-400/50"></div>
+        </div>
+      </div>
+      <div>
+        <div class="flex items-baseline justify-between">
+          <span class="font-mono text-[10px] text-muted">PagedAttention</span>
+          <span class="font-mono text-[10px] text-dim" data-paged>{formatBytes(paged)}</span>
+        </div>
+        <div class="mt-1 h-1 overflow-hidden rounded-full bg-white/5">
+          <div
+            class="accent-fill h-full rounded-full"
+            style={`width:${Math.max(2, (paged / total) * 100)}%`}
+            data-paged-bar
+          >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="mt-3 font-mono text-[10px] text-dim" data-savings>
+      {savings > 0.005 ? `ahorro: ${Math.round(savings * 100)} %` : 'sin ahorro a plena ocupación'}
+    </p>
+  </div>
+
+  <p class="mt-3 text-[10px] leading-relaxed text-dim">
+    KV = 2 × capas × cabezas K/V × head_dim × bytes × tokens. PagedAttention asigna páginas de
+    {KV_MODEL.pageTokens} tokens en lugar de reservar el máximo por petición.
+  </p>
+
+  <noscript>
+    <p class="mt-2 text-[10px] leading-relaxed text-amber-300/80">
+      Los controles necesitan JavaScript. Los valores mostrados corresponden a 8K de contexto,
+      batch 1, GQA y FP16.
+    </p>
+  </noscript>
+</div>
+
+<script>
+  import {
+    KV_DTYPES,
+    KV_MODEL,
+    KV_VARIANTS,
+    formatBytes,
+    formatTokens,
+    kvBytesPerToken,
+    kvCacheBytes,
+    pagedKvBytes,
+    type KvDtype,
+    type KvVariant,
+  } from '../../lib/kv';
+
+  const root = document.querySelector<HTMLElement>('[data-kv-widget]');
+
+  if (root) {
+    const query = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector);
+    const context = query<HTMLInputElement>('[data-context]');
+    const batch = query<HTMLInputElement>('[data-batch]');
+    const occupancy = query<HTMLInputElement>('[data-occupancy]');
+
+    const outputs = {
+      context: query<HTMLElement>('[data-context-out]'),
+      batch: query<HTMLElement>('[data-batch-out]'),
+      total: query<HTMLElement>('[data-total]'),
+      sub: query<HTMLElement>('[data-sub]'),
+      share: query<HTMLElement>('[data-share]'),
+      perToken: query<HTMLElement>('[data-per-token]'),
+      perRequest: query<HTMLElement>('[data-per-request]'),
+      contiguous: query<HTMLElement>('[data-contiguous]'),
+      paged: query<HTMLElement>('[data-paged]'),
+      pagedBar: query<HTMLElement>('[data-paged-bar]'),
+      savings: query<HTMLElement>('[data-savings]'),
+      occupancy: query<HTMLElement>('[data-occupancy-out]'),
+      variantNote: query<HTMLElement>('[data-variant-note]'),
+      dtypeNote: query<HTMLElement>('[data-dtype-note]'),
+    };
+
+    const weightsBytes = KV_MODEL.weightsGiB * 1024 ** 3;
+
+    const update = () => {
+      if (!context || !batch || !occupancy) return;
+
+      const variant = (root.querySelector<HTMLInputElement>('[data-variant]:checked')?.value ??
+        'gqa') as KvVariant;
+      const dtype = (root.querySelector<HTMLInputElement>('[data-dtype]:checked')?.value ??
+        'fp16') as KvDtype;
+      const options = {
+        context: Number(context.value),
+        batch: Number(batch.value),
+        variant,
+        dtype,
+      };
+      const total = kvCacheBytes(options);
+      const perToken = kvBytesPerToken(options);
+      const paged = pagedKvBytes(options, Number(occupancy.value));
+      const maxVariant = Math.max(
+        ...(Object.keys(KV_VARIANTS) as KvVariant[]).map((id) =>
+          kvCacheBytes({ ...options, variant: id }),
+        ),
+      );
+
+      if (outputs.context) outputs.context.textContent = formatTokens(options.context);
+      if (outputs.occupancy) outputs.occupancy.textContent = `${Number(occupancy.value)} %`;
+      if (outputs.batch) outputs.batch.textContent = String(options.batch);
+      if (outputs.total) outputs.total.textContent = formatBytes(total);
+      if (outputs.sub) {
+        outputs.sub.textContent = `${formatTokens(options.context)} tokens · batch ${options.batch} · ${KV_VARIANTS[variant].label} · ${KV_DTYPES[dtype].label}`;
+      }
+      if (outputs.share) {
+        const ratio = total / weightsBytes;
+        outputs.share.textContent =
+          ratio >= 1
+            ? `${new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 }).format(ratio)}× los ${KV_MODEL.weightsGiB} GiB de pesos`
+            : `${Math.round(ratio * 100)} % de los ${KV_MODEL.weightsGiB} GiB de pesos`;
+      }
+      if (outputs.variantNote) {
+        const count = KV_VARIANTS[variant].kvHeads;
+        outputs.variantNote.textContent = `${count} ${count === 1 ? 'cabeza' : 'cabezas'} K/V · ${KV_VARIANTS[variant].note}`;
+      }
+      if (outputs.dtypeNote) {
+        outputs.dtypeNote.textContent = `${KV_DTYPES[dtype].bytes} bytes por valor · K y V`;
+      }
+      if (outputs.perToken) outputs.perToken.textContent = formatBytes(perToken);
+      if (outputs.perRequest) {
+        outputs.perRequest.textContent = formatBytes(perToken * options.context);
+      }
+      if (outputs.contiguous) outputs.contiguous.textContent = formatBytes(total);
+      if (outputs.paged) outputs.paged.textContent = formatBytes(paged);
+      if (outputs.pagedBar) {
+        outputs.pagedBar.style.width = `${Math.max(2, (paged / total) * 100)}%`;
+      }
+      if (outputs.savings) {
+        const savings = 1 - paged / total;
+        outputs.savings.textContent =
+          savings > 0.005 ? `ahorro: ${Math.round(savings * 100)} %` : 'sin ahorro a plena ocupación';
+      }
+
+      for (const row of Array.from(root.querySelectorAll<HTMLElement>('[data-variant-row]'))) {
+        const id = row.dataset.variantRow as KvVariant;
+        const bytes = kvCacheBytes({ ...options, variant: id });
+        const value = row.querySelector<HTMLElement>('[data-variant-value]');
+        const bar = row.querySelector<HTMLElement>('[data-variant-bar]');
+        if (value) value.textContent = formatBytes(bytes);
+        if (bar) bar.style.width = `${Math.max(2, (bytes / maxVariant) * 100)}%`;
+        row.toggleAttribute('data-active', id === variant);
+      }
+    };
+
+    for (const input of [context, batch, occupancy]) {
+      input?.addEventListener('input', update);
+    }
+    for (const input of Array.from(root.querySelectorAll<HTMLInputElement>('[data-variant], [data-dtype]'))) {
+      input.addEventListener('change', update);
+    }
+
+    update();
+  }
+</script>
+
+<style>
+  .range {
+    accent-color: var(--layer);
+    color-scheme: dark;
+  }
+
+  .accent-fill {
+    background: var(--layer);
+  }
+
+  .variant-bar {
+    background: color-mix(in oklab, var(--layer) 45%, transparent);
+    transition: width 200ms ease;
+  }
+
+  [data-active] .variant-bar {
+    background: var(--layer);
+  }
+
+  [data-active] .variant-label {
+    color: var(--layer);
+  }
+
+  select {
+    color-scheme: dark;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .variant-bar {
+      transition: none;
+    }
+  }
+</style>

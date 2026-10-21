@@ -1,0 +1,20 @@
+---
+import type { WidgetId } from '../data/types';
+import MemoryScale from './widgets/MemoryScale.astro';
+import KvCache from './widgets/KvCache.astro';
+
+interface Props {
+  id: WidgetId;
+}
+
+const { id } = Astro.props;
+
+const registry = {
+  'memory-scale': MemoryScale,
+  'kv-cache': KvCache,
+} satisfies Record<WidgetId, unknown>;
+
+const Widget = registry[id];
+---
+
+<Widget />

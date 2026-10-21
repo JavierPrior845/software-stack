@@ -1,0 +1,153 @@
+---
+import {
+  MEMORY_LEVELS,
+  formatDuration,
+  formatLatency,
+  logWidth,
+  relativeSeconds,
+} from '../../lib/memory';
+
+const DEFAULT_BASE = 'l1';
+const base = MEMORY_LEVELS.find((level) => level.id === DEFAULT_BASE) ?? MEMORY_LEVELS[1];
+
+const rows = MEMORY_LEVELS.map((level) => ({
+  ...level,
+  width: logWidth(level.ns),
+  latency: formatLatency(level.ns),
+  relative:
+    level.id === base.id ? 'referencia' : formatDuration(relativeSeconds(level.ns, base.ns)),
+  isBase: level.id === base.id,
+}));
+---
+
+<div class="widget" data-memory-widget>
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <label class="text-xs text-muted" for="memory-base">
+      Si <span class="text-ink" data-base-name>{base.name}</span> tarda 1 segundo…
+    </label>
+    <div class="relative">
+      <select
+        id="memory-base"
+        class="appearance-none rounded-md border border-white/10 bg-black/30 py-1 pr-7 pl-2 font-mono text-[11px] text-muted outline-none focus:border-white/30"
+        data-base
+      >
+        {
+          MEMORY_LEVELS.map((level) => (
+            <option value={level.id} selected={level.id === base.id}>
+              {level.name}
+            </option>
+          ))
+        }
+      </select>
+      <svg
+        class="pointer-events-none absolute top-1/2 right-2 size-3 -translate-y-1/2 text-dim"
+        viewBox="0 0 12 12"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path d="m3 4.5 3 3 3-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+      </svg>
+    </div>
+  </div>
+
+  <ol class="mt-4 space-y-2.5">
+    {
+      rows.map((row) => (
+        <li data-row data-id={row.id} data-ns={row.ns} data-active={row.isBase ? '' : undefined}>
+          <div class="flex items-baseline justify-between gap-3">
+            <div class="flex min-w-0 items-baseline gap-2">
+              <span class="level-name text-sm font-medium">{row.name}</span>
+              <span class="hidden truncate text-[10px] text-dim sm:inline">{row.note}</span>
+            </div>
+            <span class="shrink-0 font-mono text-[11px] text-muted">{row.latency}</span>
+          </div>
+          <div class="mt-1.5 flex items-center gap-3">
+            <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-white/5">
+              <div class="level-bar h-full rounded-full" style={`width:${row.width}%`}></div>
+            </div>
+            <span
+              class="w-28 shrink-0 text-right font-mono text-[10px] text-dim"
+              data-relative
+              aria-live="polite">{row.relative}</span>
+          </div>
+        </li>
+      ))
+    }
+  </ol>
+
+  <p class="mt-3 text-[10px] leading-relaxed text-dim">
+    Escala logarítmica: cada barra representa una latencia real, no una proporción visual. Un
+    acceso a RAM cuesta ~100 veces un acierto en L1.
+  </p>
+
+  <noscript>
+    <p class="mt-2 text-[10px] leading-relaxed text-amber-300/80">
+      Selecciona otra referencia para cambiar la escala humana. Los valores absolutos ya son
+      correctos sin JavaScript.
+    </p>
+  </noscript>
+</div>
+
+<script>
+  import {
+    MEMORY_LEVELS,
+    formatDuration,
+    relativeSeconds,
+  } from '../../lib/memory';
+
+  const widget = document.querySelector<HTMLElement>('[data-memory-widget]');
+
+  if (widget) {
+    const select = widget.querySelector<HTMLSelectElement>('[data-base]');
+    const baseName = widget.querySelector<HTMLElement>('[data-base-name]');
+    const rows = Array.from(widget.querySelectorAll<HTMLElement>('[data-row]'));
+
+    const update = () => {
+      const level = MEMORY_LEVELS.find((item) => item.id === select?.value);
+      if (!level || !baseName) return;
+
+      baseName.textContent = level.name;
+
+      for (const row of rows) {
+        const ns = Number(row.dataset.ns);
+        const output = row.querySelector<HTMLElement>('[data-relative]');
+        const isBase = ns === level.ns;
+
+        if (output) {
+          output.textContent = isBase
+            ? 'referencia'
+            : formatDuration(relativeSeconds(ns, level.ns));
+        }
+
+        if (isBase) row.setAttribute('data-active', '');
+        else row.removeAttribute('data-active');
+      }
+    };
+
+    select?.addEventListener('change', update);
+    update();
+    widget.setAttribute('data-ready', '');
+  }
+</script>
+
+<style>
+  .level-bar {
+    background: linear-gradient(90deg, color-mix(in oklab, var(--layer) 55%, transparent), var(--layer));
+    transition: width 240ms ease;
+  }
+
+  [data-active] .level-name {
+    color: var(--layer);
+  }
+
+  select {
+    color-scheme: dark;
+    accent-color: var(--layer);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .level-bar {
+      transition: none;
+    }
+  }
+</style>
