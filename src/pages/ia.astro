@@ -1,0 +1,21 @@
+---
+import Base from '../layouts/Base.astro';
+import Explorer from '../components/Explorer.astro';
+import { getConcept, getStack } from '../data';
+
+const stack = getStack('ai');
+const firstConcept = stack.layers[0].blocks[0].concepts[0];
+const location = getConcept(firstConcept.slug);
+
+if (!location) {
+  throw new Error(`Concepto inicial no encontrado: ${firstConcept.slug}`);
+}
+---
+
+<Base
+  title="Artificial Intelligence Stack"
+  description="Las seis capas del stack de IA: IA simbólica, machine learning, redes neuronales, deep learning, IA generativa y agentes autónomos. Con trade-offs y conexiones hacia la ingeniería de software."
+  mode="ai"
+>
+  <Explorer stack={stack} location={location} intro />
+</Base>

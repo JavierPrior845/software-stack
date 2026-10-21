@@ -1,0 +1,103 @@
+---
+import Base from '../layouts/Base.astro';
+import { bridges, getBridgePair, totalBridges } from '../data';
+
+const rows = bridges
+  .map((bridge) => ({ bridge, ...getBridgePair(bridge) }))
+  .filter((row) => row.software !== undefined && row.ai !== undefined);
+---
+
+<Base
+  title="Conexiones entre pilas"
+  description="Crosswalk entre ingeniería de software y IA: memoria virtual y PagedAttention, JIT y decodificación especulativa, arquitectura hexagonal y MCP."
+  mode="bridges"
+>
+
+<section class="shell pt-12 pb-8 sm:pt-16">
+  <p class="font-mono text-[11px] uppercase tracking-[0.2em] text-dim">
+    Modo C · crosswalk
+  </p>
+  <h1 class="mt-4 max-w-3xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+    Las conexiones que nadie dibuja.
+  </h1>
+  <p class="mt-4 max-w-2xl text-base leading-relaxed text-muted">
+    Cada fila enfrenta un problema de ingeniería con su equivalente en IA. No es una analogía
+    decorativa: es la misma restricción resuelta dos veces, con nombres distintos.
+    <span class="text-dim"> {totalBridges} puentes.</span>
+  </p>
+
+  <div class="mt-6 flex flex-wrap items-center gap-4 font-mono text-[10px] text-dim">
+    <span class="flex items-center gap-1.5">
+      <span class="size-2 rounded-full" style="background: hsl(218 85% 64%)"></span> software
+    </span>
+    <span class="flex items-center gap-1.5">
+      <span class="size-2 rounded-full" style="background: hsl(350 85% 64%)"></span> IA
+    </span>
+    <span>mismo problema · distinto vocabulario</span>
+  </div>
+</section>
+
+<section class="shell pb-10">
+  <div class="space-y-3">
+    {
+      rows.map(({ bridge, software, ai }, index) => (
+        <article class="panel p-4 sm:p-5">
+          <div class="flex items-baseline justify-between gap-3">
+            <h2 class="text-sm font-medium text-ink/90">{bridge.theme}</h2>
+            <span class="font-mono text-[10px] text-dim">
+              {String(index + 1).padStart(2, '0')} / {String(rows.length).padStart(2, '0')}
+            </span>
+          </div>
+
+          <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center">
+            <a
+              href={`/concepto/${software!.concept.slug}`}
+              class="group rounded-lg border border-l-2 border-white/8 bg-white/[0.015] p-3 transition-colors hover:border-white/20 hover:bg-white/[0.03]"
+              style={`--layer: hsl(${software!.layer.hue} 85% 64%); border-left-color: hsl(${software!.layer.hue} 85% 64% / 0.55)`}
+            >
+              <p class="font-mono text-[9px] uppercase tracking-wider text-dim">
+                Software · capa {software!.layer.number}
+              </p>
+              <p class="mt-1 text-sm font-medium text-ink/90 group-hover:text-[var(--layer)]">
+                {software!.concept.name}
+              </p>
+              <p class="mt-0.5 line-clamp-1 text-[11px] text-dim">
+                {software!.concept.tagline}
+              </p>
+            </a>
+
+            <div class="flex items-center justify-center py-1 text-dim sm:px-1" aria-hidden="true">
+              <span class="font-mono text-xs sm:hidden">↓</span>
+              <svg class="hidden sm:block" width="22" height="12" viewBox="0 0 22 12" fill="none">
+                <path
+                  d="M1 6h18m-4-4 4 4-4 4"
+                  stroke="currentColor"
+                  stroke-width="1.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+
+            <a
+              href={`/concepto/${ai!.concept.slug}`}
+              class="group rounded-lg border border-l-2 border-white/8 bg-white/[0.015] p-3 transition-colors hover:border-white/20 hover:bg-white/[0.03]"
+              style={`--layer: hsl(${ai!.layer.hue} 85% 64%); border-left-color: hsl(${ai!.layer.hue} 85% 64% / 0.55)`}
+            >
+              <p class="font-mono text-[9px] uppercase tracking-wider text-dim">
+                IA · capa {ai!.layer.number}
+              </p>
+              <p class="mt-1 text-sm font-medium text-ink/90 group-hover:text-[var(--layer)]">
+                {ai!.concept.name}
+              </p>
+              <p class="mt-0.5 line-clamp-1 text-[11px] text-dim">{ai!.concept.tagline}</p>
+            </a>
+          </div>
+
+          <p class="mt-3 max-w-4xl text-xs leading-5 text-muted">{bridge.note}</p>
+        </article>
+      ))
+    }
+  </div>
+</section>
+</Base>

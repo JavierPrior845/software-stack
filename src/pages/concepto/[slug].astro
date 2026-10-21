@@ -1,0 +1,31 @@
+---
+import Base from '../../layouts/Base.astro';
+import Explorer from '../../components/Explorer.astro';
+import { allConceptSlugs, getConcept } from '../../data';
+
+export function getStaticPaths() {
+  return allConceptSlugs().map((slug) => {
+    const location = getConcept(slug);
+
+    if (!location) {
+      throw new Error(`Concepto no encontrado: ${slug}`);
+    }
+
+    return {
+      params: { slug },
+      props: { location },
+    };
+  });
+}
+
+const { location } = Astro.props;
+const { concept, layer, stack } = location;
+---
+
+<Base
+  title={`${concept.name} · ${layer.title}`}
+  description={`${concept.tagline} ${concept.summary.slice(0, 140)}`}
+  mode={stack.id}
+>
+  <Explorer stack={stack} location={location} />
+</Base>
