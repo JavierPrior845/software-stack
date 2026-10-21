@@ -1,0 +1,28 @@
+---
+import type { DiagramId } from '../data/types';
+import MemoryHierarchy from './diagrams/MemoryHierarchy.astro';
+import CpuPipeline from './diagrams/CpuPipeline.astro';
+import Encapsulation from './diagrams/Encapsulation.astro';
+import TlsHandshake from './diagrams/TlsHandshake.astro';
+import AttentionMap from './diagrams/AttentionMap.astro';
+import ReactLoop from './diagrams/ReactLoop.astro';
+
+interface Props {
+  id: DiagramId;
+}
+
+const { id } = Astro.props;
+
+const registry = {
+  'memory-hierarchy': MemoryHierarchy,
+  'cpu-pipeline': CpuPipeline,
+  encapsulation: Encapsulation,
+  'tls-handshake': TlsHandshake,
+  attention: AttentionMap,
+  'react-loop': ReactLoop,
+} satisfies Record<DiagramId, unknown>;
+
+const Diagram = registry[id];
+---
+
+<Diagram />

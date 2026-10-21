@@ -1,0 +1,183 @@
+---
+import Diagram from './Diagram.astro';
+import { getBridgesFor, getConcept, type ConceptLocation } from '../data';
+
+interface Props {
+  location: ConceptLocation;
+}
+
+const { location } = Astro.props;
+const { concept, block, layer, stack, prev, next } = location;
+
+const stackHref = stack.id === 'ai' ? '/ia' : '/software';
+
+const related = getBridgesFor(concept.slug)
+  .map((bridge) => {
+    const otherSlug = bridge.software === concept.slug ? bridge.ai : bridge.software;
+    return { bridge, other: getConcept(otherSlug) };
+  })
+  .filter((item) => item.other !== undefined);
+---
+
+<article class="panel p-5 sm:p-7 lg:p-9" style={`--layer: hsl(${layer.hue} 85% 64%)`}>
+  <div class="accent-rule mb-6 h-px w-full"></div>
+
+  <div class="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] text-dim">
+    <a href={stackHref} class="transition-colors hover:text-ink">{stack.short}</a>
+    <span aria-hidden="true">/</span>
+    <span>Capa {layer.number}</span>
+    <span aria-hidden="true">/</span>
+    <span class="text-muted">{block.title}</span>
+    <span class="ml-auto hidden text-[10px] text-dim sm:inline">{layer.title}</span>
+  </div>
+
+  <h1 class="mt-4 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+    {concept.name}
+  </h1>
+
+  <p class="mt-3 border-l-2 pl-4 text-base leading-relaxed text-muted accent-border sm:text-lg">
+    {concept.tagline}
+  </p>
+
+  {
+    (concept.tags?.length || concept.complexity) && (
+      <div class="mt-5 flex flex-wrap items-center gap-1.5">
+        {concept.complexity && (
+          <span class="chip border-white/10 font-mono accent">{concept.complexity}</span>
+        )}
+        {concept.tags?.map((tag) => (
+          <span class="chip">#{tag}</span>
+        ))}
+      </div>
+    )
+  }
+
+  {
+    concept.diagram && (
+      <div class="mt-7 overflow-hidden rounded-xl border border-white/8 bg-black/25">
+        <div class="flex items-center justify-between border-b border-white/5 px-4 py-2">
+          <span class="text-[10px] uppercase tracking-widest text-dim">Diagrama</span>
+          <span class="font-mono text-[10px] text-dim">esquema estático</span>
+        </div>
+        <div class="p-4 sm:p-5">
+          <Diagram id={concept.diagram} />
+        </div>
+      </div>
+    )
+  }
+
+  <div class="mt-7 max-w-3xl">
+    <p class="text-[15px] leading-7 text-slate-300">{concept.summary}</p>
+
+    {
+      concept.keyPoints?.length && (
+        <ul class="mt-5 space-y-2.5">
+          {concept.keyPoints.map((point) => (
+            <li class="flex gap-3 text-[13px] leading-6 text-muted">
+              <span class="mt-2.5 h-px w-4 shrink-0 accent-rule" aria-hidden="true" />
+              <span>{point}</span>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </div>
+
+  {
+    concept.tradeoffs && (
+      <section class="mt-9" aria-labelledby="tradeoff-heading">
+        <h2 id="tradeoff-heading" class="text-[11px] font-semibold uppercase tracking-widest text-dim">
+          Trade-off
+        </h2>
+        <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div class="rounded-lg border border-emerald-400/15 bg-emerald-400/[0.03] p-3.5">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-emerald-300/80">
+              Cuándo usarlo
+            </p>
+            <ul class="mt-2 space-y-1.5 text-xs leading-5 text-muted">
+              {concept.tradeoffs.whenToUse.map((item) => (
+                <li>{item}</li>
+              ))}
+            </ul>
+          </div>
+          <div class="rounded-lg border border-rose-400/15 bg-rose-400/[0.03] p-3.5">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-rose-300/80">
+              Cuándo evitarlo
+            </p>
+            <ul class="mt-2 space-y-1.5 text-xs leading-5 text-muted">
+              {concept.tradeoffs.whenToAvoid.map((item) => (
+                <li>{item}</li>
+              ))}
+            </ul>
+          </div>
+          <div class="rounded-lg border border-white/8 bg-white/[0.02] p-3.5">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-dim">Coste</p>
+            <p class="mt-2 text-xs leading-5 text-muted">{concept.tradeoffs.cost}</p>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    related.length > 0 && (
+      <section class="mt-9" aria-labelledby="bridges-heading">
+        <h2 id="bridges-heading" class="text-[11px] font-semibold uppercase tracking-widest text-dim">
+          Conexión cruzada
+        </h2>
+        <div class="mt-3 space-y-2">
+          {related.map(({ bridge, other }) => (
+            <a
+              href={`/concepto/${other!.concept.slug}`}
+              class="group block rounded-lg border border-white/8 bg-white/[0.015] p-3.5 transition-colors hover:border-white/20 hover:bg-white/[0.03]"
+              style={`--bridge: hsl(${other!.layer.hue} 85% 64%)`}
+            >
+              <div class="flex flex-wrap items-baseline justify-between gap-2">
+                <span class="text-sm font-medium text-ink/90 group-hover:text-ink">
+                  {other!.concept.name}
+                  <span class="ml-2 font-mono text-[10px] text-dim">
+                    {other!.stack.short} · capa {other!.layer.number}
+                  </span>
+                </span>
+                <span class="font-mono text-[10px] text-dim">{bridge.theme}</span>
+              </div>
+              <p class="mt-1.5 text-xs leading-5 text-muted">{bridge.note}</p>
+            </a>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  <nav
+    class="mt-10 flex flex-col gap-3 border-t border-white/8 pt-5 sm:flex-row sm:justify-between"
+    aria-label="Navegación entre conceptos"
+  >
+    {
+      prev ? (
+        <a href={`/concepto/${prev.slug}`} class="group max-w-xs text-left">
+          <span class="block font-mono text-[10px] uppercase tracking-wider text-dim">← Anterior</span>
+          <span class="mt-0.5 block text-sm text-muted transition-colors group-hover:text-ink">
+            {prev.name}
+          </span>
+        </a>
+      ) : (
+        <span />
+      )
+    }
+    {
+      next ? (
+        <a href={`/concepto/${next.slug}`} class="group max-w-xs text-left sm:text-right">
+          <span class="block font-mono text-[10px] uppercase tracking-wider text-dim">
+            Siguiente →
+          </span>
+          <span class="mt-0.5 block text-sm text-muted transition-colors group-hover:text-ink">
+            {next.name}
+          </span>
+        </a>
+      ) : (
+        <span />
+      )
+    }
+  </nav>
+</article>

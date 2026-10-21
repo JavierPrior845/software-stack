@@ -1,0 +1,45 @@
+---
+const levels = [
+  { name: 'Registros', latency: '~1 ns', width: 5, note: '0.3 ns' },
+  { name: 'Caché L1', latency: '~1 ns', width: 9, note: '1-2 ns' },
+  { name: 'Caché L2', latency: '~5 ns', width: 15, note: '4-10 ns' },
+  { name: 'Caché L3', latency: '~30 ns', width: 27, note: '20-40 ns' },
+  { name: 'RAM (DRAM)', latency: '~100 ns', width: 45, note: '60-100 ns' },
+  { name: 'SSD (NAND)', latency: '~100 µs', width: 72, note: '50-150 µs' },
+  { name: 'HDD', latency: '~10 ms', width: 100, note: '5-10 ms' },
+];
+---
+
+<div class="space-y-2.5">
+  <div class="flex items-center justify-between text-[10px] uppercase tracking-wider text-dim">
+    <span>Nivel</span>
+    <span>Latencia típica</span>
+  </div>
+
+  {
+    levels.map((level) => (
+      <div class="flex items-center gap-3">
+        <span class="w-24 shrink-0 text-right text-[11px] text-muted sm:w-28 sm:text-xs">
+          {level.name}
+        </span>
+        <div class="h-4 flex-1 overflow-hidden rounded-sm bg-white/[0.03]">
+          <div
+            class="h-full rounded-sm bg-[var(--layer)] opacity-60"
+            style={`width: ${level.width}%`}
+          />
+        </div>
+        <span class="w-16 shrink-0 font-mono text-[11px] accent sm:w-20 sm:text-xs">
+          {level.latency}
+        </span>
+      </div>
+    ))
+  }
+
+  <div class="flex gap-3 pt-2">
+    <span class="w-24 shrink-0 sm:w-28"></span>
+    <p class="text-[10px] leading-relaxed text-dim">
+      Anchura en escala logarítmica. Un acierto en L1 cuesta ~1 ns; un fallo hasta RAM, ~100 ns.
+      La diferencia entre RAM y SSD es de tres órdenes de magnitud: por eso el swap duele.
+    </p>
+  </div>
+</div>

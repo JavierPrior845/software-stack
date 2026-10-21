@@ -1,0 +1,65 @@
+---
+import '@fontsource-variable/inter';
+import '@fontsource-variable/jetbrains-mono';
+import '../styles/global.css';
+import { site } from '../config';
+import Header from '../components/Header.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  mode?: 'software' | 'ai' | 'bridges' | 'home';
+}
+
+const { title, description = site.description, mode } = Astro.props;
+const pageTitle = title ? `${title} · ${site.name}` : `${site.name} — ${site.tagline}`;
+
+const path = Astro.url.pathname;
+const currentMode =
+  mode ??
+  (path === '/' ? 'home' : path.startsWith('/ia') ? 'ai' : path.startsWith('/conexiones') ? 'bridges' : 'software');
+
+const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).toString() : undefined;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="theme-color" content="#0a0b10" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    {canonical && <link rel="canonical" href={canonical} />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:locale" content="es_ES" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+  </head>
+
+  <body class="min-h-dvh flex flex-col">
+    <Header mode={currentMode} />
+
+    <main class="flex-1">
+      <slot />
+    </main>
+
+    <footer class="border-t border-white/5 mt-16">
+      <div
+        class="shell flex flex-col gap-2 py-8 text-xs text-dim sm:flex-row sm:items-center sm:justify-between"
+      >
+        <p>
+          {site.name} · 5 capas de software, 6 de IA, y las conexiones entre ambas.
+        </p>
+        <p class="font-mono">v0.1 · fase 1</p>
+      </div>
+    </footer>
+  </body>
+</html>

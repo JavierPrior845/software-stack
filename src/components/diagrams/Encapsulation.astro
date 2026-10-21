@@ -1,0 +1,54 @@
+---
+const layers = [
+  { label: 'Ethernet II', detail: 'MAC origen/destino · 14 B', hue: 250 },
+  { label: 'IPv4', detail: 'IPs · TTL · protocolo · 20 B', hue: 250 },
+  { label: 'TCP', detail: 'puertos · secuencia · flags · 20 B', hue: 250 },
+];
+---
+
+<div class="space-y-4">
+  <div class="rounded-lg border border-white/10 bg-black/20 p-3">
+    <div class="mb-2 flex items-center justify-between font-mono text-[10px] text-dim">
+      <span>trama en el cable</span>
+      <span>MTU Ethernet: 1500 B</span>
+    </div>
+
+    <div class="space-y-2">
+      {
+        layers.map((layer, index) => (
+          <div
+            class="rounded-md border p-2.5"
+            style={`border-color: color-mix(in oklab, var(--layer) ${55 - index * 10}%, transparent); background: color-mix(in oklab, var(--layer) ${7 - index}%, transparent)`}
+          >
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+              <span class="font-mono text-[11px] text-ink/90">
+                <span class="text-dim">[{index + 1}]</span> {layer.label}
+              </span>
+              <span class="font-mono text-[9px] text-dim">{layer.detail}</span>
+            </div>
+            <div class="mt-2">
+              {
+                index === layers.length - 1 ? (
+                  <div class="rounded-sm border border-dashed border-white/15 bg-black/20 px-3 py-4 text-center">
+                    <p class="font-mono text-[10px] text-muted">payload TCP</p>
+                    <p class="mt-1 font-mono text-[11px] text-ink/80">
+                      {'{ "accion": "comprar", "id": 42 }'}
+                    </p>
+                  </div>
+                ) : (
+                  <div class="h-7 rounded-sm border border-dashed border-white/10 bg-black/10" />
+                )
+              }
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+
+  <p class="text-[10px] leading-relaxed text-dim">
+    Cada capa añade metadatos y trata todo lo anterior como opaco. En destino se retiran en orden
+    inverso. Si el payload supera la MTU, IP fragmenta o descarta: el coste se paga al final del
+    camino, no en la capa que añadió la cabecera.
+  </p>
+</div>

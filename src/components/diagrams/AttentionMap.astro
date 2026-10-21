@@ -1,0 +1,65 @@
+---
+const tokens = ['El', 'gato', 'bebió', 'la', 'leche', 'porque', 'tenía', 'sed'];
+
+const weights = [
+  [0.30, 0.20, 0.10, 0.10, 0.10, 0.05, 0.10, 0.05],
+  [0.12, 0.35, 0.10, 0.05, 0.08, 0.05, 0.20, 0.05],
+  [0.04, 0.38, 0.15, 0.05, 0.2, 0.06, 0.09, 0.03],
+  [0.05, 0.1, 0.05, 0.3, 0.35, 0.05, 0.07, 0.03],
+  [0.03, 0.15, 0.22, 0.25, 0.2, 0.05, 0.07, 0.03],
+  [0.03, 0.1, 0.08, 0.04, 0.12, 0.35, 0.22, 0.06],
+  [0.05, 0.42, 0.06, 0.03, 0.28, 0.04, 0.09, 0.03],
+  [0.03, 0.12, 0.05, 0.03, 0.18, 0.1, 0.42, 0.07],
+];
+
+const focusRow = 6;
+---
+
+<div class="overflow-x-auto">
+  <div class="min-w-[520px]">
+    <div class="grid grid-cols-[5.5rem_repeat(8,minmax(0,1fr))] gap-1">
+      <span class="flex items-end pb-1 text-[9px] uppercase tracking-wider text-dim">query ↓</span>
+      {
+        tokens.map((token) => (
+          <span class="pb-1 text-center font-mono text-[9px] text-dim" title={token}>
+            {token}
+          </span>
+        ))
+      }
+
+      {
+        tokens.map((token, row) => (
+          <>
+            <span
+              class:list={[
+                'flex items-center justify-end pr-1.5 font-mono text-[10px]',
+                row === focusRow ? 'accent font-semibold' : 'text-muted',
+              ]}
+            >
+              {token}
+            </span>
+            {weights[row].map((weight, column) => (
+              <span
+                class:list={[
+                  'flex h-6 items-center justify-center rounded-[2px] border font-mono text-[8px] text-ink/80',
+                  row === focusRow ? 'border-white/25' : 'border-white/5',
+                ]}
+                style={`background: color-mix(in oklab, var(--layer) ${Math.round(12 + weight * 88)}%, transparent)`}
+                title={`${token} → ${tokens[column]}: ${weight.toFixed(2)}`}
+              >
+                {weight >= 0.2 ? weight.toFixed(2) : ''}
+              </span>
+            ))}
+          </>
+        ))
+      }
+    </div>
+
+    <p class="mt-3 text-[10px] leading-relaxed text-dim">
+      Fila <span class="accent font-mono">tenía</span>: reparte atención entre
+      <span class="text-muted"> gato (0.42)</span> y
+      <span class="text-muted"> leche (0.28)</span>. Ejemplo ilustrativo de una sola cabeza:
+      un modelo real promedia decenas de cabezas y opera sobre tokens subword, no sobre palabras.
+    </p>
+  </div>
+</div>

@@ -1,0 +1,87 @@
+---
+import LayerNav from './LayerNav.astro';
+import ConceptPanel from './ConceptPanel.astro';
+import { layerConceptCount, type ConceptLocation } from '../data';
+import type { Stack } from '../data/types';
+
+interface Props {
+  stack: Stack;
+  location: ConceptLocation;
+  intro?: boolean;
+}
+
+const { stack, location, intro = false } = Astro.props;
+const total = stack.layers.reduce((sum, layer) => sum + layerConceptCount(layer), 0);
+const activeSlug = Astro.url.pathname.startsWith('/concepto/') ? location.concept.slug : undefined;
+---
+
+{
+  intro && (
+    <div class="shell flex flex-wrap items-baseline justify-between gap-2 pt-5 sm:pt-6">
+      <p class="text-sm font-medium text-muted">
+        <span class="accent mr-1.5">●</span>{stack.title}
+      </p>
+      <p class="font-mono text-[11px] text-dim">
+        {stack.layers.length} capas · {total} conceptos
+      </p>
+    </div>
+  )
+}
+
+<div
+  class="shell grid grid-cols-1 gap-4 py-4 sm:py-5 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] lg:items-start lg:gap-5 xl:grid-cols-[minmax(0,380px)_minmax(0,1fr)]"
+>
+  <div class="lg:hidden">
+    <details class="panel">
+      <summary class="flex items-center gap-2.5 px-4 py-3">
+        <svg class="size-4 shrink-0 text-dim" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path
+            d="M2 4h12M2 8h12M2 12h8"
+            stroke="currentColor"
+            stroke-width="1.2"
+            stroke-linecap="round"
+          />
+        </svg>
+        <span class="text-sm font-medium">Mapa de capas</span>
+        <span class="ml-auto font-mono text-[10px] text-dim">
+          {stack.layers.length} capas · {total} conceptos
+        </span>
+        <svg
+          class="chev size-4 shrink-0 text-dim"
+          viewBox="0 0 16 16"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+        </svg>
+      </summary>
+      <div class="border-t border-white/8 p-2">
+        <LayerNav
+          stack={stack}
+          activeLayer=""
+          activeSlug={activeSlug}
+          compact
+          className="border-0 bg-transparent p-0"
+        />
+      </div>
+    </details>
+  </div>
+
+  <div
+    class="hidden lg:block lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto nav-scroll"
+  >
+    <LayerNav
+      stack={stack}
+      activeLayer={location.layer.slug}
+      activeSlug={activeSlug}
+    />
+  </div>
+
+  <ConceptPanel location={location} />
+</div>
+
+<style>
+  details[open] .chev {
+    transform: rotate(180deg);
+  }
+</style>
