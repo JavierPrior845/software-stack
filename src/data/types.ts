@@ -1,12 +1,19 @@
 export type StackId = 'software' | 'ai';
 
-export type DiagramId =
-  | 'memory-hierarchy'
-  | 'cpu-pipeline'
-  | 'encapsulation'
-  | 'tls-handshake'
-  | 'attention'
-  | 'react-loop';
+export const DIAGRAM_IDS = [
+  'memory-hierarchy',
+  'cpu-pipeline',
+  'encapsulation',
+  'tls-handshake',
+  'attention',
+  'react-loop',
+] as const;
+
+export type DiagramId = (typeof DIAGRAM_IDS)[number];
+
+export const WIDGET_IDS = ['memory-scale', 'kv-cache'] as const;
+
+export type WidgetId = (typeof WIDGET_IDS)[number];
 
 export interface Tradeoffs {
   whenToUse: string[];
@@ -22,6 +29,7 @@ export interface Concept {
   keyPoints?: string[];
   tags?: string[];
   diagram?: DiagramId;
+  widget?: WidgetId;
   complexity?: string;
   tradeoffs?: Tradeoffs;
 }

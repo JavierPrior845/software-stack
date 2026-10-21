@@ -1,5 +1,6 @@
 import { software } from './software';
 import { ai } from './ai';
+import { validateContent } from './validate';
 import { bridges, type Bridge } from './bridges';
 import type { Block, Concept, Layer, Stack, StackId } from './types';
 
@@ -91,6 +92,8 @@ export function layerConceptCount(layer: Layer): number {
 export function stackConceptCount(stack: Stack): number {
   return stack.layers.reduce((total, layer) => total + layerConceptCount(layer), 0);
 }
+
+validateContent(stacks, bridges);
 
 export const totalConcepts = allLocations.size;
 export const totalBridges = bridges.length;

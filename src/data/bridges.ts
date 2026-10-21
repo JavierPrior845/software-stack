@@ -37,10 +37,10 @@ export const bridges: Bridge[] = [
   },
   {
     id: 'busqueda-heuristica',
-    theme: 'Búsqueda guiada por una heurística',
-    software: 'a-estrella',
-    ai: 'tree-of-thoughts',
-    note: 'A* explora el espacio de estados con g(n) + h(n). Tree-of-Thoughts explora rutas de razonamiento y las evalúa para podar. Cuando el espacio es demasiado grande para enumerarlo, ambos dependen de una buena función de estimación.',
+    theme: 'De la elección local a la búsqueda informada',
+    software: 'algoritmos-voraces',
+    ai: 'a-estrella',
+    note: 'El voraz se queda con el mejor paso inmediato y no vuelve atrás. A* suma coste real y heurística para explorar solo lo prometedor. Ambos sustituyen enumerar todo por una función de puntuación; si esa función está mal calibrada, el atajo se convierte en el error.',
   },
   {
     id: 'grafos',
@@ -53,8 +53,8 @@ export const bridges: Bridge[] = [
     id: 'indexacion',
     theme: 'Índices: de la igualdad exacta a la similitud',
     software: 'hash-tables',
-    ai: 'bases-vectoriales',
-    note: 'Una tabla hash convierte una clave en una cubeta para responder "¿existe?" en O(1). HNSW convierte un vector en un vecindario para responder "¿a qué se parece?" en milisegundos. Cambia la pregunta, no la ambición de no recorrer todo.',
+    ai: 'rag-avanzado',
+    note: 'Una tabla hash convierte una clave en una cubeta para responder "¿existe?" en O(1). RAG indexa fragmentos y recupera los más parecidos antes de generar, en vez de recorrer el corpus. Cambia la pregunta —exactitud frente a similitud—, no la ambición de no recorrerlo todo.',
   },
   {
     id: 'frontera-de-sistema',
@@ -87,8 +87,8 @@ export const bridges: Bridge[] = [
   {
     id: 'control-determinista',
     theme: 'Reglas que no se negocian',
-    software: 'sbr-motor-inferencia',
+    software: 'mutex-semaforo-spinlock',
     ai: 'guardrails',
-    note: 'Un sistema basado en reglas decide con IF-THEN auditables. Un guardrail hace lo mismo con un agente: políticas externas y deterministas que no dependen de que el modelo "decida" portarse bien.',
+    note: 'Un mutex no pide permiso al hilo: lo bloquea. Un guardrail no pide al modelo que se porte bien: intercepta la acción fuera del modelo. En ambos casos la garantía vive en el mecanismo, no en la buena voluntad de quien actúa.',
   },
 ];

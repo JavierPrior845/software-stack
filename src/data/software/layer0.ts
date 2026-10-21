@@ -241,6 +241,7 @@ export const layer0: Layer = {
           ],
           tags: ['memoria', 'rendimiento'],
           diagram: 'memory-hierarchy',
+          widget: 'memory-scale',
         },
         {
           slug: 'sram-dram',

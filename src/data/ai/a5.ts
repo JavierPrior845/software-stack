@@ -89,6 +89,7 @@ export const ai5: Layer = {
           ],
           tags: ['inferencia', 'memoria'],
           diagram: 'memory-hierarchy',
+          widget: 'kv-cache',
           tradeoffs: {
             whenToUse: ['Siempre en generación autorregresiva'],
             whenToAvoid: ['Nunca, pero dimensiona la VRAM antes de prometer contextos largos'],
