@@ -69,6 +69,11 @@ export function validateContent(stacks: Record<StackId, Stack>, bridges: Bridge[
             if (!concept.tradeoffs.whenToAvoid.length) errors.push(`${conceptWhere}: whenToAvoid vacío`);
             assertText(errors, concept.tradeoffs.cost, `${conceptWhere}.tradeoffs.cost`);
           }
+
+          if (concept.example) {
+            assertText(errors, concept.example.label, `${conceptWhere}.example.label`);
+            assertText(errors, concept.example.code, `${conceptWhere}.example.code`);
+          }
         }
       }
     }

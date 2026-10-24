@@ -24,6 +24,11 @@ export const ai3: Layer = {
             'El teorema garantiza existencia, no que el entrenamiento la encuentre.',
           ],
           tags: ['redes', 'fundamentos'],
+          diagram: 'neural-activations',
+          example: {
+            label: 'Colapso lineal sin activación',
+            code: '// Dos capas lineales seguidas:\nh = W1 * x + b1\ny = W2 * h + b2 = (W2 * W1) * x + (W2 * b1 + b2) = W_eq * x + b_eq\n\n// Con no linealidad (ReLU / GELU):\nh = gelu(W1 * x + b1)  // ya no puede colapsarse en una sola matriz',
+          },
         },
         {
           slug: 'backpropagation',
@@ -56,6 +61,12 @@ export const ai3: Layer = {
             'GELU es la activación por defecto en GPT, BERT y compañía.',
           ],
           tags: ['redes', 'activaciones'],
+          diagram: 'neural-activations',
+          tradeoffs: {
+            whenToUse: ['ReLU en redes convolucionales/MLP rápidos', 'GELU/SwiGLU en Transformers', 'Sigmoid/Softmax solo en la capa de salida'],
+            whenToAvoid: ['Sigmoid en capas ocultas profundas (satura gradientes en ambos extremos)'],
+            cost: 'GELU y SwiGLU requieren más operaciones aritméticas que ReLU, pero mejoran la convergencia en modelos grandes.',
+          },
         },
         {
           slug: 'funciones-de-perdida',

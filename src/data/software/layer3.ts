@@ -81,6 +81,11 @@ export const layer3: Layer = {
             'DNS sobre UDP 53; si la respuesta es grande, cae a TCP.',
           ],
           tags: ['redes', 'dns'],
+          tradeoffs: {
+            whenToUse: ['TTL alto (3600s+) para servicios estables (ahorra latencia de resolución)', 'TTL bajo (60-300s) antes de una migración o failover'],
+            whenToAvoid: ['Confiar en que todos los resolvers del mundo respetan un TTL de 5 segundos'],
+            cost: 'En frío, una resolución DNS sin caché añade 20-100 ms antes de siquiera iniciar el handshake TCP.',
+          },
         },
         {
           slug: 'dhcp-arp-icmp',
@@ -125,7 +130,7 @@ export const layer3: Layer = {
             'Un RTT alto penaliza tanto el handshake como el crecimiento inicial de la ventana.',
           ],
           tags: ['redes', 'tcp'],
-          diagram: 'tls-handshake',
+          diagram: 'tcp-handshake',
           tradeoffs: {
             whenToUse: ['APIs, bases de datos, ficheros: no puedes perder bytes'],
             whenToAvoid: ['Streaming en vivo o juegos donde un frame tardío ya no sirve'],
@@ -155,6 +160,11 @@ export const layer3: Layer = {
             'La multiplexación de QUIC evita que un paquete perdido bloquee todos los streams.',
           ],
           tags: ['redes', 'udp', 'http'],
+          tradeoffs: {
+            whenToUse: ['UDP puro: WebRTC, gaming en tiempo real, DNS', 'QUIC/HTTP3: conexiones móviles inestables o con pérdida de paquetes'],
+            whenToAvoid: ['UDP puro sin protocolo de aplicación propio cuando necesitas entrega garantizada'],
+            cost: 'QUIC consume más CPU en espacio de usuario que TCP (que cuenta con offloading en hardware NIC).',
+          },
         },
       ],
     },
@@ -231,6 +241,11 @@ export const layer3: Layer = {
             'Compara hashes en tiempo constante para evitar timing attacks.',
           ],
           tags: ['seguridad', 'criptografía'],
+          tradeoffs: {
+            whenToUse: ['SHA-256 / BLAKE3: integridad de ficheros, firmas y tokens de alta entropía', 'Argon2id / bcrypt: contraseñas humanas'],
+            whenToAvoid: ['SHA-256 sin key-stretching para contraseñas (una GPU prueba miles de millones por segundo)'],
+            cost: 'Argon2id se configura a propósito para tardar ~100-300 ms y consumir MB de RAM por intento.',
+          },
         },
         {
           slug: 'simetrico-vs-asimetrico',
@@ -243,6 +258,11 @@ export const layer3: Layer = {
             'ECC ofrece seguridad comparable a RSA con claves mucho más pequeñas.',
           ],
           tags: ['seguridad', 'criptografía'],
+          tradeoffs: {
+            whenToUse: ['AES-GCM / ChaCha20-Poly1305: cifrar tráfico o discos', 'Ed25519 / ECDSA: firmas digitales e intercambio ECDHE'],
+            whenToAvoid: ['Intentar cifrar payloads grandes directamente con RSA'],
+            cost: 'El cifrado asimétrico es entre 100× y 1.000× más costoso en CPU que AES con aceleración hardware (AES-NI).',
+          },
         },
         {
           slug: 'tls-handshake',

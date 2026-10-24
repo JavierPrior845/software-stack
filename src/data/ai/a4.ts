@@ -60,6 +60,11 @@ export const ai4: Layer = {
             'Demasiadas capas difuminan las diferencias entre nodos (oversmoothing).',
           ],
           tags: ['grafos', 'arquitecturas'],
+          tradeoffs: {
+            whenToUse: ['Química molecular, recomendación sobre grafos relacionales, detección de fraude en redes'],
+            whenToAvoid: ['Datos tabulares independientes o cuando 2-3 saltos de grafo caben como features agregadas'],
+            cost: 'El vecindario explota exponencialmente por capa (neighbor explosion); exige muestreo tipo GraphSAGE.',
+          },
         },
       ],
     },
@@ -81,7 +86,13 @@ export const ai4: Layer = {
           ],
           tags: ['transformer', 'atención'],
           diagram: 'attention',
+          widget: 'attention-explorer',
           complexity: 'O(N²·d) por capa en longitud de contexto',
+          example: {
+            label: 'Scaled Dot-Product Attention en forma matricial',
+            code: '// Q, K, V de dimensión [seq_len, d_k]\nscores = (Q @ K.T) / sqrt(d_k)\nscores = apply_causal_mask(scores) // -inf en triángulo superior\nweights = softmax(scores, dim=-1)\nout = weights @ V',
+            note: 'La matriz scores es [seq_len × seq_len]: ahí vive el crecimiento cuadrático O(N²) con la ventana de contexto.',
+          },
         },
         {
           slug: 'multi-head-attention',
@@ -94,6 +105,12 @@ export const ai4: Layer = {
             'La calidad se mantiene sorprendentemente bien al compartir K/V.',
           ],
           tags: ['transformer', 'atención'],
+          widget: 'attention-explorer',
+          tradeoffs: {
+            whenToUse: ['GQA en cualquier LLM moderno de producción para recortar KV-cache de 4× a 8×'],
+            whenToAvoid: ['MHA clásico en contextos largos con concurrencia alta de usuarios'],
+            cost: 'MHA multiplica el tráfico de memoria de VRAM en cada paso de generación autorregresiva.',
+          },
         },
         {
           slug: 'positional-encoding',

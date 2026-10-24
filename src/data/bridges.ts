@@ -91,4 +91,18 @@ export const bridges: Bridge[] = [
     ai: 'guardrails',
     note: 'Un mutex no pide permiso al hilo: lo bloquea. Un guardrail no pide al modelo que se porte bien: intercepta la acción fuera del modelo. En ambos casos la garantía vive en el mecanismo, no en la buena voluntad de quien actúa.',
   },
+  {
+    id: 'orquestacion-dag',
+    theme: 'Grafos dirigidos para coordinar trabajo',
+    software: 'dfs-bfs-toposort',
+    ai: 'multiagente-langgraph',
+    note: 'El orden topológico decide qué tarea puede ejecutarse cuando sus dependencias han terminado. Un grafo de agentes (LangGraph) aplica la misma disciplina al razonamiento: nodos con estado explícito, aristas condicionales y puntos de control.',
+  },
+  {
+    id: 'poda-de-ramas',
+    theme: 'Explorar árboles podando lo inviable',
+    software: 'backtracking-branch-bound',
+    ai: 'tree-of-thoughts',
+    note: 'Branch & Bound explora un árbol de decisiones y corta ramas cuya cota no puede mejorar la solución actual. Tree-of-Thoughts genera múltiples candidatos de pensamiento y usa un evaluador para podar las ramas poco prometedoras antes de gastar más tokens.',
+  },
 ];

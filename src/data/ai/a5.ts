@@ -36,6 +36,11 @@ export const ai5: Layer = {
             'El balanceo de carga entre expertos es el problema operativo de MoE.',
           ],
           tags: ['llm', 'arquitectura'],
+          tradeoffs: {
+            whenToUse: ['Servidores multi-GPU con alto throughput donde el cómputo por token domina el coste'],
+            whenToAvoid: ['Despliegue local con poca VRAM (todos los expertos deben residir en memoria)'],
+            cost: 'Un MoE 8×7B activa ~13B por token pero exige cargar ~47B de parámetros en VRAM.',
+          },
         },
       ],
     },
@@ -107,6 +112,8 @@ export const ai5: Layer = {
             'Habilita continuous batching: nuevas peticiones entran sin esperar a que el lote termine.',
           ],
           tags: ['inferencia', 'memoria', 'serving'],
+          diagram: 'virtual-memory',
+          widget: 'kv-cache',
           tradeoffs: {
             whenToUse: ['Serving de LLM con concurrencia y contextos largos'],
             whenToAvoid: ['Inferencia local de un solo usuario con contexto corto'],
@@ -124,6 +131,16 @@ export const ai5: Layer = {
             'Cuantiza y evalúa: la pérdida de calidad depende del modelo y de la tarea.',
           ],
           tags: ['inferencia', 'memoria'],
+          example: {
+            label: 'Presupuesto de VRAM para pesos de un modelo 70B',
+            code: 'FP16 (2 bytes/peso): 70B × 2 B ≈ 140 GB VRAM (2× A100 80GB)\nFP8  (1 byte/peso):  70B × 1 B ≈  70 GB VRAM (1× H100 80GB)\nINT4 (0,5 B/peso):   70B × 0.5 ≈  35 GB VRAM (2× RTX 4090 / Mac 64GB)',
+            note: 'A la memoria de los pesos hay que sumarle siempre el KV-cache y las activaciones en vuelo.',
+          },
+          tradeoffs: {
+            whenToUse: ['FP8 en GPUs Hopper/Ada sin pérdida apreciable', 'INT4 AWQ cuando la VRAM limita el despliegue'],
+            whenToAvoid: ['Modelos pequeños (<3B) cuantizados agresivamente para código o matemáticas finas'],
+            cost: 'Recorta VRAM a la mitad o cuarta parte y acelera el decoding memory-bound.',
+          },
         },
         {
           slug: 'speculative-decoding',

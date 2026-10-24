@@ -14,28 +14,24 @@ export const layer0: Layer = {
         'De un interruptor de silicio a una unidad que suma, compara y recuerda. Aquí nace todo lo demás.',
       concepts: [
         {
-          slug: 'transistor-cmos',
-          name: 'Transistor CMOS',
-          tagline: 'El interruptor más caro del mundo, repetido cien mil millones de veces.',
+          slug: 'cmos-y-puertas-logicas',
+          name: 'CMOS y puertas lógicas',
+          tagline: 'Del transistor al NAND: el ladrillo con el que se construye cualquier circuito.',
           summary:
-            'Un transistor MOS es un interruptor controlado por voltaje: un NMOS conduce con un 1 lógico y un PMOS con un 0. CMOS combina ambos de forma complementaria para que, en reposo, casi no circule corriente: por eso un chip moderno puede tener decenas de miles de millones de transistores sin fundirse.',
+            'Un transistor MOS es un interruptor controlado por voltaje; CMOS combina NMOS y PMOS para que en reposo casi no circule corriente. Esa pareja forma las puertas lógicas, y NAND y NOR son funcionalmente completas: con un solo tipo de puerta se construye cualquier función booleana. El coste real no es el número de transistores, sino la profundidad: cada nivel añade retardo de propagación.',
           keyPoints: [
-            'La electrónica digital existe porque abstraemos voltaje continuo en dos estados discretos.',
-            'El consumo dinámico crece con la frecuencia y el cuadrado del voltaje: de ahí el fin del escalado de reloj.',
-          ],
-          tags: ['hardware', 'física'],
-        },
-        {
-          slug: 'puertas-universales',
-          name: 'Puertas universales (NAND/NOR)',
-          tagline: 'Con un solo tipo de ladrillo puedes construir cualquier circuito del universo.',
-          summary:
-            'NAND y NOR son funcionalmente completas: cualquier función booleana puede construirse solo con ellas. Por eso las fábricas estandarizan su producción y el diseño lógico se reduce a optimizar cuántas compuertas y cuántos niveles de profundidad necesitas.',
-          keyPoints: [
-            'Universalidad = misma puerta para todo, menor coste de fabricación.',
-            'La profundidad del circuito determina su latencia: cada nivel añade retardo de propagación.',
+            'CMOS consume sobre todo energía dinámica al conmutar; el consumo estático es mínimo.',
+            'NAND y NOR son universales: de ahí que las fábricas estandaricen su producción.',
+            'Cada nivel de puertas añade retardo: la latencia de un circuito es su camino crítico, no su número de transistores.',
+            'El fan-out y la capacidad de carga limitan cuántas puertas puede alimentar una salida.',
           ],
           tags: ['hardware', 'lógica'],
+          widget: 'logic-gates',
+          tradeoffs: {
+            whenToUse: ['Diseño digital estándar: CMOS para bajo consumo estático', 'NAND/NOR cuando necesitas una puerta universal'],
+            whenToAvoid: ['Familias antiguas o lógica dominó cuando importan consumo y densidad'],
+            cost: 'Cada puerta añade retardo y área; el reloj debe esperar al camino crítico.',
+          },
         },
         {
           slug: 'multiplexor-decodificador',
@@ -104,6 +100,7 @@ export const layer0: Layer = {
             'El bit más significativo actúa como signo, pero no con la lógica de "signo y magnitud".',
           ],
           tags: ['datos', 'binario'],
+          diagram: 'bit-layout',
         },
         {
           slug: 'ieee-754',
@@ -121,6 +118,7 @@ export const layer0: Layer = {
             whenToAvoid: ['Dinero, contabilidad, impuestos', 'Comparaciones exactas de igualdad'],
             cost: 'Error relativo ~2⁻⁵³ en doble precisión; los desnormalizados pierden precisión gradualmente.',
           },
+          diagram: 'bit-layout',
         },
         {
           slug: 'endianness',
@@ -133,6 +131,7 @@ export const layer0: Layer = {
             'No mandes structs crudos por la red: padding y endianness cambian entre plataformas.',
           ],
           tags: ['datos', 'binario'],
+          diagram: 'bit-layout',
         },
         {
           slug: 'alineamiento-memoria',
@@ -145,6 +144,17 @@ export const layer0: Layer = {
             'En binarios serializados, define el layout byte a byte: no dependas del compilador.',
           ],
           tags: ['memoria', 'rendimiento'],
+          example: {
+            label: 'Layout en memoria C/C++ (64-bit)',
+            code: `struct Malo  { char a; int b; char c; }; // sizeof = 12 B (6 B de padding)
+struct Bueno { int b; char a; char c; }; // sizeof = 8 B  (2 B de padding)`,
+            note: 'En un array de 10 millones de structs, reordenar dos campos ahorra 40 MB de RAM y mejora el uso de caché L1.',
+          },
+          tradeoffs: {
+            whenToUse: ['Estructuras alineadas de forma natural en memoria (por defecto)'],
+            whenToAvoid: ['`__attribute__((packed))` en structs de uso frecuente en CPU (penaliza lecturas)'],
+            cost: 'Desperdicio por fragmentación interna (padding) si no ordenas los campos por tamaño.',
+          },
         },
       ],
     },
@@ -221,6 +231,24 @@ export const layer0: Layer = {
           ],
           tags: ['cpu', 'isa'],
         },
+        {
+          slug: 'simd-y-gpu',
+          name: 'SIMD y GPU',
+          tagline: 'Una instrucción, muchos datos: el patrón que hace posible entrenar un transformer.',
+          summary:
+            'SIMD ejecuta la misma operación sobre varios datos en una sola instrucción: AVX-512 mueve 512 bits (16 float32) por registro y NEON, 128 bits en ARM. Una GPU lleva la idea al extremo: miles de ALUs simples que ocultan latencia con warps en lugar de cachés enormes, y memoria coalescida. Gana cuando hay paralelismo de datos masivo; pierde con ramas divergentes y dependencias en cadena.',
+          keyPoints: [
+            'AVX-512 procesa 16 float32 por instrucción; NEON, 4.',
+            'La GPU no es "una CPU más rápida": son miles de núcleos simples que ocultan latencia con paralelismo.',
+            'Accesos coalescidos y ausencia de divergencia valen más que el pico teórico de FLOPS.',
+          ],
+          tags: ['rendimiento', 'paralelismo', 'hardware'],
+          tradeoffs: {
+            whenToUse: ['Bucles regulares sobre arrays', 'Matmul, convoluciones y procesamiento de imagen', 'Cargas con paralelismo de datos masivo'],
+            whenToAvoid: ['Control de flujo impredecible (branch divergence)', 'Cadenas de dependencias secuenciales', 'Datos pequeños: la transferencia domina'],
+            cost: 'Pasar de escalar a AVX2 da 4–8×; una GPU solo compensa si el trabajo paralelo amortiza la transferencia y el kernel launch.',
+          },
+        },
       ],
     },
     {
@@ -255,6 +283,7 @@ export const layer0: Layer = {
           ],
           tags: ['memoria', 'hardware'],
           diagram: 'memory-hierarchy',
+          widget: 'memory-scale',
           tradeoffs: {
             whenToUse: ['SRAM para caché y registros', 'DRAM para el working set del proceso'],
             whenToAvoid: ['No puedes sustituir DRAM por SRAM: el coste por bit se multiplica'],
@@ -346,6 +375,7 @@ export const layer0: Layer = {
             'strace es el microscopio para ver qué está pidiendo realmente tu proceso.',
           ],
           tags: ['so', 'rendimiento'],
+          diagram: 'process-memory-layout',
         },
         {
           slug: 'paginacion',
@@ -358,6 +388,12 @@ export const layer0: Layer = {
             'El aislamiento entre procesos es, literalmente, que no comparten tabla de páginas.',
           ],
           tags: ['so', 'memoria'],
+          diagram: 'virtual-memory',
+          tradeoffs: {
+            whenToUse: ['Páginas de 4 KB para propósito general', 'HugePages (2 MB) en bases de datos y motores de IA'],
+            whenToAvoid: ['HugePages en procesos pequeños con asignaciones dispersas (desperdicio por fragmentación interna)'],
+            cost: 'Sobrecarga de tablas de páginas y traducción por cada acceso que falle en la TLB.',
+          },
         },
         {
           slug: 'tablas-de-paginas',
@@ -370,6 +406,7 @@ export const layer0: Layer = {
             'Cada proceso tiene su propio árbol; cambiar de proceso cambia la raíz (CR3).',
           ],
           tags: ['so', 'memoria'],
+          diagram: 'virtual-memory',
         },
         {
           slug: 'tlb',
@@ -382,6 +419,7 @@ export const layer0: Layer = {
             'Huge pages reducen misses porque cubren más rango con una entrada.',
           ],
           tags: ['so', 'memoria', 'rendimiento'],
+          diagram: 'virtual-memory',
           tradeoffs: {
             whenToUse: ['Procesos con working set grande y accesos dispersos (huge pages ayudan)'],
             whenToAvoid: ['No fuerces huge pages en cargas con mucha fragmentación interna'],
@@ -399,6 +437,25 @@ export const layer0: Layer = {
             'SIGSEGV es un page fault de protección, no un acceso "a memoria inexistente" en abstracto.',
           ],
           tags: ['so', 'memoria'],
+        },
+        {
+          slug: 'mmap-y-zero-copy',
+          name: 'mmap y zero-copy',
+          tagline: 'Mapear en vez de copiar: cómo un fichero se vuelve memoria y un LLM carga pesos sin duplicarlos.',
+          summary:
+            'mmap proyecta las páginas de un fichero en el espacio de direcciones del proceso: el page cache del kernel se comparte y las páginas se traen bajo demanda por page fault. Zero-copy va un paso más allá y evita la copia a espacio de usuario con sendfile o splice. Es la base de Kafka, de la carga de .safetensors con mmap y de muchas bases de datos; el precio son fallos de página, coherencia con escrituras y señales si el fichero se trunca.',
+          keyPoints: [
+            'mmap evita la copia, no el page fault: el primer acceso a cada página sigue costando.',
+            'sendfile y splice llevan datos de página a socket sin pasar por espacio de usuario.',
+            'safetensors permite mmap porque el layout es explícito; pickle obliga a deserializar y copiar.',
+            'Mide en frío y en caliente: con page cache caliente, mmap y read pueden parecerse.',
+          ],
+          tags: ['memoria', 'so', 'rendimiento'],
+          tradeoffs: {
+            whenToUse: ['Ficheros grandes de solo lectura (pesos, índices, logs)', 'Serving estático y Kafka', 'Compartir páginas entre procesos'],
+            whenToAvoid: ['Ficheros que se truncan mientras están mapeados (SIGBUS)', 'Escrituras pequeñas y aleatorias', 'Cuando necesitas control explícito de cuándo se lee'],
+            cost: 'Un minor o major fault por página; el dirty writeback y el truncado añaden casos límite.',
+          },
         },
       ],
     },
@@ -419,6 +476,12 @@ export const layer0: Layer = {
             'La pila es privada; el heap es compartido y por eso necesita sincronización.',
           ],
           tags: ['so', 'concurrencia'],
+          diagram: 'process-memory-layout',
+          tradeoffs: {
+            whenToUse: ['Procesos: aislamiento de fallos y seguridad (workers en Python para saltar el GIL)', 'Hilos: paralelismo con memoria compartida de baja latencia'],
+            whenToAvoid: ['Hilos sin sincronización estricta sobre estado mutable', 'Miles de procesos pesados cuando basta un event loop asíncrono'],
+            cost: 'Proceso: mayor huella de RAM y coste de IPC. Hilo: riesgo de data races y deadlocks.',
+          },
         },
         {
           slug: 'context-switch',
@@ -431,6 +494,7 @@ export const layer0: Layer = {
             'Menos hilos que núcleos evita contención; demasiados hilos solo añaden latencia.',
           ],
           tags: ['so', 'concurrencia', 'rendimiento'],
+          diagram: 'process-memory-layout',
         },
         {
           slug: 'race-conditions',

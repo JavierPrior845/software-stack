@@ -36,6 +36,11 @@ export const layer4: Layer = {
             'AOT no significa más rápido en todo; significa predecible.',
           ],
           tags: ['runtime', 'rendimiento'],
+          tradeoffs: {
+            whenToUse: ['AOT (Go/Rust): serverless, CLIs y contenedores que escalan de 0 a N en milisegundos', 'JIT (JVM/V8): servidores de larga duración'],
+            whenToAvoid: ['Runtimes con warm-up pesado en funciones efímeras (cold starts lentos)'],
+            cost: 'JIT consume más RAM base para almacenar el compilador y el código máquina generado al vuelo.',
+          },
         },
         {
           slug: 'libreria-vs-framework',
@@ -48,6 +53,11 @@ export const layer4: Layer = {
             'Aísla el framework en adaptadores si esperas sobrevivir a él.',
           ],
           tags: ['runtime', 'arquitectura'],
+          tradeoffs: {
+            whenToUse: ['Framework: estandarizar convenciones en equipos y acelerar entrega', 'Librerías: mantener control fino del flujo'],
+            whenToAvoid: ['Acoplar las entidades del dominio a decoradores o clases base propietarios del framework'],
+            cost: 'Cambiar una librería lleva horas; migrar de framework sin arquitectura limpia equivale a reescribir.',
+          },
         },
       ],
     },
@@ -97,6 +107,11 @@ export const layer4: Layer = {
             'WebSocket requiere gestionar reconexión, heartbeats y estado a mano.',
           ],
           tags: ['api', 'tiempo-real'],
+          tradeoffs: {
+            whenToUse: ['SSE: streaming de tokens de IA, notificaciones y feeds en vivo', 'WebSockets: colaboración multiusuario en tiempo real y gaming'],
+            whenToAvoid: ['WebSockets cuando el cliente solo envía una petición inicial y escucha el stream de respuesta'],
+            cost: 'WebSockets complica el balanceo de carga L7, los cortafuegos corporativos y la reconexión.',
+          },
         },
         {
           slug: 'tipos-de-bases-de-datos',
@@ -109,6 +124,12 @@ export const layer4: Layer = {
             'Redis es caché, no fuente de verdad (salvo que aceptes persistencia asíncrona).',
           ],
           tags: ['persistencia', 'bases-de-datos'],
+          widget: 'stack-selector',
+          tradeoffs: {
+            whenToUse: ['PostgreSQL: sistema de registro (SoR) por defecto', 'Redis: caché, colas y rate-limiting', 'Qdrant: >1M de vectores con filtros complejos'],
+            whenToAvoid: ['NoSQL documental para datos financieros o con relaciones muchos-a-muchos que acabarás uniendo en código'],
+            cost: 'Cada motor de base de datos adicional multiplica el coste de backups, monitorización y consistencia.',
+          },
         },
         {
           slug: 'bases-vectoriales',
@@ -121,6 +142,13 @@ export const layer4: Layer = {
             'El filtrado por metadatos cambia por completo el rendimiento del índice.',
           ],
           tags: ['persistencia', 'ia', 'vectores'],
+          diagram: 'rag-pipeline',
+          complexity: 'O(log N) aproximado en búsqueda HNSW',
+          tradeoffs: {
+            whenToUse: ['Búsqueda semántica, deduplicación difusa y RAG sobre corpus grandes'],
+            whenToAvoid: ['Búsqueda de códigos exactos, SKUs o identificadores (ahí BM25 o un índice B-Tree ganan siempre)'],
+            cost: 'El grafo HNSW consume bastante RAM; requiere cuantización (scalar/binary) a gran escala.',
+          },
         },
       ],
     },
@@ -141,6 +169,7 @@ export const layer4: Layer = {
             'El coste de contratación y mantenimiento es parte del benchmark.',
           ],
           tags: ['stack', 'decisiones'],
+          widget: 'stack-selector',
           tradeoffs: {
             whenToUse: ['Siempre: escribe los criterios antes de elegir'],
             whenToAvoid: ['Reescribir por moda o por aburrimiento del stack actual'],
@@ -158,6 +187,7 @@ export const layer4: Layer = {
             'Los DTOs en la frontera evitan filtrar el modelo de persistencia al exterior.',
           ],
           tags: ['arquitectura', 'diseño'],
+          diagram: 'hexagonal-arch',
         },
       ],
     },

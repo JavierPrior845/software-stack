@@ -36,6 +36,12 @@ export const layer2: Layer = {
             'ISP y SRP suelen resolverse juntos: interfaces grandes acaban violando ambos.',
           ],
           tags: ['diseño', 'solid'],
+          diagram: 'hexagonal-arch',
+          tradeoffs: {
+            whenToUse: ['En las fronteras de módulos y servicios externos (bases de datos, pagos, LLMs)'],
+            whenToAvoid: ['Crear una interfaz por cada clase interna que solo tiene una implementación y nunca cambiará'],
+            cost: 'Indirección adicional al navegar el código si se abusa de interfaces innecesarias.',
+          },
         },
         {
           slug: 'composicion-sobre-herencia',
@@ -48,6 +54,11 @@ export const layer2: Layer = {
             'Delega en un colaborador antes de crear otra subclase.',
           ],
           tags: ['diseño', 'poo'],
+          tradeoffs: {
+            whenToUse: ['Composición por defecto para reutilizar comportamiento e inyectar estrategias'],
+            whenToAvoid: ['Árboles de herencia de más de 2 niveles de profundidad'],
+            cost: 'Escribir pequeños métodos delegados explícitos en lugar de heredarlos implícitamente.',
+          },
         },
         {
           slug: 'patrones-gof',
@@ -60,6 +71,14 @@ export const layer2: Layer = {
             'Observer es la base del event-driven; Decorator, la del middleware.',
           ],
           tags: ['diseño', 'patrones'],
+          example: {
+            label: 'Adapter / Strategy en TypeScript',
+            code: `interface Notifier { send(msg: string): Promise<void>; }
+class OrderService {
+  constructor(private readonly notifier: Notifier) {} // DIP + Strategy
+}`,
+            note: 'Cambiar de Email a Slack o a un Fake en un test unitario no toca ni una línea de OrderService.',
+          },
         },
         {
           slug: 'ddd',
@@ -104,6 +123,7 @@ export const layer2: Layer = {
             'Si tu entidad importa el ORM, ya no tienes dominio: tienes un esquema con métodos.',
           ],
           tags: ['arquitectura', 'diseño'],
+          diagram: 'hexagonal-arch',
           tradeoffs: {
             whenToUse: ['Sistemas con vida útil larga', 'Reglas de negocio complejas y múltiples interfaces'],
             whenToAvoid: ['CRUD simple de fin de semana', 'Prototipos donde el dominio aún no existe'],
@@ -121,6 +141,11 @@ export const layer2: Layer = {
             'Sin observabilidad, una cola se convierte en un agujero negro de mensajes.',
           ],
           tags: ['arquitectura', 'distribuidos'],
+          tradeoffs: {
+            whenToUse: ['Tareas pesadas en background (emails, inferencia IA, webhooks)', 'Absorber picos de tráfico (load leveling)'],
+            whenToAvoid: ['Flujos que requieren respuesta síncrona inmediata al usuario'],
+            cost: 'Operar un broker (RabbitMQ/Kafka/Redis), gestionar Dead Letter Queues (DLQ) y consistencia eventual.',
+          },
         },
         {
           slug: 'monolito-vs-microservicios',
@@ -150,6 +175,12 @@ export const layer2: Layer = {
             'Mocks verifican interacción; stubs devuelven datos; fakes implementan de verdad.',
           ],
           tags: ['testing', 'calidad'],
+          diagram: 'testing-pyramid',
+          tradeoffs: {
+            whenToUse: ['Unitarios para reglas de dominio complejas', 'Integración con BD real para repositorios SQL'],
+            whenToAvoid: ['Mockear la base de datos en un test cuyo único propósito es probar una query SQL'],
+            cost: 'Los tests E2E son 100-1000× más lentos y frágiles ante cambios de UI que los unitarios.',
+          },
         },
         {
           slug: 'impedance-mismatch',
@@ -162,6 +193,14 @@ export const layer2: Layer = {
             'Conoce el SQL que genera tu ORM o el ORM te conocerá a ti.',
           ],
           tags: ['persistencia', 'orm'],
+          example: {
+            label: 'El problema N+1 clásico',
+            code: `const users = await db.users.findMany(); // 1 query
+for (const u of users) {
+  await db.orders.findByUserId(u.id);    // +N queries por red!
+} // Solución: JOIN / Eager Loading (include: { orders: true })`,
+            note: 'Con 200 usuarios y 2 ms de RTT a la base de datos, un N+1 añade 400 ms de latencia invisible.',
+          },
         },
       ],
     },

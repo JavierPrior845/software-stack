@@ -24,6 +24,16 @@ export const ai1: Layer = {
             'La inferencia convierte hechos explícitos en conocimiento implícito.',
           ],
           tags: ['simbólica', 'conocimiento'],
+          example: {
+            label: 'Tripleta RDF y regla de transitividad',
+            code: ':AlanTuring  :estudióEn     :Cambridge .\n:Cambridge   :ubicadaEn     :ReinoUnido .\n\n# Regla OWL/Datalog:\n?persona :estudióEnPais ?pais :- ?persona :estudióEn ?uni, ?uni :ubicadaEn ?pais.\n# Inferencia automática -> :AlanTuring :estudióEnPais :ReinoUnido',
+            note: 'El hecho inferido no está almacenado como fila estática: se deduce por la semántica de las aristas.',
+          },
+          tradeoffs: {
+            whenToUse: ['Dominios con taxonomías ricas y consultas multi-salto (GraphRAG, fraude, biomedicina)'],
+            whenToAvoid: ['CRUD transaccional simple donde un esquema relacional normalizado basta'],
+            cost: 'Modelar y mantener la ontología requiere criterio experto y gobernanza estricta.',
+          },
         },
         {
           slug: 'logica-formal',
@@ -68,6 +78,11 @@ export const ai1: Layer = {
             'La explicabilidad es total: puedes trazar qué regla disparó cada conclusión.',
           ],
           tags: ['simbólica', 'reglas'],
+          tradeoffs: {
+            whenToUse: ['Políticas regulatorias, elegibilidad financiera, guardrails deterministas'],
+            whenToAvoid: ['Percepción no estructurada (imagen, voz, lenguaje libre) o miles de reglas acopladas'],
+            cost: 'Por encima de unos cientos de reglas, las interacciones ocultas entre reglas dificultan el mantenimiento.',
+          },
         },
         {
           slug: 'encadenamiento',
@@ -101,6 +116,16 @@ export const ai1: Layer = {
           ],
           tags: ['búsqueda', 'algoritmos'],
           complexity: 'O(b^d) peor caso · dominado por la calidad de h',
+          example: {
+            label: 'Frontera de prioridad en A*',
+            code: 'f(n) = g(n) + h(n)\n// g(n): coste real desde el inicio hasta n\n// h(n): heurística admisible (h(n) <= coste real restante)\n\nwhile (!open.empty()) {\n  const current = open.popMinF();\n  if (current === goal) return reconstructPath(current);\n}',
+            note: 'Si h(n) = 0, A* degenera en Dijkstra; si h(n) es exacta, A* camina directo a la meta sin expandir ramas laterales.',
+          },
+          tradeoffs: {
+            whenToUse: ['Rutas en grafos, planificación con heurística clara, búsqueda de planes verificables'],
+            whenToAvoid: ['Espacios de estado continuos de alta dimensión sin heurística informativa'],
+            cost: 'Mantiene todos los nodos frontera en memoria: suele agotar RAM antes que tiempo de CPU.',
+          },
         },
         {
           slug: 'minimax-alfabeta',

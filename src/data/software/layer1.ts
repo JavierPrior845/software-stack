@@ -54,6 +54,12 @@ export const layer1: Layer = {
           ],
           tags: ['estructuras', 'diccionarios'],
           complexity: 'O(1) medio · O(N) peor caso',
+          widget: 'hash-probing',
+          tradeoffs: {
+            whenToUse: ['Búsquedas por igualdad exacta (`clave → valor`)', 'Deduplicación rápida de conjuntos'],
+            whenToAvoid: ['Consultas por rango (`entre A y B`) o recorridos ordenados (usa B-Tree / AVL)'],
+            cost: 'Sobrecarga de memoria para mantener factor de carga α < 0.7 y picos de latencia durante el rehash.',
+          },
         },
         {
           slug: 'tombstones',
@@ -62,10 +68,16 @@ export const layer1: Layer = {
           summary:
             'Si vacías una celda, las búsquedas que colisionaron después dejan de encontrarse. Por eso se marca como "eliminado" (tombstone) para que la búsqueda siga avanzando. Los tombstones se acumulan y degradan la tabla: hay que rehashear periódicamente. El factor de carga α = N/M dispara colisiones por encima de ~0.7.',
           keyPoints: [
-            'Rehash: O(N), reserva el doble y reubica todo.',
+            'Rehash: O(N), reserva el doble y reubica todo limpiando las marcas de borrado.',
             'En Python, dict y set usan direccionamiento abierto con sondeo.',
           ],
           tags: ['estructuras', 'implementación'],
+          widget: 'hash-probing',
+          tradeoffs: {
+            whenToUse: ['Tablas en direccionamiento abierto (Robin Hood / SwissTable) que soportan borrados'],
+            whenToAvoid: ['Si borras e insertas masivamente sin rehash periódico, los tombstones degradan todo a O(N)'],
+            cost: 'Las celdas con tombstone siguen contando como ocupadas para las búsquedas hasta el siguiente rehash.',
+          },
         },
         {
           slug: 'bst-avl',
@@ -78,6 +90,7 @@ export const layer1: Layer = {
             'En bases de datos relacionales el equivalente son los B-Tree, optimizados para páginas de disco.',
           ],
           tags: ['estructuras', 'árboles'],
+          diagram: 'avl-vs-bst',
           complexity: 'Búsqueda O(log N) · Rotación O(1)',
           tradeoffs: {
             whenToUse: ['Lecturas frecuentes con orden garantizado', 'Rangos y búsquedas por intervalo'],
@@ -97,6 +110,11 @@ export const layer1: Layer = {
           ],
           tags: ['estructuras', 'strings'],
           complexity: 'O(L) búsqueda e inserción',
+          tradeoffs: {
+            whenToUse: ['Autocompletado por prefijo, enrutamiento CIDR IP y diccionarios léxicos'],
+            whenToAvoid: ['Claves largas sin prefijos comunes (alto consumo de RAM por punteros vacíos)'],
+            cost: 'Un Trie ingenuo gasta un array de punteros por nodo; en producción se usa Radix Tree / Patricia Trie.',
+          },
         },
         {
           slug: 'union-find',
@@ -110,6 +128,13 @@ export const layer1: Layer = {
           ],
           tags: ['estructuras', 'grafos'],
           complexity: 'O(α(N)) amortizado',
+          example: {
+            label: 'Compresión de caminos en 3 líneas',
+            code: `int find(int x) {
+  return parent[x] == x ? x : (parent[x] = find(parent[x]));
+}`,
+            note: 'Al subir buscando la raíz, aplana el árbol dejando todos los nodos visitados enganchados directamente a la raíz.',
+          },
         },
         {
           slug: 'representacion-grafos',
@@ -122,6 +147,29 @@ export const layer1: Layer = {
             'Para pesos, la lista guarda pares (vecino, peso).',
           ],
           tags: ['grafos', 'estructuras'],
+          tradeoffs: {
+            whenToUse: ['Listas de adyacencia: redes reales, rutas, dependencias (E ≪ V²)', 'Matriz: grafos pequeños y densos o álgebra en GPU'],
+            whenToAvoid: ['Matriz de adyacencia con V > 50.000 (10 GB de RAM solo en ceros)'],
+            cost: 'Matriz: O(V²) espacio fijo. Listas: O(V + E) espacio, comprobar arista (u,v) cuesta O(grado(u)).',
+          },
+        },
+        {
+          slug: 'dfs-bfs-toposort',
+          name: 'DFS, BFS y ordenación topológica',
+          tagline: 'Explorar hasta el fondo con una pila, por olas con una cola, o linealizar dependencias en un DAG.',
+          summary:
+            'DFS (profundidad) usa una pila o recursión y sirve para detectar ciclos, componentes fuertemente conexas y puntos de articulación. BFS (anchura) usa una cola FIFO y garantiza el camino más corto en grafos sin pesos. En un Grafo Acíclico Dirigido (DAG), la ordenación topológica pone cada nodo antes que sus dependientes: es el motor exacto de cualquier compilador, gestor de paquetes o grafo de agentes.',
+          keyPoints: [
+            'Si la ordenación topológica no puede visitar todos los nodos, existe un ciclo de dependencias (deadlock).',
+            'BFS en grafos ponderados se convierte en Dijkstra al cambiar la cola FIFO por un Min-Heap.',
+          ],
+          tags: ['grafos', 'algoritmos'],
+          complexity: 'O(V + E) en listas de adyacencia',
+          tradeoffs: {
+            whenToUse: ['BFS: distancia mínima en saltos', 'DFS: ciclos y topología', 'TopoSort: pipelines, builds y orquestadores'],
+            whenToAvoid: ['BFS en árboles con factor de ramificación masivo si solo buscas una hoja cualquiera (consume mucha RAM)'],
+            cost: 'O(V + E) tiempo y O(V) memoria auxiliar para el conjunto de visitados y la pila/cola.',
+          },
         },
       ],
     },
@@ -142,6 +190,7 @@ export const layer1: Layer = {
             'O(N) con saltos de memoria puede perder contra O(N log N) contiguo.',
           ],
           tags: ['complejidad', 'fundamentos'],
+          widget: 'big-o-playground',
         },
         {
           slug: 'teorema-maestro',
@@ -166,6 +215,13 @@ export const layer1: Layer = {
             'QuickSort moderno usa pivote aleatorio o mediana de tres para evitar el peor caso.',
           ],
           tags: ['algoritmos', 'ordenación'],
+          complexity: 'O(N log N) típico',
+          widget: 'big-o-playground',
+          tradeoffs: {
+            whenToUse: ['Subproblemas independientes sin solapamiento', 'Paralelización natural en múltiples núcleos o máquinas'],
+            whenToAvoid: ['Cuando los subproblemas se repiten una y otra vez (usa Programación Dinámica)'],
+            cost: 'Profundidad de pila O(log N) y, en algoritmos como MergeSort, O(N) de memoria auxiliar.',
+          },
         },
         {
           slug: 'algoritmos-voraces',
@@ -178,6 +234,11 @@ export const layer1: Layer = {
             'Kruskal usa Union-Find para detectar ciclos en O(E log E).',
           ],
           tags: ['algoritmos', 'optimización'],
+          tradeoffs: {
+            whenToUse: ['Problemas con propiedad matroide o subestructura voraz demostrada (Dijkstra, MST, Huffman)'],
+            whenToAvoid: ['Decisiones donde elegir el mejor paso inmediato bloquea un óptimo global mayor (Mochila 0/1)'],
+            cost: 'Suele reducirse a ordenar primero O(N log N) y recorrer en una sola pasada O(N).',
+          },
         },
         {
           slug: 'programacion-dinamica',
@@ -190,6 +251,24 @@ export const layer1: Layer = {
             'Muchos problemas de DP se reducen a optimizar el espacio de una fila del tablero.',
           ],
           tags: ['algoritmos', 'optimización'],
+          tradeoffs: {
+            whenToUse: ['Optimización combinatoria con subproblemas solapados (Levenshtein, Mochila 0/1, Bellman-Ford)'],
+            whenToAvoid: ['Espacios de estado continuos o de alta dimensión (explosión exponencial de la tabla: curse of dimensionality)'],
+            cost: 'Cambias tiempo exponencial O(2ᴺ) por tiempo y espacio polinómico O(N·W).',
+          },
+        },
+        {
+          slug: 'backtracking-branch-bound',
+          name: 'Backtracking y Branch & Bound',
+          tagline: 'Explora el árbol de decisiones entero, pero corta de raíz las ramas que ya no pueden ganar.',
+          summary:
+            'Backtracking recorre sistemáticamente todas las configuraciones posibles dando marcha atrás en cuanto una restricción se viola (SAT, N-Reinas, Sudoku). Branch & Bound añade una cota optimista de coste: si la mejor solución posible de una rama ya es peor que una solución conocida, poda el subárbol entero sin explorarlo.',
+          keyPoints: [
+            'La eficacia depende del orden en que pruebas candidatos y de la dureza de la poda.',
+            'Es la base de los solvers industriales (MILP, SAT solvers) cuando un problema NP no admite atajos.',
+          ],
+          tags: ['algoritmos', 'búsqueda'],
+          complexity: 'Exponencial peor caso · drásticamente menor con buena poda',
         },
         {
           slug: 'p-vs-np',
@@ -202,6 +281,7 @@ export const layer1: Layer = {
             'En la práctica: relaja restricciones, aproxima con garantía o usa un solver.',
           ],
           tags: ['complejidad', 'teoría'],
+          widget: 'big-o-playground',
         },
       ],
     },

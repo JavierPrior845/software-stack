@@ -24,6 +24,11 @@ export const ai2: Layer = {
             'El ruido del SGD puede ayudar a escapar de mínimos locales poco profundos.',
           ],
           tags: ['ml', 'optimización'],
+          example: {
+            label: 'Paso de actualización SGD vs AdamW',
+            code: '# SGD clásico\nw = w - lr * grad\n\n# AdamW (momento + varianza adaptativa + weight decay desacoplado)\nm = beta1 * m + (1 - beta1) * grad\nv = beta2 * v + (1 - beta2) * (grad ** 2)\nw = w - lr * (m_hat / (sqrt(v_hat) + eps) + wd * w)',
+            note: 'AdamW es el optimizador por defecto en Transformers porque adapta el paso por coordenada sin mezclar el weight decay con el momento.',
+          },
         },
         {
           slug: 'bayes',
@@ -56,6 +61,12 @@ export const ai2: Layer = {
             'L1 no es diferenciable en 0: usa coordenadas o prox, no gradiente puro.',
           ],
           tags: ['ml', 'supervisado'],
+          diagram: 'bias-variance',
+          tradeoffs: {
+            whenToUse: ['Baseline rápido e interpretable', 'Pocas muestras o alta colinealidad entre variables'],
+            whenToAvoid: ['Relaciones fuertemente no lineales sin ingeniería de features previa'],
+            cost: 'O(p³) cerrado o O(n·p) iterativo; insignificante comparado con cualquier red neuronal.',
+          },
         },
         {
           slug: 'regresion-logistica',
@@ -149,6 +160,12 @@ export const ai2: Layer = {
             'Si train va bien y test mal: regulariza, simplifica o consigue más datos.',
           ],
           tags: ['ml', 'evaluación'],
+          diagram: 'bias-variance',
+          tradeoffs: {
+            whenToUse: ['Siempre: es el primer diagnóstico antes de tocar arquitectura o hiperparámetros'],
+            whenToAvoid: ['Nunca: cambiar el modelo a ciegas sin mirar train vs validation es jugar a la lotería'],
+            cost: 'Exige reservar un conjunto de validación limpio sin data leakage.',
+          },
         },
         {
           slug: 'metricas-clasificacion',
@@ -161,6 +178,11 @@ export const ai2: Layer = {
             'AUC alto no garantiza buen rendimiento en el umbral que vas a usar.',
           ],
           tags: ['ml', 'métricas'],
+          example: {
+            label: 'Por qué la accuracy engaña en fraude (1% positivos)',
+            code: 'Dataset: 10.000 transacciones (9.900 legítimas, 100 fraudes)\nModelo trivial: predice SIEMPRE "legítima"\n\nAccuracy = 9.900 / 10.000 = 99,0%  <-- parece excelente\nRecall   = 0 / 100        =  0,0%  <-- no detecta ni un solo fraude',
+            note: 'Elige la métrica según qué error paga más caro el negocio: falsos positivos (fricción) o falsos negativos (fraude/enfermedad).',
+          },
         },
         {
           slug: 'deteccion-anomalias',
