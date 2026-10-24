@@ -1,0 +1,207 @@
+---
+const tokens = ['El', 'gato', 'bebió', 'la', 'leche', 'porque', 'tenía', 'sed'];
+
+const heads = {
+  coref: {
+    label: 'Cabeza 1 · Correferencia',
+    note: 'Resuelve quién realiza la acción o a qué sustantivo se refiere un verbo lejano.',
+    matrix: [
+      [0.75, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      [0.22, 0.78, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      [0.08, 0.64, 0.28, 0.0, 0.0, 0.0, 0.0, 0.0],
+      [0.05, 0.15, 0.35, 0.45, 0.0, 0.0, 0.0, 0.0],
+      [0.04, 0.18, 0.32, 0.24, 0.22, 0.0, 0.0, 0.0],
+      [0.04, 0.28, 0.34, 0.04, 0.12, 0.18, 0.0, 0.0],
+      [0.05, 0.52, 0.09, 0.03, 0.18, 0.05, 0.08, 0.0],
+      [0.03, 0.38, 0.06, 0.02, 0.14, 0.05, 0.24, 0.08],
+    ],
+  },
+  syntax: {
+    label: 'Cabeza 2 · Sintaxis local',
+    note: 'Conecta determinantes con sustantivos y verbos con su objeto directo inmediato.',
+    matrix: [
+      [0.9, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      [0.62, 0.38, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      [0.12, 0.48, 0.4, 0.0, 0.0, 0.0, 0.0, 0.0],
+      [0.04, 0.08, 0.58, 0.3, 0.0, 0.0, 0.0, 0.0],
+      [0.02, 0.06, 0.44, 0.34, 0.14, 0.0, 0.0, 0.0],
+      [0.03, 0.08, 0.42, 0.05, 0.28, 0.14, 0.0, 0.0],
+      [0.03, 0.14, 0.22, 0.04, 0.12, 0.35, 0.1, 0.0],
+      [0.02, 0.08, 0.06, 0.02, 0.22, 0.08, 0.44, 0.08],
+    ],
+  },
+};
+
+const initialToken = 6; // "tenía"
+const initialRow = heads.coref.matrix[initialToken];
+---
+
+<div
+  class="widget rounded-xl border border-white/10 bg-black/25 p-4"
+  data-attn-widget
+  data-attn-config={JSON.stringify({ tokens, heads })}
+>
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <p class="font-mono text-[10px] uppercase tracking-wider text-dim">
+      1. Pulsa un token Query · 2. Cambia la cabeza de atención
+    </p>
+    <div class="flex gap-1.5">
+      {
+        Object.entries(heads).map(([id, h], idx) => (
+          <button
+            type="button"
+            data-attn-head={id}
+            data-active={idx === 0 ? '' : undefined}
+            class="attn-head-btn cursor-pointer rounded-md border border-white/10 bg-black/30 px-2 py-1 font-mono text-[10px] text-muted transition-colors hover:text-ink"
+          >
+            {h.label}
+          </button>
+        ))
+      }
+    </div>
+  </div>
+
+  <div class="mt-3 flex flex-wrap gap-1.5">
+    {
+      tokens.map((tok, idx) => (
+        <button
+          type="button"
+          data-attn-token={idx}
+          data-active={idx === initialToken ? '' : undefined}
+          class="attn-tok-btn cursor-pointer rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-1.5 font-mono text-xs text-muted transition-all hover:border-white/25 hover:text-ink"
+        >
+          {tok}
+        </button>
+      ))
+    }
+  </div>
+
+  <div class="mt-4 space-y-2 rounded-lg border border-white/8 bg-black/30 p-3">
+    <div class="flex items-baseline justify-between gap-2">
+      <p class="font-mono text-[11px] text-ink">
+        Atención desde <span class="accent font-semibold" data-attn-from>"{tokens[initialToken]}"</span> hacia el contexto previo:
+      </p>
+      <span class="font-mono text-[9px] text-dim">máscara causal (futuro = 0)</span>
+    </div>
+
+    <div class="grid grid-cols-2 gap-2 pt-1 sm:grid-cols-4 lg:grid-cols-8">
+      {
+        tokens.map((tok, col) => {
+          const w = initialRow[col];
+          const masked = col > initialToken;
+          return (
+            <div
+              data-attn-col={col}
+              data-masked={masked ? '' : undefined}
+              class="attn-cell rounded border border-white/8 bg-white/[0.015] p-2"
+            >
+              <div class="flex items-baseline justify-between font-mono text-[10px]">
+                <span class="text-ink/90">{tok}</span>
+                <span class="text-dim" data-attn-val>
+                  {masked ? 'mask' : `${Math.round(w * 100)}%`}
+                </span>
+              </div>
+              <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/5">
+                <div
+                  class="attn-bar h-full rounded-full"
+                  style={`width:${masked ? 0 : Math.round(w * 100)}%`}
+                  data-attn-bar
+                />
+              </div>
+            </div>
+          );
+        })
+      }
+    </div>
+
+    <p class="pt-1 text-[10px] leading-relaxed text-dim" data-attn-note>
+      {heads.coref.note}
+    </p>
+  </div>
+</div>
+
+<script>
+  interface HeadData {
+    label: string;
+    note: string;
+    matrix: number[][];
+  }
+  interface AttnConfig {
+    tokens: string[];
+    heads: Record<string, HeadData>;
+  }
+
+  const root = document.querySelector<HTMLElement>('[data-attn-widget]');
+  if (root && root.dataset.attnConfig) {
+    const { tokens, heads } = JSON.parse(root.dataset.attnConfig) as AttnConfig;
+    let activeHead = 'coref';
+    let activeToken = 6;
+
+    const headBtns = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-attn-head]'));
+    const tokBtns = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-attn-token]'));
+    const cols = Array.from(root.querySelectorAll<HTMLElement>('[data-attn-col]'));
+    const fromEl = root.querySelector<HTMLElement>('[data-attn-from]');
+    const noteEl = root.querySelector<HTMLElement>('[data-attn-note]');
+
+    const render = () => {
+      const headData = heads[activeHead];
+      if (!headData) return;
+      const row = headData.matrix[activeToken] ?? [];
+
+      for (const btn of headBtns) {
+        btn.toggleAttribute('data-active', btn.getAttribute('data-attn-head') === activeHead);
+      }
+      for (const btn of tokBtns) {
+        btn.toggleAttribute(
+          'data-active',
+          Number(btn.getAttribute('data-attn-token')) === activeToken,
+        );
+      }
+
+      if (fromEl) fromEl.textContent = `"${tokens[activeToken]}"`;
+      if (noteEl) noteEl.textContent = headData.note;
+
+      cols.forEach((colEl, idx) => {
+        const w = row[idx] ?? 0;
+        const masked = idx > activeToken;
+        colEl.toggleAttribute('data-masked', masked);
+
+        const valEl = colEl.querySelector<HTMLElement>('[data-attn-val]');
+        const barEl = colEl.querySelector<HTMLElement>('[data-attn-bar]');
+        if (valEl) valEl.textContent = masked ? 'mask' : `${Math.round(w * 100)}%`;
+        if (barEl) barEl.style.width = `${masked ? 0 : Math.round(w * 100)}%`;
+      });
+    };
+
+    for (const btn of headBtns) {
+      btn.addEventListener('click', () => {
+        activeHead = btn.getAttribute('data-attn-head') || 'coref';
+        render();
+      });
+    }
+    for (const btn of tokBtns) {
+      btn.addEventListener('click', () => {
+        activeToken = Number(btn.getAttribute('data-attn-token') || 0);
+        render();
+      });
+    }
+  }
+</script>
+
+<style>
+  .attn-head-btn[data-active],
+  .attn-tok-btn[data-active] {
+    border-color: color-mix(in oklab, var(--layer) 55%, transparent);
+    background-color: color-mix(in oklab, var(--layer) 15%, transparent);
+    color: var(--color-ink);
+  }
+
+  .attn-bar {
+    background: var(--layer);
+    transition: width 180ms ease;
+  }
+
+  .attn-cell[data-masked] {
+    opacity: 0.35;
+  }
+</style>

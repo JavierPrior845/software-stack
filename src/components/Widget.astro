@@ -1,7 +1,12 @@
 ---
 import type { WidgetId } from '../data/types';
 import MemoryScale from './widgets/MemoryScale.astro';
+import BigOPlayground from './widgets/BigOPlayground.astro';
+import HashProbing from './widgets/HashProbing.astro';
+import StackSelector from './widgets/StackSelector.astro';
+import AttentionExplorer from './widgets/AttentionExplorer.astro';
 import KvCache from './widgets/KvCache.astro';
+import LogicGates from './widgets/LogicGates.astro';
 
 interface Props {
   id: WidgetId;
@@ -11,7 +16,12 @@ const { id } = Astro.props;
 
 const registry = {
   'memory-scale': MemoryScale,
+  'big-o-playground': BigOPlayground,
+  'hash-probing': HashProbing,
+  'stack-selector': StackSelector,
+  'attention-explorer': AttentionExplorer,
   'kv-cache': KvCache,
+  'logic-gates': LogicGates,
 } satisfies Record<WidgetId, unknown>;
 
 const Widget = registry[id];

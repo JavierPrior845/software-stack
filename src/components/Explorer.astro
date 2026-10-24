@@ -12,7 +12,7 @@ interface Props {
 
 const { stack, location, intro = false } = Astro.props;
 const total = stack.layers.reduce((sum, layer) => sum + layerConceptCount(layer), 0);
-const activeSlug = Astro.url.pathname.startsWith('/concepto/') ? location.concept.slug : undefined;
+const activeSlug = location.concept.slug;
 ---
 
 {

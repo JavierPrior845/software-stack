@@ -25,20 +25,31 @@ const { stack, activeLayer, activeSlug, className = '', compact = false } = Astr
           <span class="font-mono text-[11px] text-dim">{stack.layers.length} capas</span>
         </div>
 
-        <p class="mb-4 px-1 text-xs leading-relaxed text-dim">{stack.claim}</p>
+        <p class="mb-3 px-1 text-xs leading-relaxed text-dim">{stack.claim}</p>
+
+        <div class="mb-3 px-0.5">
+          <input
+            type="search"
+            placeholder="Filtrar concepto (ej. caché, LoRA, TCP)…"
+            aria-label="Filtrar conceptos de la pila"
+            data-nav-filter
+            class="w-full rounded-lg border border-white/10 bg-black/25 px-2.5 py-1.5 font-mono text-[11px] text-ink placeholder:text-dim outline-none transition-colors focus:border-white/25"
+          />
+        </div>
       </>
     )
   }
 
-  <ol class="flex flex-col-reverse gap-1">
+  <ol class="flex flex-col-reverse gap-1" data-nav-list>
     {
       stack.layers.map((layer) => {
         const open = layer.slug === activeLayer;
         const count = layerConceptCount(layer);
         return (
-          <li>
+          <li data-nav-layer>
             <details
               open={open}
+              data-initial-open={open ? 'true' : undefined}
               class="layer-item group rounded-xl border border-transparent transition-colors"
               style={`--layer: hsl(${layer.hue} 85% 64%)`}
             >
@@ -71,7 +82,7 @@ const { stack, activeLayer, activeSlug, className = '', compact = false } = Astr
 
                 <div class="space-y-3">
                   {layer.blocks.map((block) => (
-                    <div>
+                    <div data-nav-block>
                       <p class="mb-1.5 text-[10px] font-semibold tracking-wider text-muted/80 uppercase">
                         {block.title}
                       </p>
@@ -80,6 +91,8 @@ const { stack, activeLayer, activeSlug, className = '', compact = false } = Astr
                           <a
                             href={`/concepto/${concept.slug}`}
                             class="chip"
+                            data-nav-chip
+                            data-search={`${concept.name} ${concept.tagline} ${(concept.tags ?? []).join(' ')}`.toLowerCase()}
                             aria-current={concept.slug === activeSlug ? 'page' : undefined}
                           >
                             {concept.name}
@@ -97,6 +110,46 @@ const { stack, activeLayer, activeSlug, className = '', compact = false } = Astr
     }
   </ol>
 </nav>
+
+<script>
+  for (const nav of Array.from(document.querySelectorAll<HTMLElement>('nav'))) {
+    const input = nav.querySelector<HTMLInputElement>('[data-nav-filter]');
+    if (!input) continue;
+
+    const layers = Array.from(nav.querySelectorAll<HTMLElement>('[data-nav-layer]'));
+
+    input.addEventListener('input', () => {
+      const q = input.value.trim().toLowerCase();
+
+      for (const layerEl of layers) {
+        const details = layerEl.querySelector<HTMLDetailsElement>('details');
+        const blocks = Array.from(layerEl.querySelectorAll<HTMLElement>('[data-nav-block]'));
+        let layerMatches = 0;
+
+        for (const blockEl of blocks) {
+          const chips = Array.from(blockEl.querySelectorAll<HTMLElement>('[data-nav-chip]'));
+          let blockMatches = 0;
+
+          for (const chip of chips) {
+            const hay = chip.dataset.search ?? '';
+            const match = !q || hay.includes(q);
+            chip.style.display = match ? '' : 'none';
+            if (match) blockMatches++;
+          }
+
+          blockEl.style.display = blockMatches > 0 ? '' : 'none';
+          layerMatches += blockMatches;
+        }
+
+        layerEl.style.display = layerMatches > 0 ? '' : 'none';
+        if (details) {
+          if (q) details.open = layerMatches > 0;
+          else details.open = details.dataset.initialOpen === 'true';
+        }
+      }
+    });
+  }
+</script>
 
 <style>
   .layer-item[open] {

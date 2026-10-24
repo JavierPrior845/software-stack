@@ -82,6 +82,25 @@ const related = getBridgesFor(concept.slug)
         </ul>
       )
     }
+
+    {
+      concept.example && (
+        <div class="mt-6 overflow-hidden rounded-xl border border-white/8 bg-black/30">
+          <div class="flex items-center justify-between border-b border-white/5 px-3.5 py-2">
+            <span class="font-mono text-[10px] uppercase tracking-wider accent">
+              {concept.example.label}
+            </span>
+            <span class="font-mono text-[10px] text-dim">bajo el capó</span>
+          </div>
+          <pre class="overflow-x-auto p-3.5 font-mono text-xs leading-relaxed text-ink/90"><code>{concept.example.code}</code></pre>
+          {concept.example.note && (
+            <p class="border-t border-white/5 bg-white/[0.01] px-3.5 py-2 text-[11px] leading-relaxed text-dim">
+              {concept.example.note}
+            </p>
+          )}
+        </div>
+      )
+    }
   </div>
 
   {

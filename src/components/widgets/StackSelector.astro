@@ -1,0 +1,120 @@
+---
+const profiles = [
+  {
+    id: 'saas',
+    label: 'SaaS B2B / Producto Web',
+    stack: 'TypeScript · Node (Fastify/NestJS) · Next.js · PostgreSQL · Prisma/Drizzle',
+    arch: 'Monolito modular con fronteras hexagonales en el dominio core',
+    why: 'Tipado compartido extremo a extremo (Zod/TS), ecosistema masivo y transacciones ACID en Postgres.',
+    trap: 'Evita empezar con 6 microservicios o meter GraphQL + Mongo si tus datos son relacionales.',
+  },
+  {
+    id: 'ai-agents',
+    label: 'Agentes IA / RAG Producción',
+    stack: 'Python · FastAPI · Pydantic · LangGraph · Qdrant · Redis · MCP',
+    arch: 'Grafo de estado con checkpoints, colas asíncronas para jobs largos y streaming SSE',
+    why: 'Acceso nativo de primera clase al ecosistema de IA, validación estricta con Pydantic y búsqueda híbrida HNSW.',
+    trap: 'No bloquees el event loop con llamadas síncronas ni despliegues sin observabilidad de trazas y límites de coste.',
+  },
+  {
+    id: 'high-io',
+    label: 'Microservicio Baja Latencia (<5ms)',
+    stack: 'Go · gRPC (Protobuf / HTTP2) · Redis · PostgreSQL / ScyllaDB',
+    arch: 'Servicio sin estado con goroutines, connection pooling estricto y circuit breakers',
+    why: 'Compilación nativa AOT, consumo de RAM mínimo y recolector de basura con pausas sub-milisegundo.',
+    trap: 'No serialices JSON gigante entre servicios internos en el camino crítico si puedes usar Protobuf.',
+  },
+  {
+    id: 'systems',
+    label: 'Motor de Sistemas / Runtime / CLI',
+    stack: 'Rust (Cargo / Tokio) o C++20 (CMake) · Memoria estática / RAII',
+    arch: 'Zero-cost abstractions, estructuras contiguas cache-friendly y sin Garbage Collector',
+    why: 'Latencia determinista sin pausas de GC, control del layout de memoria al byte y seguridad de hilos en compilación.',
+    trap: 'No uses Rust/C++ para un CRUD de negocio cambiante donde el cuello de botella es la velocidad de iteración de producto.',
+  },
+];
+
+const initial = profiles[0];
+---
+
+<div class="widget rounded-xl border border-white/10 bg-black/25 p-4" data-stack-widget>
+  <p class="font-mono text-[10px] uppercase tracking-wider text-dim">
+    Selecciona el perfil de restricciones de tu proyecto:
+  </p>
+
+  <div class="mt-2.5 flex flex-wrap gap-1.5" role="tablist">
+    {
+      profiles.map((p) => (
+        <button
+          type="button"
+          data-stack-btn={p.id}
+          data-active={p.id === initial.id ? '' : undefined}
+          class="stack-btn cursor-pointer rounded-lg border border-white/10 bg-black/30 px-2.5 py-1.5 font-mono text-[11px] text-muted transition-colors hover:text-ink"
+        >
+          {p.label}
+        </button>
+      ))
+    }
+  </div>
+
+  <div class="mt-4 space-y-2.5 rounded-lg border accent-border accent-softer p-3.5">
+    <div>
+      <p class="font-mono text-[9px] uppercase tracking-wider text-dim">Stack recomendado</p>
+      <p class="mt-0.5 font-mono text-xs font-semibold text-ink" data-stack-name>
+        {initial.stack}
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 gap-2.5 pt-1 sm:grid-cols-3">
+      <div class="rounded border border-white/8 bg-black/25 p-2.5">
+        <p class="font-mono text-[9px] uppercase tracking-wider text-dim">Arquitectura</p>
+        <p class="mt-1 text-[11px] leading-snug text-muted" data-stack-arch>{initial.arch}</p>
+      </div>
+      <div class="rounded border border-emerald-400/20 bg-emerald-400/[0.04] p-2.5">
+        <p class="font-mono text-[9px] uppercase tracking-wider text-emerald-300/85">Por qué gana</p>
+        <p class="mt-1 text-[11px] leading-snug text-muted" data-stack-why>{initial.why}</p>
+      </div>
+      <div class="rounded border border-rose-400/20 bg-rose-400/[0.04] p-2.5">
+        <p class="font-mono text-[9px] uppercase tracking-wider text-rose-300/85">Trampa a evitar</p>
+        <p class="mt-1 text-[11px] leading-snug text-muted" data-stack-trap>{initial.trap}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ profiles }}>
+  const root = document.querySelector('[data-stack-widget]');
+  if (root) {
+    const buttons = Array.from(root.querySelectorAll('[data-stack-btn]'));
+    const nameEl = root.querySelector('[data-stack-name]');
+    const archEl = root.querySelector('[data-stack-arch]');
+    const whyEl = root.querySelector('[data-stack-why]');
+    const trapEl = root.querySelector('[data-stack-trap]');
+
+    const selectProfile = (id) => {
+      const p = profiles.find((item) => item.id === id);
+      if (!p) return;
+
+      for (const btn of buttons) {
+        btn.toggleAttribute('data-active', btn.getAttribute('data-stack-btn') === id);
+      }
+
+      if (nameEl) nameEl.textContent = p.stack;
+      if (archEl) archEl.textContent = p.arch;
+      if (whyEl) whyEl.textContent = p.why;
+      if (trapEl) trapEl.textContent = p.trap;
+    };
+
+    for (const btn of buttons) {
+      btn.addEventListener('click', () => selectProfile(btn.getAttribute('data-stack-btn')));
+    }
+  }
+</script>
+
+<style>
+  .stack-btn[data-active] {
+    border-color: color-mix(in oklab, var(--layer) 55%, transparent);
+    background-color: color-mix(in oklab, var(--layer) 14%, transparent);
+    color: var(--color-ink);
+  }
+</style>
