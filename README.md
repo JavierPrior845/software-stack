@@ -2,11 +2,11 @@
 
 Atlas estático de las **5 capas de ingeniería de software** y las **6 capas del stack de IA**, con un crosswalk explícito entre ambos mundos.
 
-Fase 2 en curso: esqueleto, datos y diagramas estáticos de la Fase 1, más validación en build, SEO, dos widgets interactivos y OG images. JavaScript solo en los dos widgets.
+Fase 2 completada: esqueleto, datos enriquecidos con ejemplos y trade-offs, 16 diagramas estáticos, validación en build, SEO, 7 widgets interactivos, buscador instantáneo de conceptos y OG images.
 
 ## Stack
 
-- **Astro 5** con salida estática; dos islas de TypeScript vanilla, sin framework de UI.
+- **Astro 5** con salida estática; 7 islas interactivas en TypeScript vanilla, sin framework de UI.
 - **Tailwind CSS 4** mediante `@tailwindcss/vite`.
 - **TypeScript** para el modelo de datos.
 - Fuentes self-hosted: Inter + JetBrains Mono (`@fontsource-variable`).
@@ -31,7 +31,7 @@ npm test          # tests de las fórmulas de los widgets
 | `/ia` | Explorador de las capas 1–6 |
 | `/conexiones` | Crosswalk completo (Modo C) |
 | `/concepto/[slug]` | Ficha prerenderizada de cada concepto |
-| `/og/[slug].png` | Tarjeta 1200×630 para redes (145 imágenes) |
+| `/og/[slug].png` | Tarjeta 1200×630 para redes (148 imágenes) |
 
 Cada concepto tiene URL propia y contenido completo en el HTML: el panel lateral no es estado de cliente, así que es indexable.
 
@@ -48,16 +48,17 @@ src/
 │  └─ index.ts               # registro, índices y helpers
 ├─ components/
 │  ├─ Header.astro
-│  ├─ LayerNav.astro         # navegador de capas y chips
-│  ├─ ConceptPanel.astro     # ficha + trade-offs + conexiones
+│  ├─ LayerNav.astro         # navegador de capas, buscador y chips
+│  ├─ ConceptPanel.astro     # ficha + ejemplos + trade-offs + conexiones
 │  ├─ Explorer.astro         # layout de dos zonas
 │  ├─ Diagram.astro          # registro de diagramas
 │  ├─ Widget.astro           # registro de widgets
-│  ├─ diagrams/*.astro       # 6 diagramas estáticos
-│  └─ widgets/*.astro        # jerarquía de memoria y KV-cache
+│  ├─ diagrams/*.astro       # 14 diagramas técnicos estáticos
+│  └─ widgets/*.astro        # 6 laboratorios interactivos
 ├─ lib/
 │  ├─ memory.ts            # latencias, escala logarítmica y duraciones
-│  └─ kv.ts                # fórmula del KV-cache y PagedAttention
+│  ├─ kv.ts                # fórmula del KV-cache y PagedAttention
+│  └─ bigo.ts              # curvas de complejidad y tiempos reales
 ├─ assets/fonts/           # Inter TTF para las OG images (+ licencia OFL)
 ├─ layouts/Base.astro
 ├─ pages/
@@ -82,7 +83,7 @@ En `src/data/software/layerX.ts` o `src/data/ai/aX.ts`, dentro del `block` corre
   keyPoints: ['Dato accionable', 'Otro dato'],
   tags: ['memoria', 'rendimiento'],
   diagram: 'memory-hierarchy',    // opcional (ver DiagramId en types.ts)
-  widget: 'memory-scale',          // opcional: 'memory-scale' | 'kv-cache'
+  widget: 'memory-scale',          // opcional (ver WidgetId en types.ts)
   complexity: 'O(1) medio',        // opcional
   tradeoffs: {                     // opcional, pero es el diferencial
     whenToUse: ['...'],
@@ -121,7 +122,7 @@ Los slugs se validan en build: si un puente apunta a un concepto inexistente o a
 
 ## Tests
 
-`npm test` ejecuta `node:test` con type stripping sobre `tests/widgets.test.ts`: bytes por token, KV-cache a 8K/128K, desperdicio de PagedAttention, formato de bytes y escala humana de latencias. Las fórmulas viven en `src/lib/` y no dependen de Astro.
+`npm test` ejecuta `node:test` con type stripping sobre `tests/widgets.test.ts`: bytes por token, KV-cache a 8K/128K, desperdicio de PagedAttention, formato de bytes, escala humana de latencias y tablas de verdad de puertas lógicas. Las fórmulas viven en `src/lib/` y no dependen de Astro.
 
 ## Deploy
 
@@ -136,14 +137,14 @@ Antes de publicar, define el dominio en build:
 SITE_URL=https://tudominio.com npm run build
 ```
 
-Con `SITE_URL` definido se activan el `<link rel="canonical">`, `og:url`, `og:image` (apuntando a `/og/[slug].png`), `twitter:card=summary_large_image`, el sitemap (`sitemap-index.xml`) y la línea `Sitemap:` en `/robots.txt`. Sin esa variable no se emite ninguno, para no publicar canonical a un dominio equivocado. Las imágenes OG se generan igualmente (145 archivos).
+Con `SITE_URL` definido se activan el `<link rel="canonical">`, `og:url`, `og:image` (apuntando a `/og/[slug].png`), `twitter:card=summary_large_image`, el sitemap (`sitemap-index.xml`) y la línea `Sitemap:` en `/robots.txt`. Sin esa variable no se emite ninguno, para no publicar canonical a un dominio equivocado. Las imágenes OG se generan igualmente (148 archivos).
 
 Revisa también `src/config.ts` (`supportUrl` vacío no renderiza el botón). El `404.astro` se genera siempre.
 
 ## Roadmap
 
-- **Fase 1 (hecha):** layout, 141 conceptos, 12 puentes, 6 diagramas estáticos, rutas por concepto, responsive.
-- **Fase 2 (hecha):** validación de contenido en build, SEO condicionado a `SITE_URL`, OG images por página y concepto, y widgets de jerarquía de memoria y KV-cache/PagedAttention.
+- **Fase 1 (hecha):** layout, 144 conceptos, 14 puentes, rutas por concepto, responsive.
+- **Fase 2 (hecha):** 16 diagramas estáticos, 7 widgets interactivos (`memory-scale`, `big-o-playground`, `hash-probing`, `stack-selector`, `attention-explorer`, `kv-cache`, `logic-gates`), bloques de ejemplos y trade-offs ampliados, buscador instantáneo por capa, validación en build y OG images.
 - **Fase 3:** comentarios (Giscus), PDF/cheat-sheet, analítica y difusión.
 
 Pendiente de decisión de producto: i18n ES/EN. Afecta al esquema de datos, así que conviene resolverlo antes de multiplicar fichas.
