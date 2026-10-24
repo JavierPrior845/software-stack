@@ -1,0 +1,54 @@
+---
+const stages = [
+  {
+    step: '01',
+    title: 'Ingesta & Chunking Semántico',
+    detail: 'Corta por estructura (AST/encabezados) o distancia coseno, nunca a ciegas cada N caracteres.',
+    badge: 'Offline / Indexación',
+  },
+  {
+    step: '02',
+    title: 'Búsqueda Híbrida (Dense + Sparse)',
+    detail: 'Combina embeddings en HNSW (semántica) + BM25/SPLADE (palabras exactas, IDs, SKUs).',
+    badge: 'Retrieval · top-50',
+  },
+  {
+    step: '03',
+    title: 'Fusión RRF + Cross-Encoder Re-ranker',
+    detail: 'Unifica rankings y reordena los candidatos evaluando (query, documento) juntos con alta precisión.',
+    badge: 'Precisión · top-5',
+  },
+  {
+    step: '04',
+    title: 'Generación con Citas + Evaluación Ragas',
+    detail: 'Inyecta el contexto delimitado y mide Faithfulness (alucinación) y Context Recall por separado.',
+    badge: 'Generación + Auditoría',
+  },
+];
+---
+
+<div class="space-y-2.5">
+  {
+    stages.map((stage, index) => (
+      <div>
+        <div class="rounded-lg border border-white/10 bg-black/20 p-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+              <span class="grid size-6 place-items-center rounded border accent-border accent-softer font-mono text-[10px] font-semibold accent">
+                {stage.step}
+              </span>
+              <span class="font-mono text-xs font-medium text-ink">{stage.title}</span>
+            </div>
+            <span class="rounded border border-white/10 bg-white/[0.03] px-2 py-0.5 font-mono text-[9px] text-muted">
+              {stage.badge}
+            </span>
+          </div>
+          <p class="mt-1.5 pl-8 text-[11px] leading-relaxed text-dim">{stage.detail}</p>
+        </div>
+        {index < stages.length - 1 && (
+          <div class="pl-5 py-0.5 font-mono text-[10px] text-dim">↓</div>
+        )}
+      </div>
+    ))
+  }
+</div>

@@ -1,0 +1,46 @@
+---
+const funcs = [
+  {
+    name: 'Sigmoid · σ(x) = 1 / (1 + e⁻ˣ)',
+    range: '(0, 1)',
+    grad: 'Máx 0.25 · se anula en extremos',
+    note: 'Sufre vanishing gradient en redes profundas; hoy relegada a puertas (LSTM) y salida binaria.',
+    path: 'M 10 52 C 45 52, 55 50, 75 30 C 95 10, 105 8, 140 8',
+  },
+  {
+    name: 'ReLU · max(0, x)',
+    range: '[0, ∞)',
+    grad: '1 si x > 0 · 0 si x < 0',
+    note: 'Derivada constante sin saturación positiva. Riesgo: neuronas muertas si caen siempre en x < 0.',
+    path: 'M 10 48 L 75 48 L 140 8',
+  },
+  {
+    name: 'GELU · x · Φ(x)',
+    range: '(-0.17, ∞)',
+    grad: 'Suave y no monótona cerca de 0',
+    note: 'Estándar en GPT, BERT y Llama: evita el corte brusco en 0 y estabiliza el flujo de gradiente.',
+    path: 'M 10 48 L 58 48 Q 72 54, 82 42 L 140 8',
+  },
+];
+---
+
+<div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+  {
+    funcs.map((fn) => (
+      <div class="rounded-lg border border-white/10 bg-black/25 p-3">
+        <p class="font-mono text-[11px] font-semibold text-ink">{fn.name}</p>
+        <p class="mt-0.5 font-mono text-[9px] text-dim">
+          Rango: {fn.range} · ∂: {fn.grad}
+        </p>
+
+        <svg viewBox="0 0 150 60" class="mt-2.5 h-14 w-full rounded border border-white/5 bg-black/30">
+          <line x1="10" y1="48" x2="140" y2="48" stroke="rgba(255,255,255,0.12)" stroke-width="1" />
+          <line x1="75" y1="4" x2="75" y2="56" stroke="rgba(255,255,255,0.12)" stroke-width="1" />
+          <path d={fn.path} fill="none" stroke="var(--layer)" stroke-width="2.2" stroke-linecap="round" />
+        </svg>
+
+        <p class="mt-2 text-[10px] leading-relaxed text-dim">{fn.note}</p>
+      </div>
+    ))
+  }
+</div>

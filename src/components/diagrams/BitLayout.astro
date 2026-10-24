@@ -1,0 +1,144 @@
+---
+const int8 = ['1', '1', '1', '1', '1', '0', '1', '1'];
+const exponent = '01111111';
+const mantissa = '10000000000000000000000';
+const bytes = ['12', '34', '56', '78'];
+---
+
+<div class="space-y-6 text-xs">
+  <section>
+    <div class="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+      <h4 class="font-mono text-[10px] uppercase tracking-wider text-dim">Entero int8 · complemento a dos</h4>
+      <span class="font-mono text-[10px] accent">-5 = 0xFB</span>
+    </div>
+
+    <div class="flex gap-1">
+      {
+        int8.map((bit, index) => (
+          <span
+            class:list={[
+              'flex h-7 w-7 items-center justify-center rounded-sm border font-mono text-[11px]',
+              index === 0
+                ? 'accent-border accent-softer accent'
+                : 'border-white/10 bg-white/[0.03] text-muted',
+            ]}
+            title={index === 0 ? 'Bit de signo' : `Bit ${7 - index}`}
+          >
+            {bit}
+          </span>
+        ))
+      }
+    </div>
+
+    <div class="mt-1.5 flex justify-between font-mono text-[9px] text-dim">
+      <span class="w-7 text-center accent">S</span>
+      <span>magnitud · 7 bits</span>
+    </div>
+
+    <p class="mt-2 text-[10px] leading-relaxed text-dim">
+      El bit 7 pesa −128. Para negar: invierte todos los bits y suma 1.
+      <span class="font-mono text-muted">0000 0101 → 1111 1010 → 1111 1011</span>.
+    </p>
+  </section>
+
+  <section>
+    <div class="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+      <h4 class="font-mono text-[10px] uppercase tracking-wider text-dim">Float32 IEEE 754 · 1.5</h4>
+      <span class="font-mono text-[10px] accent">0x3FC00000</span>
+    </div>
+
+    <div class="overflow-x-auto pb-1">
+      <div class="min-w-[600px]">
+        <div class="flex gap-2">
+          <div class="flex gap-px">
+            {['0'].map((bit) => (
+              <span class="accent-border accent-softer flex h-6 w-4 items-center justify-center rounded-sm border font-mono text-[10px] accent">
+                {bit}
+              </span>
+            ))}
+          </div>
+          <div class="flex gap-px">
+            {exponent.split('').map((bit) => (
+              <span class="flex h-6 w-4 items-center justify-center rounded-sm border border-sky-300/15 bg-sky-300/[0.06] font-mono text-[10px] text-muted">
+                {bit}
+              </span>
+            ))}
+          </div>
+          <div class="flex gap-px">
+            {mantissa.split('').map((bit) => (
+              <span class="flex h-6 w-4 items-center justify-center rounded-sm border border-white/10 bg-white/[0.03] font-mono text-[10px] text-muted">
+                {bit}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div class="mt-1.5 flex gap-2 font-mono text-[9px] text-dim">
+          <span class="w-4 text-center accent">S</span>
+          <span class="w-[135px] text-center text-sky-300/70">exponente · 8 bits</span>
+          <span class="flex-1 text-center">mantisa · 23 bits</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="mt-1 text-[9px] text-dim sm:hidden">Desliza para ver los 32 bits →</p>
+
+    <p class="mt-2 text-[10px] leading-relaxed text-dim">
+      Valor = (−1)<sup>S</sup> × 1.mantisa × 2<sup>exp − 127</sup>. El exponente 01111111 es 127, así que
+      este 1.5 se guarda como <span class="font-mono text-muted">1.1₂ × 2⁰</span>.
+    </p>
+  </section>
+
+  <section>
+    <h4 class="mb-2 font-mono text-[10px] uppercase tracking-wider text-dim">Endianness · 0x12345678</h4>
+
+    <div class="grid gap-2.5 sm:grid-cols-2">
+      <div class="rounded-lg border border-white/8 bg-black/20 p-3">
+        <p class="font-mono text-[10px] text-muted">Big-endian <span class="text-dim">· red</span></p>
+        <div class="mt-2 flex gap-1">
+          {
+            bytes.map((byte, index) => (
+              <span
+                class:list={[
+                  'flex h-7 flex-1 items-center justify-center rounded-sm border font-mono text-[11px]',
+                  index === 0
+                    ? 'accent-border accent-softer accent'
+                    : 'border-white/10 bg-white/[0.03] text-muted',
+                ]}
+              >
+                {byte}
+              </span>
+            ))
+          }
+        </div>
+        <p class="mt-1.5 font-mono text-[9px] text-dim">dirección baja → alta · MSB primero</p>
+      </div>
+
+      <div class="rounded-lg border border-white/8 bg-black/20 p-3">
+        <p class="font-mono text-[10px] text-muted">Little-endian <span class="text-dim">· x86, ARM</span></p>
+        <div class="mt-2 flex gap-1">
+          {
+            [...bytes].reverse().map((byte, index) => (
+              <span
+                class:list={[
+                  'flex h-7 flex-1 items-center justify-center rounded-sm border font-mono text-[11px]',
+                  index === 3
+                    ? 'accent-border accent-softer accent'
+                    : 'border-white/10 bg-white/[0.03] text-muted',
+                ]}
+              >
+                {byte}
+              </span>
+            ))
+          }
+        </div>
+        <p class="mt-1.5 font-mono text-[9px] text-dim">dirección baja → alta · LSB primero</p>
+      </div>
+    </div>
+
+    <p class="mt-2 text-[10px] leading-relaxed text-dim">
+      El byte resaltado es el más significativo. Leer el mismo fichero con el orden equivocado produce
+      <span class="font-mono text-muted">0x78563412</span>: parece corrupción, pero es solo convención.
+    </p>
+  </section>
+</div>

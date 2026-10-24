@@ -1,0 +1,74 @@
+---
+const steps = [
+  {
+    dir: 'right' as const,
+    flag: 'SYN',
+    seq: 'seq = x',
+    detail: 'El cliente solicita abrir conexión y sincroniza su número de secuencia inicial',
+  },
+  {
+    dir: 'left' as const,
+    flag: 'SYN-ACK',
+    seq: 'seq = y · ack = x + 1',
+    detail: 'El servidor confirma x+1, propone su secuencia y anuncia su ventana de recepción (rwnd)',
+  },
+  {
+    dir: 'right' as const,
+    flag: 'ACK',
+    seq: 'seq = x + 1 · ack = y + 1',
+    detail: 'El cliente confirma y+1. Conexión ESTABLISHED; el primer payload puede viajar aquí',
+  },
+];
+---
+
+<div class="space-y-3">
+  <div class="grid grid-cols-2 gap-4 text-center">
+    <div class="rounded-md border border-white/10 bg-black/20 px-3 py-1.5 font-mono text-[10px] text-muted">
+      cliente (puerto efímero 54120)
+    </div>
+    <div class="rounded-md border border-white/10 bg-black/20 px-3 py-1.5 font-mono text-[10px] text-muted">
+      servidor (puerto escucha 443)
+    </div>
+  </div>
+
+  <ol class="space-y-2.5">
+    {
+      steps.map((step, index) => (
+        <li class="rounded-md border border-white/8 bg-white/[0.015] px-3 py-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span
+                class:list={[
+                  'font-mono text-sm',
+                  step.dir === 'right' ? 'accent' : 'text-emerald-300',
+                ]}
+              >
+                {step.dir === 'right' ? '──▶' : '◀──'}
+              </span>
+              <span class="font-mono text-xs font-semibold text-ink">
+                {index + 1}. [{step.flag}]
+              </span>
+            </div>
+            <span class="font-mono text-[10px] text-muted">{step.seq}</span>
+          </div>
+          <p class="mt-1 pl-7 text-[10px] leading-relaxed text-dim">{step.detail}</p>
+        </li>
+      ))
+    }
+  </ol>
+
+  <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+    <div class="rounded-md border border-white/8 bg-black/20 px-3 py-2">
+      <p class="font-mono text-[10px] text-ink/90">Control de flujo (rwnd)</p>
+      <p class="mt-0.5 text-[10px] text-dim">
+        El receptor limita cuántos bytes sin ACK acepta para no desbordar su buffer.
+      </p>
+    </div>
+    <div class="rounded-md border border-white/8 bg-black/20 px-3 py-2">
+      <p class="font-mono text-[10px] text-ink/90">Control de congestión (cwnd)</p>
+      <p class="mt-0.5 text-[10px] text-dim">
+        El emisor arranca en Slow Start y frena si la red intermedia descarta paquetes.
+      </p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,49 @@
+---
+---
+
+<div class="space-y-3">
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+    <div class="rounded-lg border border-rose-400/20 bg-rose-400/[0.03] p-3.5">
+      <div class="flex items-baseline justify-between gap-2">
+        <span class="font-mono text-[11px] font-medium text-rose-200/90">
+          BST sin balancear
+        </span>
+        <span class="font-mono text-[10px] text-rose-300/80">altura = N · O(N)</span>
+      </div>
+      <p class="mt-1 font-mono text-[10px] text-dim">Inserción en orden: 10 → 20 → 30 → 40 → 50</p>
+
+      <pre
+        class="mt-3 overflow-x-auto rounded-md border border-white/5 bg-black/30 p-3 font-mono text-[11px] leading-5 text-rose-200/85">10
+ └─ 20
+     └─ 30
+         └─ 40
+             └─ 50  ← 5 saltos</pre>
+
+      <p class="mt-2.5 text-[10px] leading-relaxed text-dim">
+        Degenera en una lista enlazada cara: pagas memoria de dos punteros por nodo y recorres todo.
+      </p>
+    </div>
+
+    <div class="rounded-lg border accent-border accent-softer p-3.5">
+      <div class="flex items-baseline justify-between gap-2">
+        <span class="font-mono text-[11px] font-medium accent">
+          Árbol AVL (auto-balanceado)
+        </span>
+        <span class="font-mono text-[10px] text-muted">altura = ⌊log₂N⌋ · O(log N)</span>
+      </div>
+      <p class="mt-1 font-mono text-[10px] text-dim">Misma inserción + rotaciones O(1)</p>
+
+      <pre
+        class="mt-3 overflow-x-auto rounded-md border border-white/5 bg-black/30 p-3 font-mono text-[11px] leading-5 text-ink/90">      30
+     /  \
+   20    40
+  /        \
+10          50      ← máx 3 saltos</pre>
+
+      <p class="mt-2.5 text-[10px] leading-relaxed text-dim">
+        Invariante AVL: <span class="font-mono text-muted">|altura(izq) − altura(der)| ≤ 1</span> en
+        todo nodo. Con 1.000.000 de claves, nunca supera ~20 comparaciones.
+      </p>
+    </div>
+  </div>
+</div>

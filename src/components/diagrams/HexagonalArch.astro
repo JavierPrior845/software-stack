@@ -1,0 +1,68 @@
+---
+const inbound = [
+  { adapter: 'HTTP / FastAPI', port: 'Puerto de entrada (Casos de uso)' },
+  { adapter: 'CLI / Worker Cola', port: 'Puerto de entrada (Comandos)' },
+  { adapter: 'MCP Tool Server', port: 'Puerto de entrada (Agentes)' },
+];
+
+const outbound = [
+  { port: 'Repositorio (Interfaz)', adapter: 'PostgreSQL / Prisma' },
+  { port: 'Gateway Pagos (Interfaz)', adapter: 'Stripe SDK / Mock Test' },
+  { port: 'Bus Eventos (Interfaz)', adapter: 'Redis Streams / Kafka' },
+];
+---
+
+<div class="space-y-3">
+  <div class="grid grid-cols-1 gap-2.5 lg:grid-cols-[1fr_1.15fr_1fr] lg:items-stretch">
+    <div class="flex flex-col justify-between rounded-lg border border-white/10 bg-black/20 p-3">
+      <p class="font-mono text-[10px] uppercase tracking-wider text-dim">
+        Adaptadores primarios (Driving)
+      </p>
+      <div class="my-2 space-y-1.5">
+        {
+          inbound.map((item) => (
+            <div class="rounded border border-white/8 bg-white/[0.02] px-2.5 py-1.5">
+              <p class="font-mono text-[11px] text-ink/90">{item.adapter}</p>
+              <p class="font-mono text-[9px] text-dim">──▶ {item.port}</p>
+            </div>
+          ))
+        }
+      </div>
+      <p class="font-mono text-[9px] text-dim">dependen del dominio (──▶)</p>
+    </div>
+
+    <div class="flex flex-col justify-center rounded-xl border-2 accent-border accent-softer p-4 text-center">
+      <p class="font-mono text-[10px] uppercase tracking-widest accent">Núcleo Hexagonal</p>
+      <p class="mt-1.5 text-sm font-semibold text-ink">Dominio + Aplicación</p>
+      <p class="mt-1 text-[11px] leading-relaxed text-muted">
+        Entidades, Value Objects, Reglas de negocio y Puertos (interfaces puras).
+      </p>
+      <div class="mt-3 rounded-md border border-white/10 bg-black/30 px-2.5 py-1.5 font-mono text-[10px] text-ink/85">
+        0 imports de frameworks, ORMs o HTTP
+      </div>
+    </div>
+
+    <div class="flex flex-col justify-between rounded-lg border border-white/10 bg-black/20 p-3">
+      <p class="font-mono text-[10px] uppercase tracking-wider text-dim">
+        Adaptadores secundarios (Driven)
+      </p>
+      <div class="my-2 space-y-1.5">
+        {
+          outbound.map((item) => (
+            <div class="rounded border border-white/8 bg-white/[0.02] px-2.5 py-1.5">
+              <p class="font-mono text-[11px] text-ink/90">{item.adapter}</p>
+              <p class="font-mono text-[9px] text-dim">◀── implementa {item.port}</p>
+            </div>
+          ))
+        }
+      </div>
+      <p class="font-mono text-[9px] text-dim">inversión de dependencias (DIP)</p>
+    </div>
+  </div>
+
+  <p class="text-[10px] leading-relaxed text-dim">
+    Todas las flechas de dependencia del código fuente apuntan <span class="text-muted">hacia el centro</span>.
+    Por eso puedes ejecutar toda la suite de tests del dominio en milisegundos inyectando un Fake en
+    memoria sin levantar Docker.
+  </p>
+</div>

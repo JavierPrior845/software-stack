@@ -2,10 +2,20 @@
 import type { DiagramId } from '../data/types';
 import MemoryHierarchy from './diagrams/MemoryHierarchy.astro';
 import CpuPipeline from './diagrams/CpuPipeline.astro';
+import VirtualMemory from './diagrams/VirtualMemory.astro';
+import AvlVsBst from './diagrams/AvlVsBst.astro';
+import HexagonalArch from './diagrams/HexagonalArch.astro';
+import TestingPyramid from './diagrams/TestingPyramid.astro';
 import Encapsulation from './diagrams/Encapsulation.astro';
+import TcpHandshake from './diagrams/TcpHandshake.astro';
 import TlsHandshake from './diagrams/TlsHandshake.astro';
+import BiasVariance from './diagrams/BiasVariance.astro';
+import NeuralActivations from './diagrams/NeuralActivations.astro';
 import AttentionMap from './diagrams/AttentionMap.astro';
 import ReactLoop from './diagrams/ReactLoop.astro';
+import RagPipeline from './diagrams/RagPipeline.astro';
+import BitLayout from './diagrams/BitLayout.astro';
+import ProcessMemoryLayout from './diagrams/ProcessMemoryLayout.astro';
 
 interface Props {
   id: DiagramId;
@@ -16,10 +26,20 @@ const { id } = Astro.props;
 const registry = {
   'memory-hierarchy': MemoryHierarchy,
   'cpu-pipeline': CpuPipeline,
+  'virtual-memory': VirtualMemory,
+  'avl-vs-bst': AvlVsBst,
+  'hexagonal-arch': HexagonalArch,
+  'testing-pyramid': TestingPyramid,
   encapsulation: Encapsulation,
+  'tcp-handshake': TcpHandshake,
   'tls-handshake': TlsHandshake,
+  'bias-variance': BiasVariance,
+  'neural-activations': NeuralActivations,
   attention: AttentionMap,
   'react-loop': ReactLoop,
+  'rag-pipeline': RagPipeline,
+  'bit-layout': BitLayout,
+  'process-memory-layout': ProcessMemoryLayout,
 } satisfies Record<DiagramId, unknown>;
 
 const Diagram = registry[id];

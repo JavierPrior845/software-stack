@@ -1,0 +1,83 @@
+---
+const steps = [
+  {
+    title: '1. Dirección virtual (64-bit)',
+    code: '0x0000_7fff_a4c0_12f8',
+    split: [
+      { label: 'VPN (página virtual)', value: '0x7fffa4c01', accent: true },
+      { label: 'Offset (4 KB)', value: '0x2f8', accent: false },
+    ],
+  },
+  {
+    title: '2. MMU + TLB / Tabla de páginas',
+    code: 'TLB hit (~1 ciclo)  │  TLB miss → Page Walk (4 niveles en RAM)',
+    split: [
+      { label: 'Traducción VPN → PFN', value: '0x7fffa4c01 → 0x0018a', accent: true },
+      { label: 'Permisos PTE', value: 'R/W · User · Present=1', accent: false },
+    ],
+  },
+  {
+    title: '3. Dirección física en DRAM',
+    code: '0x0000_0000_18a0_02f8',
+    split: [
+      { label: 'PFN (marco físico)', value: '0x0018a', accent: true },
+      { label: 'Offset (idéntico)', value: '0x2f8', accent: false },
+    ],
+  },
+];
+---
+
+<div class="space-y-3">
+  {
+    steps.map((step, index) => (
+      <div>
+        <div class="rounded-lg border border-white/10 bg-black/20 p-3">
+          <div class="flex flex-wrap items-baseline justify-between gap-2">
+            <span class="font-mono text-[11px] font-medium text-ink/90">{step.title}</span>
+            <span class="font-mono text-[10px] text-dim">{step.code}</span>
+          </div>
+
+          <div class="mt-2.5 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {step.split.map((part) => (
+              <div
+                class:list={[
+                  'rounded-md border px-3 py-2',
+                  part.accent
+                    ? 'accent-border accent-softer'
+                    : 'border-white/8 bg-white/[0.015]',
+                ]}
+              >
+                <p class="font-mono text-[9px] uppercase tracking-wider text-dim">{part.label}</p>
+                <p
+                  class:list={[
+                    'mt-0.5 font-mono text-xs',
+                    part.accent ? 'accent font-medium' : 'text-muted',
+                  ]}
+                >
+                  {part.value}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {index < steps.length - 1 && (
+          <div class="flex items-center gap-2 py-1 pl-4 font-mono text-[10px] text-dim">
+            <span>↓</span>
+            <span>
+              {index === 0
+                ? 'la MMU intercepta el VPN; el offset de 12 bits pasa sin tocar'
+                : 'si Present=0 → Page Fault al kernel (swap o SIGSEGV)'}
+            </span>
+          </div>
+        )}
+      </div>
+    ))
+  }
+
+  <p class="pt-1 text-[10px] leading-relaxed text-dim">
+    El offset dentro de los 4 KB nunca se traduce. Por eso dos procesos pueden usar la misma
+    dirección virtual <span class="font-mono text-muted">0x7fffa4c012f8</span> y apuntar a marcos
+    físicos completamente distintos sin verse jamás.
+  </p>
+</div>
