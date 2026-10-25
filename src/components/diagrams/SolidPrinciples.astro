@@ -23,24 +23,24 @@
     </div>
     
     <!-- Principle selector buttons -->
-    <div class="flex flex-wrap items-center gap-1.5 p-1 bg-secondary/30 rounded-xl border border-border/50 text-xs font-mono" id="solid-tabs">
-      <button class="solid-tab px-3 py-1.5 rounded-lg text-foreground font-semibold bg-primary/20 border border-primary/40 transition-all hover:bg-primary/30" data-principle="srp">
-        <span class="text-amber-400">S</span>RP
+    <div class="flex flex-wrap items-center gap-1.5 p-1.5 bg-secondary/40 rounded-xl border border-border/70 text-xs font-mono shadow-inner" id="solid-tabs">
+      <button class="solid-tab active-solid px-3.5 py-2 rounded-lg font-bold text-white bg-amber-600 border border-amber-400 shadow-md shadow-amber-500/30 transition-all cursor-pointer" data-principle="srp">
+        <span>S</span>RP
       </button>
-      <button class="solid-tab px-3 py-1.5 rounded-lg text-muted-foreground font-medium transition-all hover:text-foreground hover:bg-secondary/40" data-principle="ocp">
-        <span class="text-emerald-400">O</span>CP
+      <button class="solid-tab px-3.5 py-2 rounded-lg font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 border border-transparent transition-all cursor-pointer" data-principle="ocp">
+        <span>O</span>CP
       </button>
-      <button class="solid-tab px-3 py-1.5 rounded-lg text-muted-foreground font-medium transition-all hover:text-foreground hover:bg-secondary/40" data-principle="lsp">
-        <span class="text-cyan-400">L</span>SP
+      <button class="solid-tab px-3.5 py-2 rounded-lg font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 border border-transparent transition-all cursor-pointer" data-principle="lsp">
+        <span>L</span>SP
       </button>
-      <button class="solid-tab px-3 py-1.5 rounded-lg text-muted-foreground font-medium transition-all hover:text-foreground hover:bg-secondary/40" data-principle="isp">
-        <span class="text-purple-400">I</span>SP
+      <button class="solid-tab px-3.5 py-2 rounded-lg font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 border border-transparent transition-all cursor-pointer" data-principle="isp">
+        <span>I</span>SP
       </button>
-      <button class="solid-tab px-3 py-1.5 rounded-lg text-muted-foreground font-medium transition-all hover:text-foreground hover:bg-secondary/40" data-principle="dip">
-        <span class="text-rose-400">D</span>IP
+      <button class="solid-tab px-3.5 py-2 rounded-lg font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 border border-transparent transition-all cursor-pointer" data-principle="dip">
+        <span>D</span>IP
       </button>
-      <button class="solid-tab px-3 py-1.5 rounded-lg text-muted-foreground font-medium transition-all hover:text-foreground hover:bg-secondary/40" data-principle="laws">
-        <span class="text-blue-400">⚖️</span> Mandatos
+      <button class="solid-tab px-3.5 py-2 rounded-lg font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 border border-transparent transition-all cursor-pointer" data-principle="laws">
+        <span>⚖️</span> Mandatos
       </button>
     </div>
   </div>
@@ -524,23 +524,40 @@ class FacturacionService &#123;
 
 <script>
   function setupSolidTabs() {
-    const tabs = document.querySelectorAll('.solid-tab');
-    const panels = document.querySelectorAll('.solid-panel');
+    const tabs = document.querySelectorAll<HTMLButtonElement>('.solid-tab');
+    const panels = document.querySelectorAll<HTMLElement>('.solid-panel');
 
     tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
+      tab.addEventListener('click', (e) => {
+        e.preventDefault();
         const principle = tab.getAttribute('data-principle');
         if (!principle) return;
 
         // Reset tabs
         tabs.forEach(t => {
-          t.classList.remove('bg-primary/20', 'border-primary/40', 'text-foreground');
-          t.classList.add('text-muted-foreground');
+          t.classList.remove(
+            'active-solid',
+            'font-bold',
+            'text-white',
+            'bg-amber-600',
+            'border-amber-400',
+            'shadow-md',
+            'shadow-amber-500/30'
+          );
+          t.classList.add('text-muted-foreground', 'border-transparent', 'font-medium');
         });
 
         // Activate clicked tab
-        tab.classList.add('bg-primary/20', 'border-primary/40', 'text-foreground');
-        tab.classList.remove('text-muted-foreground');
+        tab.classList.add(
+          'active-solid',
+          'font-bold',
+          'text-white',
+          'bg-amber-600',
+          'border-amber-400',
+          'shadow-md',
+          'shadow-amber-500/30'
+        );
+        tab.classList.remove('text-muted-foreground', 'border-transparent', 'font-medium');
 
         // Toggle panels
         panels.forEach(p => {

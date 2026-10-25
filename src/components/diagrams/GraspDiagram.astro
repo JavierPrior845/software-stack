@@ -18,24 +18,24 @@
     </div>
 
     <!-- Category Switcher -->
-    <div class="inline-flex flex-wrap gap-1 rounded-lg border border-white/10 bg-black/50 p-1" role="tablist">
+    <div class="inline-flex flex-wrap gap-1.5 rounded-xl border border-white/10 bg-black/60 p-1.5 shadow-inner" role="tablist">
       <button
         type="button"
-        class="grasp-btn active rounded px-2.5 py-1 font-mono text-xs font-semibold text-slate-200 hover:text-white transition-colors"
+        class="grasp-btn active-grasp rounded-lg px-3 py-1.5 font-mono text-xs font-bold text-white bg-indigo-600 border border-indigo-400 shadow-md shadow-indigo-500/30 transition-all cursor-pointer"
         data-group="assignment"
       >
         1. Asignación Central (Experto, Creador, Controlador)
       </button>
       <button
         type="button"
-        class="grasp-btn rounded px-2.5 py-1 font-mono text-xs font-semibold text-indigo-300 hover:text-white transition-colors"
+        class="grasp-btn rounded-lg px-3 py-1.5 font-mono text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 border border-transparent transition-all cursor-pointer"
         data-group="pillars"
       >
         2. Pilares (Cohesión, Acoplamiento, Fabricación Pura)
       </button>
       <button
         type="button"
-        class="grasp-btn rounded px-2.5 py-1 font-mono text-xs font-semibold text-emerald-300 hover:text-white transition-colors"
+        class="grasp-btn rounded-lg px-3 py-1.5 font-mono text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 border border-transparent transition-all cursor-pointer"
         data-group="protection"
       >
         3. Protección (Polimorfismo, Indirección, Variación)
@@ -270,13 +270,31 @@
     const panels = root.querySelectorAll<HTMLElement>('.grasp-panel');
 
     buttons.forEach((btn) => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
         buttons.forEach((b) => {
-          b.classList.remove('active', 'text-slate-200');
-          b.classList.add('text-slate-400');
+          b.classList.remove(
+            'active-grasp',
+            'text-white',
+            'bg-indigo-600',
+            'border-indigo-400',
+            'shadow-md',
+            'shadow-indigo-500/30',
+            'font-bold'
+          );
+          b.classList.add('text-muted-foreground', 'border-transparent', 'font-medium');
         });
-        btn.classList.add('active', 'text-slate-200');
-        btn.classList.remove('text-slate-400');
+
+        btn.classList.add(
+          'active-grasp',
+          'text-white',
+          'bg-indigo-600',
+          'border-indigo-400',
+          'shadow-md',
+          'shadow-indigo-500/30',
+          'font-bold'
+        );
+        btn.classList.remove('text-muted-foreground', 'border-transparent', 'font-medium');
 
         const group = btn.dataset.group;
         panels.forEach((p) => {
@@ -290,5 +308,10 @@
     });
   }
 
-  document.querySelectorAll<HTMLElement>('[data-grasp-diagram]').forEach(setupGraspDiagram);
+  function initAllGraspDiagrams() {
+    document.querySelectorAll<HTMLElement>('[data-grasp-diagram]').forEach(setupGraspDiagram);
+  }
+
+  initAllGraspDiagrams();
+  document.addEventListener('astro:page-load', initAllGraspDiagrams);
 </script>

@@ -2,436 +2,1101 @@
 // src/components/diagrams/GofPatternsDiagram.astro
 ---
 
-<div class="gof-container my-6 rounded-2xl border border-border/80 bg-gradient-to-b from-card/90 via-card/50 to-background/90 p-5 shadow-2xl backdrop-blur-xl">
+<div class="gof-master-container my-6 rounded-2xl border border-border/80 bg-gradient-to-b from-card/95 via-card/70 to-background/95 p-5 sm:p-6 shadow-2xl backdrop-blur-xl">
   <!-- Header -->
-  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-5 border-b border-border/60">
+  <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-5 border-b border-border/60">
     <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 font-bold text-lg shadow-inner">
+      <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 text-white font-extrabold text-xl flex items-center justify-center shadow-lg shadow-indigo-500/25">
         GoF
       </div>
       <div>
-        <h3 class="font-bold text-lg text-foreground flex items-center gap-2">
-          Catálogo Canónico de Patrones GoF (Gang of Four)
-          <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 font-mono">
+        <h3 class="font-bold text-lg sm:text-xl text-foreground flex items-center gap-2">
+          Catálogo Canónico GoF con Diagramas UML
+          <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 font-mono font-medium">
             TDS / UMU
           </span>
         </h3>
         <p class="text-xs text-muted-foreground mt-0.5">
-          Taxonomía tripartita: Creacionales, Estructurales y de Comportamiento con análisis de trade-offs
+          Estructura UML, participantes, contratos y trade-offs de los 23 patrones de diseño
         </p>
       </div>
     </div>
     
-    <!-- Category Tabs -->
-    <div class="flex flex-wrap items-center gap-1.5 p-1 bg-secondary/30 rounded-xl border border-border/50 text-xs font-mono" id="gof-category-tabs">
-      <button class="gof-cat-tab px-3 py-1.5 rounded-lg text-foreground font-semibold bg-primary/20 border border-primary/40 transition-all hover:bg-primary/30" data-cat="creational">
+    <!-- Category Tabs (Ultra-visible indicator) -->
+    <div class="flex flex-wrap items-center gap-1.5 p-1.5 bg-secondary/40 rounded-xl border border-border/70 text-xs font-mono shadow-inner" id="gof-cat-selector">
+      <button 
+        type="button" 
+        class="gof-cat-btn active-cat px-3.5 py-2 rounded-lg font-bold transition-all duration-200 cursor-pointer text-white bg-indigo-600 shadow-md shadow-indigo-500/30 border border-indigo-400" 
+        data-category="creational">
         🔨 Creacionales
       </button>
-      <button class="gof-cat-tab px-3 py-1.5 rounded-lg text-muted-foreground font-medium transition-all hover:text-foreground hover:bg-secondary/40" data-cat="structural">
+      <button 
+        type="button" 
+        class="gof-cat-btn px-3.5 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer text-muted-foreground hover:text-foreground hover:bg-secondary/60 border border-transparent" 
+        data-category="structural">
         🏛️ Estructurales
       </button>
-      <button class="gof-cat-tab px-3 py-1.5 rounded-lg text-muted-foreground font-medium transition-all hover:text-foreground hover:bg-secondary/40" data-cat="behavioral">
-        ⚡ De Comportamiento
+      <button 
+        type="button" 
+        class="gof-cat-btn px-3.5 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer text-muted-foreground hover:text-foreground hover:bg-secondary/60 border border-transparent" 
+        data-category="behavioral">
+        ⚡ Comportamiento
       </button>
-      <button class="gof-cat-tab px-3 py-1.5 rounded-lg text-muted-foreground font-medium transition-all hover:text-foreground hover:bg-secondary/40" data-cat="tradeoffs">
+      <button 
+        type="button" 
+        class="gof-cat-btn px-3.5 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer text-muted-foreground hover:text-foreground hover:bg-secondary/60 border border-transparent" 
+        data-category="tradeoffs">
         ⚖️ Trade-offs TDS
       </button>
     </div>
   </div>
 
-  <!-- Panels -->
-  <div class="mt-5 space-y-4">
-    <!-- PANEL 1: CREACIONALES -->
-    <div id="gof-panel-creational" class="gof-panel space-y-4">
-      <div class="p-3.5 rounded-xl border border-indigo-500/20 bg-indigo-500/5 text-xs text-muted-foreground leading-relaxed">
-        <strong class="text-indigo-300">Patrones Creacionales:</strong> Desacoplan el sistema de cómo se crean, componen y representan sus objetos. Encapsulan el conocimiento de qué clases concretas se instancian y ocultan los detalles mecánicos de la creación de instancias.
+  <!-- Main Display Area -->
+  <div class="mt-6">
+
+    <!-- ========================================== -->
+    <!-- 1. CATEGORÍA: CREACIONALES                 -->
+    <!-- ========================================== -->
+    <div id="cat-creational" class="gof-category-view space-y-5">
+      <!-- Selector de Patrones Creacionales -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-border/40">
+        <span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-2 shrink-0">Patrón:</span>
+        <button class="gof-pat-btn active-pat px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-indigo-500/20 text-indigo-300 border border-indigo-500/50 shadow-sm shrink-0" data-target="pat-factory-method">
+          Factory Method
+        </button>
+        <button class="gof-pat-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/40 border border-transparent shrink-0" data-target="pat-abstract-factory">
+          Abstract Factory
+        </button>
+        <button class="gof-pat-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/40 border border-transparent shrink-0" data-target="pat-builder">
+          Builder
+        </button>
+        <button class="gof-pat-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/40 border border-transparent shrink-0" data-target="pat-singleton">
+          Singleton
+        </button>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Factory Method -->
-        <div class="p-4 rounded-xl border border-border/70 bg-card/60 hover:border-indigo-500/40 transition-all space-y-3">
-          <div class="flex items-center justify-between">
-            <h4 class="font-bold text-sm text-foreground flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-indigo-400"></span> Factory Method
-            </h4>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300">Herencia o Reflexión</span>
+      <!-- PATRÓN: Factory Method -->
+      <div id="pat-factory-method" class="gof-pattern-detail space-y-4">
+        <div class="p-4 rounded-xl border border-indigo-500/30 bg-indigo-950/15">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] font-mono text-indigo-400 font-bold tracking-widest uppercase">Creacional • GoF</span>
+              <h4 class="text-base sm:text-lg font-bold text-foreground">Factory Method (Método de Fábrica)</h4>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-mono">
+              Intención: Desacoplar creación mediante herencia o reflexión
+            </span>
           </div>
-          <p class="text-xs text-muted-foreground leading-relaxed">
-            Define una interfaz para crear un objeto, pero delega en las subclases (o en un mecanismo dinámico) la decisión de qué clase instanciar.
+          <p class="text-xs text-muted-foreground mt-2 leading-relaxed">
+            Define una interfaz o clase base abstracta para la creación de un objeto, delegando en subclases especializadas (o un mecanismo reflexivo de carga) la decisión de qué clase concreta instanciar.
           </p>
-          <div class="p-2.5 rounded-lg bg-black/40 border border-border/40 font-mono text-[11px] text-indigo-200/90 space-y-1">
-            <div class="text-[10px] text-muted-foreground">// En TDS / UMU: Variante con Reflexión dinámica</div>
-            <div><code>Product p = (Product) Class.forName(tipo)</code></div>
-            <div><code>  .getDeclaredConstructor().newInstance();</code></div>
-          </div>
-          <div class="text-[11px] text-muted-foreground">
-            <strong class="text-foreground">Ventaja TDS:</strong> Elimina el acoplamiento directo a clases concretas sin requerir una subclase Creator por cada producto nuevo si se parametriza por reflexión o mapa de proveedores.
-          </div>
         </div>
 
-        <!-- Abstract Factory -->
-        <div class="p-4 rounded-xl border border-border/70 bg-card/60 hover:border-indigo-500/40 transition-all space-y-3">
-          <div class="flex items-center justify-between">
-            <h4 class="font-bold text-sm text-foreground flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-indigo-400"></span> Abstract Factory
-            </h4>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300">Familias de Productos</span>
+        <!-- Diagrama UML Factory Method -->
+        <div class="p-5 rounded-xl border border-border/80 bg-black/40 overflow-x-auto space-y-4">
+          <div class="flex items-center justify-between text-xs font-mono text-muted-foreground pb-2 border-b border-border/40">
+            <span class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Diagrama de Clases UML Estándar
+            </span>
+            <span class="text-emerald-400">Relación: Creación desacoplada</span>
           </div>
-          <p class="text-xs text-muted-foreground leading-relaxed">
-            Proporciona una interfaz para crear familias de objetos relacionados o dependientes (ej. Botón, Ventana, Menú para Windows, macOS o Linux) sin especificar sus clases concretas.
-          </p>
-          <div class="p-2.5 rounded-lg bg-black/40 border border-border/40 font-mono text-[11px] text-indigo-200/90">
-            <code>GUIFactory factory = new DarkThemeFactory();</code><br/>
-            <code>Button b = factory.createButton();</code><br/>
-            <code>Scrollbar s = factory.createScrollbar();</code>
+
+          <!-- UML Visual Grid -->
+          <div class="min-w-[620px] grid grid-cols-2 gap-8 py-4 px-2">
+            <!-- Jerarquía de Creadores -->
+            <div class="space-y-6">
+              <!-- Creator (Abstract) -->
+              <div class="w-full rounded-lg border-2 border-indigo-400/60 bg-card p-3 shadow-md">
+                <div class="text-center pb-2 border-b border-border/60">
+                  <div class="text-[10px] italic text-muted-foreground">&lt;&lt;abstract&gt;&gt;</div>
+                  <div class="font-bold text-xs text-indigo-300">Creator</div>
+                </div>
+                <div class="py-2 text-[11px] font-mono border-b border-border/40 text-muted-foreground">
+                  <div>+ anOperation(): void</div>
+                  <div class="italic text-foreground">+ createProduct(): Product</div>
+                </div>
+                <div class="pt-1.5 text-[10px] text-muted-foreground italic">
+                  // anOperation invoca createProduct()
+                </div>
+              </div>
+
+              <!-- Flecha de Herencia hacia arriba -->
+              <div class="flex justify-center -my-3">
+                <div class="flex flex-col items-center">
+                  <div class="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[8px] border-b-indigo-400"></div>
+                  <div class="w-[2px] h-6 bg-indigo-400/80"></div>
+                </div>
+              </div>
+
+              <!-- Concrete Creator -->
+              <div class="w-full rounded-lg border border-indigo-500/40 bg-card/80 p-3 shadow-md">
+                <div class="text-center pb-2 border-b border-border/60">
+                  <div class="font-bold text-xs text-foreground">ConcreteCreator</div>
+                </div>
+                <div class="py-2 text-[11px] font-mono text-indigo-200">
+                  <div>+ createProduct(): Product</div>
+                </div>
+                <div class="pt-1 text-[10px] text-emerald-400 font-mono">
+                  return new ConcreteProduct();
+                </div>
+              </div>
+            </div>
+
+            <!-- Jerarquía de Productos -->
+            <div class="space-y-6">
+              <!-- Product (Interface) -->
+              <div class="w-full rounded-lg border-2 border-emerald-400/60 bg-card p-3 shadow-md">
+                <div class="text-center pb-2 border-b border-border/60">
+                  <div class="text-[10px] italic text-muted-foreground">&lt;&lt;interface&gt;&gt;</div>
+                  <div class="font-bold text-xs text-emerald-300">Product</div>
+                </div>
+                <div class="py-2 text-[11px] font-mono text-muted-foreground">
+                  <div>+ doSomething(): void</div>
+                </div>
+              </div>
+
+              <!-- Flecha de Realización hacia arriba -->
+              <div class="flex justify-center -my-3">
+                <div class="flex flex-col items-center">
+                  <div class="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[8px] border-b-dashed border-b-emerald-400"></div>
+                  <div class="w-[2px] h-6 bg-dashed border-l border-emerald-400/80"></div>
+                </div>
+              </div>
+
+              <!-- Concrete Product -->
+              <div class="w-full rounded-lg border border-emerald-500/40 bg-card/80 p-3 shadow-md">
+                <div class="text-center pb-2 border-b border-border/60">
+                  <div class="font-bold text-xs text-foreground">ConcreteProduct</div>
+                </div>
+                <div class="py-2 text-[11px] font-mono text-emerald-200">
+                  <div>+ doSomething(): void</div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="text-[11px] text-muted-foreground">
-            <strong class="text-foreground">Invariante:</strong> Garantiza que los productos creados dentro de una familia sean 100% compatibles entre sí.
+
+          <!-- Leyenda de Participantes -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3 border-t border-border/40 text-xs">
+            <div class="space-y-1">
+              <strong class="text-indigo-300 font-mono">Participantes:</strong>
+              <ul class="list-disc list-inside text-muted-foreground text-[11px] space-y-0.5">
+                <li><strong class="text-foreground">Product:</strong> Define la interfaz de los objetos que crea el método.</li>
+                <li><strong class="text-foreground">ConcreteProduct:</strong> Implementación real del producto.</li>
+                <li><strong class="text-foreground">Creator:</strong> Declara el método fábrica que retorna un objeto de tipo Product.</li>
+                <li><strong class="text-foreground">ConcreteCreator:</strong> Sobrescribe el método devolviendo la instancia concreta.</li>
+              </ul>
+            </div>
+            <div class="space-y-1 p-2.5 rounded bg-secondary/20 border border-border/50 text-[11px]">
+              <strong class="text-amber-300 font-mono">Variante TDS UMU (Reflexión Dinámica):</strong>
+              <p class="text-muted-foreground leading-relaxed">
+                Para no crear infinitas subclases `ConcreteCreator`, se parametrizan nombres de clase y se instancian en tiempo de ejecución:
+              </p>
+              <code class="text-indigo-300 font-mono">Class.forName(name).getDeclaredConstructor().newInstance()</code>
+            </div>
           </div>
         </div>
+      </div>
 
-        <!-- Builder -->
-        <div class="p-4 rounded-xl border border-border/70 bg-card/60 hover:border-indigo-500/40 transition-all space-y-3">
-          <div class="flex items-center justify-between">
-            <h4 class="font-bold text-sm text-foreground flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-indigo-400"></span> Builder (Constructor)
-            </h4>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300">Paso a Paso</span>
+      <!-- PATRÓN: Abstract Factory -->
+      <div id="pat-abstract-factory" class="gof-pattern-detail space-y-4 hidden">
+        <div class="p-4 rounded-xl border border-indigo-500/30 bg-indigo-950/15">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] font-mono text-indigo-400 font-bold tracking-widest uppercase">Creacional • GoF</span>
+              <h4 class="text-base sm:text-lg font-bold text-foreground">Abstract Factory (Fábrica Abstracta)</h4>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-mono">
+              Intención: Familias completas de productos compatibles
+            </span>
           </div>
-          <p class="text-xs text-muted-foreground leading-relaxed">
-            Separa la construcción de un objeto complejo de su representación, permitiendo que el mismo proceso de construcción produzca representaciones diferentes (con o sin Director).
+          <p class="text-xs text-muted-foreground mt-2 leading-relaxed">
+            Proporciona una interfaz para crear familias de objetos relacionados o dependientes sin especificar sus clases concretas (ej. GUI con Botón y Ventana para Windows y Mac).
           </p>
-          <div class="p-2.5 rounded-lg bg-black/40 border border-border/40 font-mono text-[11px] text-indigo-200/90">
-            <code>ConsultaSQL q = new QueryBuilder()</code><br/>
-            <code>  .select("id", "nombre").from("usuarios")</code><br/>
-            <code>  .where("activo = true").limit(10).build();</code>
-          </div>
-          <div class="text-[11px] text-muted-foreground">
-            <strong class="text-foreground">Evita el antipatrón Telescoping Constructor</strong> (constructores con 8 parámetros donde la mitad son <code>null</code>).
-          </div>
         </div>
 
-        <!-- Singleton -->
-        <div class="p-4 rounded-xl border border-border/70 bg-card/60 hover:border-indigo-500/40 transition-all space-y-3">
-          <div class="flex items-center justify-between">
-            <h4 class="font-bold text-sm text-foreground flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-indigo-400"></span> Singleton (Instancia Única)
-            </h4>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">Precaución Testabilidad</span>
+        <!-- Diagrama UML Abstract Factory -->
+        <div class="p-5 rounded-xl border border-border/80 bg-black/40 overflow-x-auto space-y-4">
+          <div class="text-xs font-mono text-muted-foreground pb-2 border-b border-border/40">
+            <span class="text-indigo-300 font-bold">Diagrama UML: Familias de Productos Compatibles</span>
           </div>
-          <p class="text-xs text-muted-foreground leading-relaxed">
-            Garantiza que una clase tenga una única instancia en toda la aplicación y proporciona un punto de acceso global a ella mediante un constructor privado y un método estático.
+
+          <div class="min-w-[650px] grid grid-cols-3 gap-4 py-2">
+            <!-- Fábricas -->
+            <div class="space-y-4">
+              <div class="rounded-lg border-2 border-indigo-400/60 bg-card p-3 text-xs">
+                <div class="text-[10px] text-muted-foreground italic text-center">&lt;&lt;interface&gt;&gt;</div>
+                <div class="font-bold text-indigo-300 text-center">GUIFactory</div>
+                <div class="mt-2 font-mono text-[11px] text-muted-foreground border-t border-border/40 pt-1">
+                  <div>+ createButton(): Button</div>
+                  <div>+ createScrollbar(): Scrollbar</div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 text-[10px] font-mono">
+                <div class="p-2 rounded border border-border/70 bg-card/60">
+                  <div class="font-bold text-foreground">WinFactory</div>
+                  <div class="text-muted-foreground mt-1">createButton() &#8594; WinButton</div>
+                </div>
+                <div class="p-2 rounded border border-border/70 bg-card/60">
+                  <div class="font-bold text-foreground">MacFactory</div>
+                  <div class="text-muted-foreground mt-1">createButton() &#8594; MacButton</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Familia Botón -->
+            <div class="space-y-4">
+              <div class="rounded-lg border-2 border-emerald-400/60 bg-card p-3 text-xs">
+                <div class="text-[10px] text-muted-foreground italic text-center">&lt;&lt;interface&gt;&gt;</div>
+                <div class="font-bold text-emerald-300 text-center">Button</div>
+                <div class="mt-2 font-mono text-[11px] text-muted-foreground border-t border-border/40 pt-1">
+                  <div>+ render(): void</div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 text-[10px] font-mono">
+                <div class="p-2 rounded border border-emerald-500/30 bg-card/60 text-foreground">WinButton</div>
+                <div class="p-2 rounded border border-emerald-500/30 bg-card/60 text-foreground">MacButton</div>
+              </div>
+            </div>
+
+            <!-- Familia Scrollbar -->
+            <div class="space-y-4">
+              <div class="rounded-lg border-2 border-cyan-400/60 bg-card p-3 text-xs">
+                <div class="text-[10px] text-muted-foreground italic text-center">&lt;&lt;interface&gt;&gt;</div>
+                <div class="font-bold text-cyan-300 text-center">Scrollbar</div>
+                <div class="mt-2 font-mono text-[11px] text-muted-foreground border-t border-border/40 pt-1">
+                  <div>+ scroll(): void</div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 text-[10px] font-mono">
+                <div class="p-2 rounded border border-cyan-500/30 bg-card/60 text-foreground">WinScrollbar</div>
+                <div class="p-2 rounded border border-cyan-500/30 bg-card/60 text-foreground">MacScrollbar</div>
+              </div>
+            </div>
+          </div>
+          <div class="text-xs text-muted-foreground">
+            <strong class="text-foreground">Invariante garantizada:</strong> Es imposible mezclar accidentalmente un <code class="text-emerald-400">WinButton</code> con un <code class="text-cyan-400">MacScrollbar</code> porque el cliente solo interactúa con la fábrica abstracta inyectada.
+          </div>
+        </div>
+      </div>
+
+      <!-- PATRÓN: Builder -->
+      <div id="pat-builder" class="gof-pattern-detail space-y-4 hidden">
+        <div class="p-4 rounded-xl border border-indigo-500/30 bg-indigo-950/15">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] font-mono text-indigo-400 font-bold tracking-widest uppercase">Creacional • GoF</span>
+              <h4 class="text-base sm:text-lg font-bold text-foreground">Builder (Constructor)</h4>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-mono">
+              Intención: Construcción paso a paso de objetos complejos
+            </span>
+          </div>
+          <p class="text-xs text-muted-foreground mt-2 leading-relaxed">
+            Separa el proceso de ensamblado de un objeto complejo de su representación final, permitiendo que la misma secuencia de construcción cree configuraciones completamente dispares.
           </p>
-          <div class="p-2.5 rounded-lg bg-black/40 border border-border/40 font-mono text-[11px] text-indigo-200/90">
-            <code>public static synchronized DB getInstance() &#123;</code><br/>
-            <code>  if (instance == null) instance = new DB();</code><br/>
-            <code>  return instance;</code><br/>
-            <code>&#125;</code>
+        </div>
+
+        <div class="p-5 rounded-xl border border-border/80 bg-black/40 overflow-x-auto space-y-4">
+          <div class="text-xs font-mono text-muted-foreground pb-2 border-b border-border/40">
+            <span class="text-indigo-300 font-bold">Diagrama UML: Director, Builder y Fluent API</span>
           </div>
-          <div class="text-[11px] text-amber-300/90">
-            <strong>Advertencia TDS:</strong> Dificulta los tests unitarios al introducir estado global mutable y acoplamiento oculto. En arquitecturas modernas se prefiere inyección de dependencias con ciclo de vida Singleton (IoC).
+
+          <div class="min-w-[620px] flex items-center justify-between gap-4 py-2">
+            <!-- Director -->
+            <div class="w-48 rounded-lg border border-border/80 bg-card p-3 text-xs space-y-1">
+              <div class="font-bold text-foreground text-center">Director</div>
+              <div class="font-mono text-[10px] text-muted-foreground border-t border-border/40 pt-1">
+                - builder: Builder
+              </div>
+              <div class="font-mono text-[10px] text-indigo-300">
+                + construct(): void
+              </div>
+            </div>
+
+            <div class="text-muted-foreground font-mono text-xs">────────▶</div>
+
+            <!-- Builder Interface -->
+            <div class="w-56 rounded-lg border-2 border-indigo-400/60 bg-card p-3 text-xs space-y-1">
+              <div class="text-[10px] text-muted-foreground italic text-center">&lt;&lt;interface&gt;&gt;</div>
+              <div class="font-bold text-indigo-300 text-center">Builder</div>
+              <div class="font-mono text-[10px] text-muted-foreground border-t border-border/40 pt-1 space-y-0.5">
+                <div>+ buildPartA(): void</div>
+                <div>+ buildPartB(): void</div>
+                <div>+ getResult(): Product</div>
+              </div>
+            </div>
+
+            <div class="text-muted-foreground font-mono text-xs">◀─── implements</div>
+
+            <!-- Concrete Builder -->
+            <div class="w-52 rounded-lg border border-indigo-500/40 bg-card/80 p-3 text-xs space-y-1">
+              <div class="font-bold text-foreground text-center">ConcreteBuilder</div>
+              <div class="font-mono text-[10px] text-emerald-300 border-t border-border/40 pt-1">
+                <div>- result: Product</div>
+                <div>+ getResult(): Product</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PATRÓN: Singleton -->
+      <div id="pat-singleton" class="gof-pattern-detail space-y-4 hidden">
+        <div class="p-4 rounded-xl border border-indigo-500/30 bg-indigo-950/15">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] font-mono text-indigo-400 font-bold tracking-widest uppercase">Creacional • GoF</span>
+              <h4 class="text-base sm:text-lg font-bold text-foreground">Singleton (Instancia Única)</h4>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono">
+              Uso Restringido: Cuidado con la Testabilidad
+            </span>
+          </div>
+          <p class="text-xs text-muted-foreground mt-2 leading-relaxed">
+            Garantiza una única instancia en toda la máquina virtual mediante un constructor privado y expone un método de acceso global estático.
+          </p>
+        </div>
+
+        <div class="p-5 rounded-xl border border-border/80 bg-black/40 overflow-x-auto space-y-4">
+          <div class="min-w-[450px] max-w-md mx-auto rounded-lg border-2 border-indigo-400/60 bg-card p-4 text-xs space-y-2">
+            <div class="font-bold text-indigo-300 text-center text-sm">Singleton</div>
+            <div class="font-mono text-[11px] text-muted-foreground border-y border-border/40 py-2 space-y-1">
+              <div>- static instance: Singleton = null</div>
+              <div>- Singleton() <span class="text-amber-400 italic">// Constructor Privado</span></div>
+            </div>
+            <div class="font-mono text-[11px] text-emerald-400 pt-1">
+              + static getInstance(): Singleton
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- PANEL 2: ESTRUCTURALES -->
-    <div id="gof-panel-structural" class="gof-panel space-y-4 hidden">
-      <div class="p-3.5 rounded-xl border border-cyan-500/20 bg-cyan-500/5 text-xs text-muted-foreground leading-relaxed">
-        <strong class="text-cyan-300">Patrones Estructurales:</strong> Describen cómo se componen clases y objetos para formar estructuras mayores y más complejas sin sacrificar flexibilidad. Utilizan composición de interfaces y delegación en lugar de herencia rígida.
+    <!-- ========================================== -->
+    <!-- 2. CATEGORÍA: ESTRUCTURALES                -->
+    <!-- ========================================== -->
+    <div id="cat-structural" class="gof-category-view space-y-5 hidden">
+      <!-- Selector de Patrones Estructurales -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-border/40">
+        <span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-2 shrink-0">Patrón:</span>
+        <button class="gof-pat-btn active-pat px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-sm shrink-0" data-target="pat-adapter">
+          Adapter
+        </button>
+        <button class="gof-pat-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/40 border border-transparent shrink-0" data-target="pat-facade">
+          Facade
+        </button>
+        <button class="gof-pat-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/40 border border-transparent shrink-0" data-target="pat-composite">
+          Composite
+        </button>
+        <button class="gof-pat-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/40 border border-transparent shrink-0" data-target="pat-decorator">
+          Decorator
+        </button>
+        <button class="gof-pat-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/40 border border-transparent shrink-0" data-target="pat-proxy">
+          Proxy
+        </button>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        <!-- Adapter -->
-        <div class="p-3.5 rounded-xl border border-border/70 bg-card/60 hover:border-cyan-500/40 transition-all space-y-2">
-          <div class="flex items-center justify-between">
-            <h4 class="font-bold text-xs text-foreground flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-cyan-400"></span> Adapter (Adaptador)
-            </h4>
-            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300">Wrapper</span>
+      <!-- PATRÓN: Adapter -->
+      <div id="pat-adapter" class="gof-pattern-detail space-y-4">
+        <div class="p-4 rounded-xl border border-cyan-500/30 bg-cyan-950/15">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] font-mono text-cyan-400 font-bold tracking-widest uppercase">Estructural • GoF</span>
+              <h4 class="text-base sm:text-lg font-bold text-foreground">Adapter (Adaptador)</h4>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-mono">
+              Intención: Hacer encajar dos interfaces incompatibles (1 a 1)
+            </span>
           </div>
-          <p class="text-[11px] text-muted-foreground leading-relaxed">
-            Convierte la interfaz incompatible de una clase en otra interfaz que el cliente espera. Permite que clases con interfaces dispares colaboren juntas.
+          <p class="text-xs text-muted-foreground mt-2 leading-relaxed">
+            Convierte la interfaz de una clase en otra interfaz esperada por el cliente. Permite que clases colaboren aunque sus contratos originales no coincidan.
           </p>
-          <div class="p-2 rounded bg-black/40 font-mono text-[10px] text-cyan-200/90">
-            <code>class StripeAdapter implements PaymentGateway &#123;</code><br/>
-            <code>  void pay(m) &#123; stripeSdk.charge(m); &#125;</code><br/>
-            <code>&#125;</code>
-          </div>
         </div>
 
-        <!-- Facade -->
-        <div class="p-3.5 rounded-xl border border-border/70 bg-card/60 hover:border-cyan-500/40 transition-all space-y-2">
-          <div class="flex items-center justify-between">
-            <h4 class="font-bold text-xs text-foreground flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-cyan-400"></span> Facade (Fachada)
-            </h4>
-            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300">Simplificador</span>
+        <div class="p-5 rounded-xl border border-border/80 bg-black/40 overflow-x-auto space-y-4">
+          <div class="text-xs font-mono text-muted-foreground pb-2 border-b border-border/40">
+            <span class="text-cyan-300 font-bold">Diagrama UML: Adaptador de Objetos (Composición)</span>
           </div>
-          <p class="text-[11px] text-muted-foreground leading-relaxed">
-            Proporciona una interfaz simplificada y de alto nivel a un subsistema complejo compuesto por múltiples clases, librerías o microservicios.
-          </p>
-          <div class="p-2 rounded bg-black/40 font-mono text-[10px] text-cyan-200/90">
-            <code>videoConverter.convert(file, "mp4");</code><br/>
-            <span class="text-muted-foreground">// Oculta codecs, buffers, bitrates</span>
+
+          <div class="min-w-[620px] flex items-center justify-between gap-4 py-2">
+            <!-- Client -->
+            <div class="w-36 rounded-lg border border-border/80 bg-card p-3 text-xs text-center">
+              <div class="font-bold text-foreground">Client</div>
+            </div>
+
+            <div class="text-muted-foreground font-mono text-xs">────────▶</div>
+
+            <!-- Target Interface -->
+            <div class="w-48 rounded-lg border-2 border-cyan-400/60 bg-card p-3 text-xs space-y-1">
+              <div class="text-[10px] text-muted-foreground italic text-center">&lt;&lt;interface&gt;&gt;</div>
+              <div class="font-bold text-cyan-300 text-center">Target</div>
+              <div class="font-mono text-[10px] text-muted-foreground border-t border-border/40 pt-1">
+                + request(): void
+              </div>
+            </div>
+
+            <div class="text-muted-foreground font-mono text-xs">◀─── implements</div>
+
+            <!-- Adapter -->
+            <div class="w-56 rounded-lg border border-cyan-500/40 bg-card/80 p-3 text-xs space-y-1">
+              <div class="font-bold text-foreground text-center">Adapter</div>
+              <div class="font-mono text-[10px] text-muted-foreground border-t border-border/40 pt-1">
+                - adaptee: Adaptee
+              </div>
+              <div class="font-mono text-[10px] text-emerald-300">
+                + request() &#123; adaptee.specificRequest(); &#125;
+              </div>
+            </div>
+
+            <div class="text-muted-foreground font-mono text-xs">◆──────▶</div>
+
+            <!-- Adaptee -->
+            <div class="w-48 rounded-lg border border-amber-500/40 bg-card/80 p-3 text-xs space-y-1">
+              <div class="font-bold text-amber-300 text-center">Adaptee (Servicio Externo)</div>
+              <div class="font-mono text-[10px] text-muted-foreground border-t border-border/40 pt-1">
+                + specificRequest(): void
+              </div>
+            </div>
           </div>
         </div>
+      </div>
 
-        <!-- Composite -->
-        <div class="p-3.5 rounded-xl border border-border/70 bg-card/60 hover:border-cyan-500/40 transition-all space-y-2">
-          <div class="flex items-center justify-between">
-            <h4 class="font-bold text-xs text-foreground flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-cyan-400"></span> Composite (Objeto Compuesto)
-            </h4>
-            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300">Árboles Parte-Todo</span>
+      <!-- PATRÓN: Facade -->
+      <div id="pat-facade" class="gof-pattern-detail space-y-4 hidden">
+        <div class="p-4 rounded-xl border border-cyan-500/30 bg-cyan-950/15">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] font-mono text-cyan-400 font-bold tracking-widest uppercase">Estructural • GoF</span>
+              <h4 class="text-base sm:text-lg font-bold text-foreground">Facade (Fachada)</h4>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-mono">
+              Intención: Simplificación unificada (1 a Muchos)
+            </span>
           </div>
-          <p class="text-[11px] text-muted-foreground leading-relaxed">
-            Organiza objetos en estructuras de árbol para representar jerarquías parte-todo. Permite a los clientes tratar a objetos individuales y a composiciones de manera idéntica.
+          <p class="text-xs text-muted-foreground mt-2 leading-relaxed">
+            Ofrece una interfaz única de alto nivel a un conjunto complejo de subsistemas o librerías, facilitando enormemente su utilización general.
           </p>
-          <div class="p-2 rounded bg-black/40 font-mono text-[10px] text-cyan-200/90">
-            <code>interface Component &#123; void draw(); &#125;</code><br/>
-            <code>class Folder implements Component &#123; ... &#125;</code>
-          </div>
         </div>
 
-        <!-- Decorator -->
-        <div class="p-3.5 rounded-xl border border-border/70 bg-card/60 hover:border-cyan-500/40 transition-all space-y-2">
-          <div class="flex items-center justify-between">
-            <h4 class="font-bold text-xs text-foreground flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-cyan-400"></span> Decorator (Decorador)
-            </h4>
-            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300">Extensión Dinámica</span>
-          </div>
-          <p class="text-[11px] text-muted-foreground leading-relaxed">
-            Añade responsabilidades adicionales a un objeto de forma dinámica sin usar herencia. Envuelve el objeto con la misma interfaz (ej: streams I/O en Java).
-          </p>
-          <div class="p-2 rounded bg-black/40 font-mono text-[10px] text-cyan-200/90">
-            <code>new GZIPOutputStream(</code><br/>
-            <code>  new BufferedOutputStream(</code><br/>
-            <code>    new FileOutputStream("f.txt")))</code>
+        <div class="p-5 rounded-xl border border-border/80 bg-black/40 overflow-x-auto space-y-4">
+          <div class="min-w-[600px] flex items-center justify-between gap-6 py-2">
+            <div class="w-36 p-3 rounded-lg border border-border/80 bg-card text-center text-xs font-bold text-foreground">
+              Client
+            </div>
+
+            <div class="text-muted-foreground font-mono text-xs">────────▶</div>
+
+            <!-- Facade -->
+            <div class="w-64 p-4 rounded-xl border-2 border-cyan-400/60 bg-card text-xs space-y-2 shadow-lg">
+              <div class="font-bold text-cyan-300 text-center text-sm">VideoConverterFacade</div>
+              <div class="font-mono text-[10px] text-emerald-300 border-t border-border/40 pt-2">
+                + convertVideo(file, format): File
+              </div>
+            </div>
+
+            <div class="text-muted-foreground font-mono text-xs">───────▶</div>
+
+            <!-- Subsystem -->
+            <div class="p-3 rounded-lg border border-dashed border-border/70 bg-secondary/10 space-y-2 text-[10px] font-mono">
+              <div class="text-muted-foreground font-bold">Subsistema Complejo:</div>
+              <div class="p-1 rounded bg-black/40 text-cyan-200">VideoFile / AudioMixer</div>
+              <div class="p-1 rounded bg-black/40 text-cyan-200">BitrateReader / CodecFactory</div>
+            </div>
           </div>
         </div>
+      </div>
 
-        <!-- Proxy -->
-        <div class="p-3.5 rounded-xl border border-border/70 bg-card/60 hover:border-cyan-500/40 transition-all space-y-2">
-          <div class="flex items-center justify-between">
-            <h4 class="font-bold text-xs text-foreground flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-cyan-400"></span> Proxy (Apoderado)
-            </h4>
-            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300">Control de Acceso</span>
+      <!-- PATRÓN: Composite -->
+      <div id="pat-composite" class="gof-pattern-detail space-y-4 hidden">
+        <div class="p-4 rounded-xl border border-cyan-500/30 bg-cyan-950/15">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] font-mono text-cyan-400 font-bold tracking-widest uppercase">Estructural • GoF</span>
+              <h4 class="text-base sm:text-lg font-bold text-foreground">Composite (Objeto Compuesto)</h4>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-mono">
+              Dilema UMU: Transparencia vs Seguridad
+            </span>
           </div>
-          <p class="text-[11px] text-muted-foreground leading-relaxed">
-            Proporciona un sustituto o intermediario de otro objeto para controlar su acceso: carga perezosa (Virtual), seguridad/permisos (Protection) o red remota (Remote).
+          <p class="text-xs text-muted-foreground mt-2 leading-relaxed">
+            Compone objetos en estructuras de árbol para representar jerarquías parte-todo, permitiendo que clientes traten de manera uniforme a hojas y nodos contenedores.
           </p>
-          <div class="p-2 rounded bg-black/40 font-mono text-[10px] text-cyan-200/90">
-            <code>class ImageProxy implements Graphic &#123;</code><br/>
-            <code>  void display() &#123; if (!loaded) load(); &#125;</code><br/>
-            <code>&#125;</code>
-          </div>
         </div>
 
-        <!-- Bridge -->
-        <div class="p-3.5 rounded-xl border border-border/70 bg-card/60 hover:border-cyan-500/40 transition-all space-y-2">
-          <div class="flex items-center justify-between">
-            <h4 class="font-bold text-xs text-foreground flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-cyan-400"></span> Bridge (Puente)
-            </h4>
-            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300">Desacopla Abstracción</span>
+        <div class="p-5 rounded-xl border border-border/80 bg-black/40 overflow-x-auto space-y-4">
+          <div class="min-w-[620px] flex flex-col items-center space-y-6 py-2">
+            <!-- Component Base -->
+            <div class="w-72 rounded-lg border-2 border-cyan-400/60 bg-card p-3 text-xs text-center space-y-1">
+              <div class="text-[10px] text-muted-foreground italic">&lt;&lt;interface&gt;&gt;</div>
+              <div class="font-bold text-cyan-300">Component</div>
+              <div class="font-mono text-[10px] text-muted-foreground border-t border-border/40 pt-1">
+                + execute(): void
+              </div>
+            </div>
+
+            <!-- Bifurcación -->
+            <div class="grid grid-cols-2 gap-12 w-full max-w-lg">
+              <!-- Leaf -->
+              <div class="rounded-lg border border-border/80 bg-card/80 p-3 text-xs space-y-1">
+                <div class="font-bold text-foreground text-center">Leaf (Hoja)</div>
+                <div class="font-mono text-[10px] text-cyan-200 border-t border-border/40 pt-1">
+                  + execute(): void
+                </div>
+              </div>
+
+              <!-- Composite -->
+              <div class="rounded-lg border border-cyan-500/50 bg-card/80 p-3 text-xs space-y-1">
+                <div class="font-bold text-cyan-300 text-center">Composite (Compuesto)</div>
+                <div class="font-mono text-[10px] text-muted-foreground border-t border-border/40 pt-1 space-y-0.5">
+                  <div>- children: Component[]</div>
+                  <div>+ add(c: Component)</div>
+                  <div class="text-emerald-400">+ execute(): for c in children</div>
+                </div>
+              </div>
+            </div>
           </div>
-          <p class="text-[11px] text-muted-foreground leading-relaxed">
-            Desacopla una abstracción de su implementación, de modo que ambas puedan variar de forma independiente (ej: Formas geométricas con Motores de renderizado Vector/Raster).
+        </div>
+      </div>
+
+      <!-- PATRÓN: Decorator -->
+      <div id="pat-decorator" class="gof-pattern-detail space-y-4 hidden">
+        <div class="p-4 rounded-xl border border-cyan-500/30 bg-cyan-950/15">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] font-mono text-cyan-400 font-bold tracking-widest uppercase">Estructural • GoF</span>
+              <h4 class="text-base sm:text-lg font-bold text-foreground">Decorator (Decorador)</h4>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-mono">
+              Intención: Añadir responsabilidades dinámicamente
+            </span>
+          </div>
+          <p class="text-xs text-muted-foreground mt-2 leading-relaxed">
+            Agrega responsabilidades adicionales a un objeto dinámicamente envolviéndolo en otra instancia con su misma interfaz, evitando la explosión combinatoria de subclases.
           </p>
-          <div class="p-2 rounded bg-black/40 font-mono text-[10px] text-cyan-200/90">
-            <code>Shape(Circle) -> bridge -> Renderer(OpenGL)</code>
+        </div>
+
+        <div class="p-5 rounded-xl border border-border/80 bg-black/40 overflow-x-auto space-y-4">
+          <div class="min-w-[620px] flex items-center justify-center gap-6 py-2">
+            <div class="w-64 p-3 rounded-lg border-2 border-cyan-400/60 bg-card text-xs space-y-1">
+              <div class="text-[10px] text-muted-foreground italic text-center">&lt;&lt;interface&gt;&gt;</div>
+              <div class="font-bold text-cyan-300 text-center">Notifier</div>
+              <div class="font-mono text-[10px] text-muted-foreground border-t border-border/40 pt-1 text-center">
+                + send(msg: String): void
+              </div>
+            </div>
+
+            <div class="text-muted-foreground font-mono text-xs">◀─── envuelve</div>
+
+            <div class="w-72 p-3 rounded-lg border border-cyan-500/40 bg-card/80 text-xs space-y-1">
+              <div class="font-bold text-foreground text-center">BaseDecorator</div>
+              <div class="font-mono text-[10px] text-muted-foreground border-t border-border/40 pt-1">
+                - wrappee: Notifier
+              </div>
+              <div class="font-mono text-[10px] text-emerald-400">
+                + send(m) &#123; wrappee.send(m); extra(); &#125;
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PATRÓN: Proxy -->
+      <div id="pat-proxy" class="gof-pattern-detail space-y-4 hidden">
+        <div class="p-4 rounded-xl border border-cyan-500/30 bg-cyan-950/15">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] font-mono text-cyan-400 font-bold tracking-widest uppercase">Estructural • GoF</span>
+              <h4 class="text-base sm:text-lg font-bold text-foreground">Proxy (Apoderado)</h4>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-mono">
+              Intención: Control de acceso, lazy loading o seguridad
+            </span>
+          </div>
+          <p class="text-xs text-muted-foreground mt-2 leading-relaxed">
+            Proporciona un sustituto o intermediario de otro objeto para controlar su acceso: carga diferida (Virtual), control de roles (Protection) o comunicación de red (Remote).
+          </p>
+        </div>
+
+        <div class="p-5 rounded-xl border border-border/80 bg-black/40 overflow-x-auto space-y-4">
+          <div class="min-w-[600px] flex items-center justify-between gap-4 py-2">
+            <div class="w-32 p-3 rounded-lg border border-border/80 bg-card text-xs text-center font-bold text-foreground">Client</div>
+            <div class="text-muted-foreground font-mono text-xs">────────▶</div>
+            <div class="w-56 p-3 rounded-lg border-2 border-cyan-400/60 bg-card text-xs space-y-1">
+              <div class="text-[10px] text-muted-foreground italic text-center">&lt;&lt;interface&gt;&gt;</div>
+              <div class="font-bold text-cyan-300 text-center">ServiceSubject</div>
+              <div class="font-mono text-[10px] text-muted-foreground border-t border-border/40 pt-1 text-center">+ request(): void</div>
+            </div>
+            <div class="text-muted-foreground font-mono text-xs">◀─── implements</div>
+            <div class="w-64 p-3 rounded-lg border border-cyan-500/40 bg-card/80 text-xs space-y-1">
+              <div class="font-bold text-foreground text-center">Proxy</div>
+              <div class="font-mono text-[10px] text-muted-foreground border-t border-border/40 pt-1">- realService: RealService</div>
+              <div class="font-mono text-[10px] text-emerald-300">+ request(): if (checkAccess()) call();</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- PANEL 3: COMPORTAMIENTO -->
-    <div id="gof-panel-behavioral" class="gof-panel space-y-4 hidden">
-      <div class="p-3.5 rounded-xl border border-purple-500/20 bg-purple-500/5 text-xs text-muted-foreground leading-relaxed">
-        <strong class="text-purple-300">Patrones de Comportamiento:</strong> Se centran en los algoritmos y la asignación de responsabilidades entre objetos. Caracterizan flujos de control complejos y la comunicación cooperativa entre múltiples objetos independientes.
+    <!-- ========================================== -->
+    <!-- 3. CATEGORÍA: COMPORTAMIENTO               -->
+    <!-- ========================================== -->
+    <div id="cat-behavioral" class="gof-category-view space-y-5 hidden">
+      <!-- Selector de Patrones de Comportamiento -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-border/40">
+        <span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-2 shrink-0">Patrón:</span>
+        <button class="gof-pat-btn active-pat px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-purple-500/20 text-purple-300 border border-purple-500/50 shadow-sm shrink-0" data-target="pat-strategy">
+          Strategy
+        </button>
+        <button class="gof-pat-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/40 border border-transparent shrink-0" data-target="pat-state">
+          State
+        </button>
+        <button class="gof-pat-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/40 border border-transparent shrink-0" data-target="pat-command">
+          Command (Undo/Redo)
+        </button>
+        <button class="gof-pat-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/40 border border-transparent shrink-0" data-target="pat-observer">
+          Observer
+        </button>
+        <button class="gof-pat-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-secondary/40 border border-transparent shrink-0" data-target="pat-cor">
+          Chain of Resp.
+        </button>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Strategy -->
-        <div class="p-4 rounded-xl border border-border/70 bg-card/60 hover:border-purple-500/40 transition-all space-y-3">
-          <div class="flex items-center justify-between">
-            <h4 class="font-bold text-sm text-foreground flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-purple-400"></span> Strategy (Estrategia)
-            </h4>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300">"El CÓMO"</span>
+      <!-- PATRÓN: Strategy -->
+      <div id="pat-strategy" class="gof-pattern-detail space-y-4">
+        <div class="p-4 rounded-xl border border-purple-500/30 bg-purple-950/15">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] font-mono text-purple-400 font-bold tracking-widest uppercase">Comportamiento • GoF</span>
+              <h4 class="text-base sm:text-lg font-bold text-foreground">Strategy (Estrategia) — "El CÓMO"</h4>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/40 font-mono">
+              Intención: Algoritmos intercambiables en tiempo de ejecución
+            </span>
           </div>
-          <p class="text-xs text-muted-foreground leading-relaxed">
-            Define una familia de algoritmos, encapsula cada uno en una clase independiente y los hace intercambiables. Permite que el algoritmo varíe independientemente de los clientes que lo usan.
+          <p class="text-xs text-muted-foreground mt-2 leading-relaxed">
+            Define una familia de algoritmos, encapsula cada uno de ellos y los hace intercambiables. Permite que el algoritmo varíe independientemente de los clientes que lo usan.
           </p>
-          <div class="p-2.5 rounded-lg bg-black/40 border border-border/40 font-mono text-[11px] text-purple-200/90">
-            <code>navigator.setRoutingStrategy(new FastestPathStrategy());</code><br/>
-            <code>navigator.buildRoute(origen, destino);</code>
-          </div>
-          <div class="text-[11px] text-muted-foreground">
-            <strong class="text-foreground">Diferencia canónica:</strong> Se enfoca en resolver el mismo problema con diferentes algoritmos matemáticos o de optimización.
-          </div>
         </div>
 
-        <!-- State -->
-        <div class="p-4 rounded-xl border border-border/70 bg-card/60 hover:border-purple-500/40 transition-all space-y-3">
-          <div class="flex items-center justify-between">
-            <h4 class="font-bold text-sm text-foreground flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-purple-400"></span> State (Estado)
-            </h4>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300">"El QUÉ según estado"</span>
+        <div class="p-5 rounded-xl border border-border/80 bg-black/40 overflow-x-auto space-y-4">
+          <div class="text-xs font-mono text-muted-foreground pb-2 border-b border-border/40">
+            <span class="text-purple-300 font-bold">Diagrama UML: Contexto delegando en Estrategia</span>
           </div>
-          <p class="text-xs text-muted-foreground leading-relaxed">
-            Permite que un objeto altere su comportamiento cuando cambia su estado interno. El objeto parece haber cambiado de clase (máquina de estados finita limpia sin switches kilométricos).
-          </p>
-          <div class="p-2.5 rounded-lg bg-black/40 border border-border/40 font-mono text-[11px] text-purple-200/90">
-            <code>class Pedido &#123;</code><br/>
-            <code>  private EstadoPedido estado; // Borrador, Pagado, Enviado</code><br/>
-            <code>  void cancelar() &#123; estado.cancelar(this); &#125;</code><br/>
-            <code>&#125;</code>
-          </div>
-          <div class="text-[11px] text-muted-foreground">
-            <strong class="text-foreground">Transiciones:</strong> El estado actual decide a qué nuevo estado transicionar según el evento disparado.
+
+          <div class="min-w-[620px] flex items-center justify-between gap-6 py-2">
+            <!-- Context -->
+            <div class="w-64 rounded-lg border border-border/80 bg-card p-3 text-xs space-y-1">
+              <div class="font-bold text-foreground text-center">NavigatorContext</div>
+              <div class="font-mono text-[10px] text-muted-foreground border-t border-border/40 pt-1">
+                - strategy: RouteStrategy
+              </div>
+              <div class="font-mono text-[10px] text-purple-300">
+                + buildRoute(A, B): Route
+              </div>
+            </div>
+
+            <div class="text-muted-foreground font-mono text-xs">◆──────▶</div>
+
+            <!-- Strategy Interface -->
+            <div class="w-60 rounded-lg border-2 border-purple-400/60 bg-card p-3 text-xs space-y-1">
+              <div class="text-[10px] text-muted-foreground italic text-center">&lt;&lt;interface&gt;&gt;</div>
+              <div class="font-bold text-purple-300 text-center">RouteStrategy</div>
+              <div class="font-mono text-[10px] text-muted-foreground border-t border-border/40 pt-1 text-center">
+                + calculate(A, B): Route
+              </div>
+            </div>
+
+            <div class="text-muted-foreground font-mono text-xs">◀─── implements</div>
+
+            <!-- Concrete Strategies -->
+            <div class="space-y-2 text-[10px] font-mono">
+              <div class="p-2 rounded border border-purple-500/40 bg-card/80 text-foreground">FastestRouteStrategy</div>
+              <div class="p-2 rounded border border-purple-500/40 bg-card/80 text-foreground">EconomicRouteStrategy</div>
+            </div>
           </div>
         </div>
+      </div>
 
-        <!-- Command con Undo/Redo -->
-        <div class="p-4 rounded-xl border border-border/70 bg-card/60 hover:border-purple-500/40 transition-all space-y-3">
-          <div class="flex items-center justify-between">
-            <h4 class="font-bold text-sm text-foreground flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-purple-400"></span> Command & Historial Undo/Redo
-            </h4>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">TDS UMU Clave</span>
+      <!-- PATRÓN: State -->
+      <div id="pat-state" class="gof-pattern-detail space-y-4 hidden">
+        <div class="p-4 rounded-xl border border-purple-500/30 bg-purple-950/15">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] font-mono text-purple-400 font-bold tracking-widest uppercase">Comportamiento • GoF</span>
+              <h4 class="text-base sm:text-lg font-bold text-foreground">State (Estado) — "El QUÉ según estado"</h4>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/40 font-mono">
+              Intención: El objeto parece cambiar de clase al mutar su estado
+            </span>
           </div>
-          <p class="text-xs text-muted-foreground leading-relaxed">
-            Encapsula una petición como un objeto independiente conteniendo toda la información de la acción (receptor, método, argumentos). Soporta encolado, ejecución asíncrona y reversibilidad.
+          <p class="text-xs text-muted-foreground mt-2 leading-relaxed">
+            Permite que un objeto altere su comportamiento cuando su estado interno cambia. El comportamiento se delega en objetos Estado concretos que transicionan automáticamente.
           </p>
-          <div class="p-2.5 rounded-lg bg-black/40 border border-border/40 font-mono text-[11px] text-purple-200/90">
-            <code>interface Command &#123; void execute(); void undo(); &#125;</code><br/>
-            <code>class UndoRedoManager &#123;</code><br/>
-            <code>  Stack&lt;Command&gt; undoStack, redoStack;</code><br/>
-            <code>&#125;</code>
-          </div>
-          <div class="text-[11px] text-muted-foreground">
-            <strong class="text-foreground">Requisito UMU:</strong> El comando debe almacenar una copia de respaldo (memento/deep copy) del estado previo antes de mutar el receptor para garantizar idempotencia en `undo()`.
-          </div>
         </div>
 
-        <!-- Observer -->
-        <div class="p-4 rounded-xl border border-border/70 bg-card/60 hover:border-purple-500/40 transition-all space-y-3">
-          <div class="flex items-center justify-between">
-            <h4 class="font-bold text-sm text-foreground flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-purple-400"></span> Observer (Publicador/Suscriptor)
-            </h4>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300">Event-Driven</span>
+        <div class="p-5 rounded-xl border border-border/80 bg-black/40 overflow-x-auto space-y-4">
+          <div class="min-w-[620px] flex items-center justify-between gap-6 py-2">
+            <!-- Context -->
+            <div class="w-64 rounded-lg border border-border/80 bg-card p-3 text-xs space-y-1">
+              <div class="font-bold text-foreground text-center">PedidoContext</div>
+              <div class="font-mono text-[10px] text-muted-foreground border-t border-border/40 pt-1">
+                - estado: EstadoPedido
+              </div>
+              <div class="font-mono text-[10px] text-purple-300">
+                + pagar(): estado.pagar(this)
+              </div>
+            </div>
+
+            <div class="text-muted-foreground font-mono text-xs">◆──────▶</div>
+
+            <!-- State Interface -->
+            <div class="w-60 rounded-lg border-2 border-purple-400/60 bg-card p-3 text-xs space-y-1">
+              <div class="text-[10px] text-muted-foreground italic text-center">&lt;&lt;interface&gt;&gt;</div>
+              <div class="font-bold text-purple-300 text-center">EstadoPedido</div>
+              <div class="font-mono text-[10px] text-muted-foreground border-t border-border/40 pt-1 text-center">
+                + pagar(ctx): void
+              </div>
+            </div>
+
+            <div class="text-muted-foreground font-mono text-xs">◀─── implements</div>
+
+            <div class="space-y-2 text-[10px] font-mono">
+              <div class="p-2 rounded border border-purple-500/40 bg-card/80 text-foreground">EstadoBorrador</div>
+              <div class="p-2 rounded border border-purple-500/40 bg-card/80 text-foreground">EstadoPagado</div>
+            </div>
           </div>
-          <p class="text-xs text-muted-foreground leading-relaxed">
-            Define una dependencia uno-a-muchos entre objetos de forma que cuando el sujeto cambia su estado, todos sus suscriptores registrados son notificados automáticamente.
+        </div>
+      </div>
+
+      <!-- PATRÓN: Command con Undo/Redo -->
+      <div id="pat-command" class="gof-pattern-detail space-y-4 hidden">
+        <div class="p-4 rounded-xl border border-emerald-500/30 bg-emerald-950/15">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] font-mono text-emerald-400 font-bold tracking-widest uppercase">Comportamiento • TDS UMU</span>
+              <h4 class="text-base sm:text-lg font-bold text-foreground">Command & Historial Undo/Redo Reversible</h4>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono">
+              Requisitos UMU: CommandManager + Lista de Historia con Copias
+            </span>
+          </div>
+          <p class="text-xs text-muted-foreground mt-2 leading-relaxed">
+            Encapsula una petición como un objeto independiente (receptor, acción, copia del estado previo). Permite parametrizar clientes con diferentes peticiones, encolar tareas y deshacer operaciones de forma reversible.
           </p>
-          <div class="p-2.5 rounded-lg bg-black/40 border border-border/40 font-mono text-[11px] text-purple-200/90">
-            <code>sujeto.attach(observador);</code><br/>
-            <code>sujeto.notifyObservers(nuevoEvento);</code>
+        </div>
+
+        <div class="p-5 rounded-xl border border-border/80 bg-black/40 overflow-x-auto space-y-4">
+          <div class="text-xs font-mono text-muted-foreground pb-2 border-b border-border/40">
+            <span class="text-emerald-300 font-bold">Diagrama UML: Command Reversible con Pilas Undo/Redo</span>
           </div>
-          <div class="text-[11px] text-muted-foreground">
-            <strong class="text-foreground">Push vs Pull:</strong> En modelo <em>Push</em> el sujeto envía los datos con el evento; en <em>Pull</em> el observador consulta los getters del sujeto.
+
+          <div class="min-w-[650px] grid grid-cols-4 gap-4 py-2 text-xs">
+            <!-- CommandManager / Invoker -->
+            <div class="rounded-lg border-2 border-emerald-400/60 bg-card p-3 space-y-1">
+              <div class="font-bold text-emerald-300 text-center">CommandManager</div>
+              <div class="font-mono text-[10px] text-muted-foreground border-t border-border/40 pt-1">
+                - undoStack: Stack&lt;Command&gt;<br/>
+                - redoStack: Stack&lt;Command&gt;
+              </div>
+              <div class="font-mono text-[10px] text-foreground pt-1 space-y-0.5">
+                <div>+ execute(cmd)</div>
+                <div class="text-emerald-400">+ undo()</div>
+                <div class="text-cyan-400">+ redo()</div>
+              </div>
+            </div>
+
+            <!-- Command Interface -->
+            <div class="rounded-lg border-2 border-indigo-400/60 bg-card p-3 space-y-1">
+              <div class="text-[10px] text-muted-foreground italic text-center">&lt;&lt;interface&gt;&gt;</div>
+              <div class="font-bold text-indigo-300 text-center">Command</div>
+              <div class="font-mono text-[10px] text-muted-foreground border-t border-border/40 pt-1 space-y-1">
+                <div>+ execute(): void</div>
+                <div class="text-emerald-300">+ undo(): void</div>
+              </div>
+            </div>
+
+            <!-- Concrete Command -->
+            <div class="rounded-lg border border-purple-500/50 bg-card/80 p-3 space-y-1">
+              <div class="font-bold text-purple-300 text-center">PasteCommand</div>
+              <div class="font-mono text-[10px] text-muted-foreground border-t border-border/40 pt-1">
+                - receiver: Editor<br/>
+                - backupText: String
+              </div>
+              <div class="font-mono text-[10px] text-foreground pt-1 space-y-0.5">
+                <div>+ execute(): backup; do();</div>
+                <div class="text-emerald-400">+ undo(): restore();</div>
+              </div>
+            </div>
+
+            <!-- Receiver -->
+            <div class="rounded-lg border border-border/80 bg-card p-3 space-y-1">
+              <div class="font-bold text-foreground text-center">Editor (Receiver)</div>
+              <div class="font-mono text-[10px] text-muted-foreground border-t border-border/40 pt-1">
+                - text: String
+              </div>
+              <div class="font-mono text-[10px] text-muted-foreground pt-1">
+                + replaceSelection(t)
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PATRÓN: Observer -->
+      <div id="pat-observer" class="gof-pattern-detail space-y-4 hidden">
+        <div class="p-4 rounded-xl border border-purple-500/30 bg-purple-950/15">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] font-mono text-purple-400 font-bold tracking-widest uppercase">Comportamiento • GoF</span>
+              <h4 class="text-base sm:text-lg font-bold text-foreground">Observer (Publicador / Suscriptor)</h4>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/40 font-mono">
+              Intención: Notificación 1 a N desacoplada
+            </span>
+          </div>
+          <p class="text-xs text-muted-foreground mt-2 leading-relaxed">
+            Define una dependencia uno a muchos entre objetos de modo que cuando el sujeto cambia su estado, todos sus dependientes registrados son notificados automáticamente.
+          </p>
+        </div>
+
+        <div class="p-5 rounded-xl border border-border/80 bg-black/40 overflow-x-auto space-y-4">
+          <div class="min-w-[620px] flex items-center justify-between gap-6 py-2">
+            <div class="w-64 rounded-lg border-2 border-purple-400/60 bg-card p-3 text-xs space-y-1">
+              <div class="font-bold text-purple-300 text-center">Subject (Publisher)</div>
+              <div class="font-mono text-[10px] text-muted-foreground border-t border-border/40 pt-1">
+                - observers: Observer[]
+              </div>
+              <div class="font-mono text-[10px] text-foreground">
+                + attach(obs): void<br/>
+                + notifyObservers(): void
+              </div>
+            </div>
+
+            <div class="text-muted-foreground font-mono text-xs">────────▶ notifica</div>
+
+            <div class="w-64 rounded-lg border-2 border-indigo-400/60 bg-card p-3 text-xs space-y-1">
+              <div class="text-[10px] text-muted-foreground italic text-center">&lt;&lt;interface&gt;&gt;</div>
+              <div class="font-bold text-indigo-300 text-center">Observer (Subscriber)</div>
+              <div class="font-mono text-[10px] text-emerald-300 border-t border-border/40 pt-1 text-center">
+                + update(eventData): void
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PATRÓN: Chain of Responsibility -->
+      <div id="pat-cor" class="gof-pattern-detail space-y-4 hidden">
+        <div class="p-4 rounded-xl border border-purple-500/30 bg-purple-950/15">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] font-mono text-purple-400 font-bold tracking-widest uppercase">Comportamiento • GoF</span>
+              <h4 class="text-base sm:text-lg font-bold text-foreground">Chain of Responsibility (Cadena de Responsabilidad)</h4>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/40 font-mono">
+              Intención: Desacoplar emisor pasando petición por cadena de manejadores
+            </span>
+          </div>
+          <p class="text-xs text-muted-foreground mt-2 leading-relaxed">
+            Permite pasar peticiones a lo largo de una cadena de manejadores. Al recibir una petición, cada manejador decide si la procesa o la reenvía al siguiente eslabón.
+          </p>
+        </div>
+
+        <div class="p-5 rounded-xl border border-border/80 bg-black/40 overflow-x-auto space-y-4">
+          <div class="min-w-[620px] flex items-center justify-between gap-4 py-2 text-xs">
+            <div class="w-32 p-3 rounded-lg border border-border/80 bg-card text-center font-bold text-foreground">Client</div>
+            <div class="text-muted-foreground font-mono text-xs">──▶</div>
+            <div class="w-48 p-3 rounded-lg border border-purple-500/40 bg-card/80 text-center font-mono">AuthMiddleware</div>
+            <div class="text-muted-foreground font-mono text-xs">──▶</div>
+            <div class="w-48 p-3 rounded-lg border border-purple-500/40 bg-card/80 text-center font-mono">RoleCheckMiddleware</div>
+            <div class="text-muted-foreground font-mono text-xs">──▶</div>
+            <div class="w-48 p-3 rounded-lg border border-emerald-500/40 bg-card/80 text-center font-mono">BusinessHandler</div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- PANEL 4: TRADEOFFS TDS -->
-    <div id="gof-panel-tradeoffs" class="gof-panel space-y-4 hidden">
+    <!-- ========================================== -->
+    <!-- 4. CATEGORÍA: TRADE-OFFS TDS               -->
+    <!-- ========================================== -->
+    <div id="cat-tradeoffs" class="gof-category-view space-y-4 hidden">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
         <!-- Strategy vs State -->
         <div class="p-4 rounded-xl border border-amber-500/30 bg-card/60 space-y-2">
-          <h4 class="font-bold text-sm text-amber-300 flex items-center gap-2">
-            Strategy vs State
-          </h4>
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-sm text-amber-300">Strategy vs State</h4>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">Intención Semántica</span>
+          </div>
           <p class="text-muted-foreground leading-relaxed">
-            Aunque su diagrama estructural UML es idéntico (un contexto que delega en una interfaz polimórfica), su intención semántica difiere radicalmente:
+            Aunque su diagrama estructural UML es idéntico (un contexto que delega en una interfaz polimórfica), su intención difiere:
           </p>
           <ul class="list-disc list-inside space-y-1 text-muted-foreground">
-            <li><strong class="text-foreground">Strategy:</strong> El cliente selecciona y configura conscientemente el algoritmo concreto ("cómo"). Las estrategias no se conocen entre sí ni mutan el contexto.</li>
-            <li><strong class="text-foreground">State:</strong> El cliente no elige los estados; el propio contexto o los estados concretos transicionan dinámicamente según los eventos ("qué").</li>
+            <li><strong class="text-foreground">Strategy:</strong> El cliente selecciona y configura conscientemente el algoritmo ("cómo"). Las estrategias son independientes y no alteran el contexto.</li>
+            <li><strong class="text-foreground">State:</strong> El cliente no elige los estados; el propio contexto o los estados concretos transicionan dinámicamente según eventos ("qué").</li>
           </ul>
         </div>
 
         <!-- Adapter vs Facade -->
         <div class="p-4 rounded-xl border border-cyan-500/30 bg-card/60 space-y-2">
-          <h4 class="font-bold text-sm text-cyan-300 flex items-center gap-2">
-            Adapter vs Facade
-          </h4>
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-sm text-cyan-300">Adapter vs Facade</h4>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300">Wrappers Opuestos</span>
+          </div>
           <p class="text-muted-foreground leading-relaxed">
-            Ambos son envoltorios (wrappers), pero con propósitos opuestos:
+            Ambos envuelven código existente, pero con objetivos contrarios:
           </p>
           <ul class="list-disc list-inside space-y-1 text-muted-foreground">
-            <li><strong class="text-foreground">Adapter:</strong> Hace que dos interfaces preexistentes e incompatibles encajen (1 a 1). Respeta una interfaz predeterminada que el cliente ya exige.</li>
-            <li><strong class="text-foreground">Facade:</strong> Crea una <em>nueva interfaz unificada</em> más simple sobre un subsistema complejo (1 a muchos) para facilitar su consumo general.</li>
+            <li><strong class="text-foreground">Adapter (1 a 1):</strong> Encaja dos interfaces preexistentes e incompatibles sin modificar código cliente ni librerías ajenas.</li>
+            <li><strong class="text-foreground">Facade (1 a Muchos):</strong> Crea una <em>nueva interfaz unificada</em> simplificada sobre un subsistema complejo para facilitar su consumo general.</li>
           </ul>
         </div>
 
         <!-- Composite: Seguridad vs Transparencia -->
         <div class="p-4 rounded-xl border border-emerald-500/30 bg-card/60 space-y-2">
-          <h4 class="font-bold text-sm text-emerald-300 flex items-center gap-2">
-            Composite: Seguridad vs Transparencia
-          </h4>
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-sm text-emerald-300">Composite: Seguridad vs Transparencia</h4>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">Dilema Canónico TDS</span>
+          </div>
           <p class="text-muted-foreground leading-relaxed">
-            Dilema clásico de diseño en TDS UMU:
+            Compromiso arquitectónico al modelar árboles parte-todo:
           </p>
           <ul class="list-disc list-inside space-y-1 text-muted-foreground">
-            <li><strong class="text-foreground">Transparencia:</strong> Los métodos de gestión de hijos (<code>add()</code>, <code>remove()</code>) se declaran en el Componente base. Las Hojas deben lanzar excepciones al invocarlos (menor seguridad en compilación, mayor polimorfismo).</li>
-            <li><strong class="text-foreground">Seguridad:</strong> Los métodos de hijos sólo existen en <code>Composite</code>. Las Hojas no compilan con <code>add()</code>, pero se pierde el tratamiento uniforme y exige <code>instanceof</code> o downcasting.</li>
+            <li><strong class="text-foreground">Transparencia:</strong> Operaciones de hijos (<code>add()</code>, <code>remove()</code>) en el Componente base. Permite tratamiento polimórfico universal, pero las Hojas lanzan excepciones en runtime.</li>
+            <li><strong class="text-foreground">Seguridad:</strong> Operaciones de hijos solo en <code>Composite</code>. Errores detectados en compilación, pero exige <code>instanceof</code> y downcasting.</li>
           </ul>
         </div>
 
         <!-- Decorator vs Subclases -->
         <div class="p-4 rounded-xl border border-purple-500/30 bg-card/60 space-y-2">
-          <h4 class="font-bold text-sm text-purple-300 flex items-center gap-2">
-            Decorator vs Explosión de Clases
-          </h4>
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-sm text-purple-300">Decorator vs Subclases</h4>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300">Composición Dinámica</span>
+          </div>
           <p class="text-muted-foreground leading-relaxed">
-            Si tenemos una clase <code>Cafe</code> con 4 añadidos opcionales (Leche, Caramelo, Soja, Canela), usar herencia pura exigiría crear $2^4 = 16$ subclases para cubrir todas las combinaciones.
+            Evita la explosión combinatoria: con 4 características opcionales, la herencia requeriría $2^4 = 16$ clases. Con Decorator, solo 4 envoltorios combinables en tiempo de ejecución.
           </p>
           <p class="text-muted-foreground leading-relaxed">
-            Con <strong class="text-purple-300">Decorator</strong>, solo creamos 4 clases decoradoras y las encadenamos en runtime a voluntad: <code>new Canela(new Leche(new CafeSimple()))</code>.
+            <strong class="text-amber-300 font-mono">Regla TDS:</strong> Si el objeto base no es "ligero" (mucha lógica pesada interna), prioriza <em>Strategy</em>.
           </p>
         </div>
       </div>
     </div>
+
   </div>
 </div>
 
 <script>
-  function setupGofTabs() {
-    const tabs = document.querySelectorAll('.gof-cat-tab');
-    const panels = document.querySelectorAll('.gof-panel');
+  function initGofMaster() {
+    // 1. Manejo de Categorías Principales
+    const catButtons = document.querySelectorAll<HTMLButtonElement>('.gof-cat-btn');
+    const catViews = document.querySelectorAll<HTMLElement>('.gof-category-view');
 
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        const cat = tab.getAttribute('data-cat');
-        if (!cat) return;
+    catButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetCat = btn.getAttribute('data-category');
+        if (!targetCat) return;
 
-        tabs.forEach(t => {
-          t.classList.remove('bg-primary/20', 'border-primary/40', 'text-foreground');
-          t.classList.add('text-muted-foreground');
+        // Reset visual de todos los botones de categoría
+        catButtons.forEach(b => {
+          b.classList.remove(
+            'active-cat',
+            'text-white',
+            'bg-indigo-600',
+            'shadow-md',
+            'shadow-indigo-500/30',
+            'border-indigo-400',
+            'font-bold'
+          );
+          b.classList.add('text-muted-foreground', 'border-transparent', 'font-medium');
         });
 
-        tab.classList.add('bg-primary/20', 'border-primary/40', 'text-foreground');
-        tab.classList.remove('text-muted-foreground');
+        // Activar el botón pulsado con destaque inequívoco
+        btn.classList.add(
+          'active-cat',
+          'text-white',
+          'bg-indigo-600',
+          'shadow-md',
+          'shadow-indigo-500/30',
+          'border-indigo-400',
+          'font-bold'
+        );
+        btn.classList.remove('text-muted-foreground', 'border-transparent', 'font-medium');
 
-        panels.forEach(p => {
-          if (p.id === `gof-panel-${cat}`) {
-            p.classList.remove('hidden');
+        // Mostrar la vista de categoría correspondiente
+        catViews.forEach(view => {
+          if (view.id === `cat-${targetCat}`) {
+            view.classList.remove('hidden');
           } else {
-            p.classList.add('hidden');
+            view.classList.add('hidden');
+          }
+        });
+      });
+    });
+
+    // 2. Manejo de Selección de Patrón dentro de cada categoría
+    const patButtons = document.querySelectorAll<HTMLButtonElement>('.gof-pat-btn');
+
+    patButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = btn.getAttribute('data-target');
+        if (!targetId) return;
+
+        // Encontrar el contenedor de categoría padre
+        const parentCat = btn.closest('.gof-category-view');
+        if (!parentCat) return;
+
+        // Resetear botones hermanos en esta categoría
+        const siblingButtons = parentCat.querySelectorAll<HTMLButtonElement>('.gof-pat-btn');
+        siblingButtons.forEach(b => {
+          b.classList.remove(
+            'active-pat',
+            'font-semibold',
+            'bg-indigo-500/20',
+            'text-indigo-300',
+            'border-indigo-500/50',
+            'bg-cyan-500/20',
+            'text-cyan-300',
+            'border-cyan-500/50',
+            'bg-purple-500/20',
+            'text-purple-300',
+            'border-purple-500/50',
+            'shadow-sm'
+          );
+          b.classList.add('text-muted-foreground', 'border-transparent', 'font-medium');
+        });
+
+        // Activar botón pulsado
+        btn.classList.add('active-pat', 'font-semibold', 'shadow-sm');
+        btn.classList.remove('text-muted-foreground', 'border-transparent', 'font-medium');
+        
+        // Estilo según categoría
+        if (parentCat.id === 'cat-creational') {
+          btn.classList.add('bg-indigo-500/20', 'text-indigo-300', 'border-indigo-500/50');
+        } else if (parentCat.id === 'cat-structural') {
+          btn.classList.add('bg-cyan-500/20', 'text-cyan-300', 'border-cyan-500/50');
+        } else {
+          btn.classList.add('bg-purple-500/20', 'text-purple-300', 'border-purple-500/50');
+        }
+
+        // Mostrar el detalle del patrón correspondiente
+        const patternDetails = parentCat.querySelectorAll<HTMLElement>('.gof-pattern-detail');
+        patternDetails.forEach(detail => {
+          if (detail.id === targetId) {
+            detail.classList.remove('hidden');
+          } else {
+            detail.classList.add('hidden');
           }
         });
       });
     });
   }
 
-  setupGofTabs();
-  document.addEventListener('astro:page-load', setupGofTabs);
+  // Inicialización inmediata y con eventos de navegación de Astro
+  initGofMaster();
+  document.addEventListener('astro:page-load', initGofMaster);
 </script>
