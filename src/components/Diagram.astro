@@ -16,6 +16,8 @@ import ReactLoop from './diagrams/ReactLoop.astro';
 import RagPipeline from './diagrams/RagPipeline.astro';
 import BitLayout from './diagrams/BitLayout.astro';
 import ProcessMemoryLayout from './diagrams/ProcessMemoryLayout.astro';
+import TrieHorizontal from './diagrams/TrieHorizontal.astro';
+import GraphRepresentation from './diagrams/GraphRepresentation.astro';
 
 interface Props {
   id: DiagramId;
@@ -40,6 +42,8 @@ const registry = {
   'rag-pipeline': RagPipeline,
   'bit-layout': BitLayout,
   'process-memory-layout': ProcessMemoryLayout,
+  'trie-horizontal': TrieHorizontal,
+  'graph-representation': GraphRepresentation,
 } satisfies Record<DiagramId, unknown>;
 
 const Diagram = registry[id];

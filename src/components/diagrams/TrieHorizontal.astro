@@ -1,0 +1,97 @@
+---
+// TrieHorizontal.astro - Representación horizontal de un árbol Trie
+---
+
+<div class="space-y-4">
+  <div class="flex items-center justify-between text-xs">
+    <span class="font-mono text-ink">Árbol de Prefijos (Trie)</span>
+    <span class="font-mono text-dim">Búsqueda en O(L) · L = longitud</span>
+  </div>
+
+  <div class="overflow-x-auto rounded-lg border border-white/10 bg-black/30 p-4 font-mono text-[11px] leading-relaxed">
+    <div class="space-y-3">
+      <!-- Raíz -->
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center rounded-md border border-white/20 bg-white/10 px-2 py-1 font-semibold text-ink">
+          (raíz)
+        </span>
+        <span class="text-dim">inicio de prefijo común</span>
+      </div>
+
+      <!-- Rama 'm' -->
+      <div class="ml-4 border-l-2 border-indigo-400/40 pl-3 space-y-2">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span class="rounded border border-indigo-400/40 bg-indigo-500/10 px-1.5 py-0.5 text-indigo-200">m</span>
+          <span class="text-dim">──►</span>
+          <span class="rounded border border-indigo-400/40 bg-indigo-500/10 px-1.5 py-0.5 text-indigo-200">a</span>
+          <span class="text-dim">──►</span>
+          <span class="rounded border border-emerald-400/50 bg-emerald-500/20 px-2 py-0.5 font-bold text-emerald-300">
+            r [✓ "mar"]
+          </span>
+        </div>
+
+        <!-- Subramas de 'mar' -->
+        <div class="ml-8 border-l border-white/10 pl-3 space-y-1.5">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span class="text-dim">├──</span>
+            <span class="rounded border border-indigo-400/30 bg-indigo-500/10 px-1.5 py-0.5 text-indigo-200">e</span>
+            <span class="text-dim">──►</span>
+            <span class="rounded border border-emerald-400/50 bg-emerald-500/20 px-2 py-0.5 font-bold text-emerald-300">
+              a [✓ "marea"]
+            </span>
+          </div>
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span class="text-dim">└──</span>
+            <span class="rounded border border-indigo-400/30 bg-indigo-500/10 px-1.5 py-0.5 text-indigo-200">i</span>
+            <span class="text-dim">──►</span>
+            <span class="rounded border border-indigo-400/30 bg-indigo-500/10 px-1.5 py-0.5 text-indigo-200">n</span>
+            <span class="text-dim">──►</span>
+            <span class="rounded border border-emerald-400/50 bg-emerald-500/20 px-2 py-0.5 font-bold text-emerald-300">
+              o [✓ "marino"]
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rama 's' -->
+      <div class="ml-4 border-l-2 border-amber-400/40 pl-3 space-y-2 pt-2">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span class="rounded border border-amber-400/40 bg-amber-500/10 px-1.5 py-0.5 text-amber-200">s</span>
+          <span class="text-dim">──►</span>
+          <span class="rounded border border-amber-400/40 bg-amber-500/10 px-1.5 py-0.5 text-amber-200">o</span>
+          <span class="text-dim">──►</span>
+          <span class="rounded border border-emerald-400/50 bg-emerald-500/20 px-2 py-0.5 font-bold text-emerald-300">
+            l [✓ "sol"]
+          </span>
+        </div>
+
+        <!-- Subrama de 'sol' -->
+        <div class="ml-8 border-l border-white/10 pl-3 space-y-1.5">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span class="text-dim">└──</span>
+            <span class="rounded border border-amber-400/30 bg-amber-500/10 px-1.5 py-0.5 text-amber-200">a</span>
+            <span class="text-dim">──►</span>
+            <span class="rounded border border-emerald-400/50 bg-emerald-500/20 px-2 py-0.5 font-bold text-emerald-300">
+              r [✓ "solar"]
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 gap-2 text-[10px] text-dim sm:grid-cols-2">
+    <div class="rounded-lg border border-white/8 bg-white/[0.015] p-2.5">
+      <span class="font-mono text-ink">Ventaja de prefijo común:</span>
+      <p class="mt-1">
+        Las palabras <code class="text-muted">"mar"</code>, <code class="text-muted">"marea"</code> y <code class="text-muted">"marino"</code> comparten el camino inicial sin duplicar memoria.
+      </p>
+    </div>
+    <div class="rounded-lg border border-white/8 bg-white/[0.015] p-2.5">
+      <span class="font-mono text-ink">Fin de palabra (marcador booleano):</span>
+      <p class="mt-1">
+        Cada casilla verde <code class="text-emerald-300">✓</code> tiene <code class="text-muted">isEndOfWord = true</code>, permitiendo que <code class="text-muted">"mar"</code> sea palabra completa y prefijo simultáneamente.
+      </p>
+    </div>
+  </div>
+</div>

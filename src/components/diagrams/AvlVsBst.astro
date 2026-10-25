@@ -46,4 +46,70 @@
       </p>
     </div>
   </div>
+
+  <!-- Las 4 rotaciones canónicas del AVL -->
+  <div class="rounded-lg border border-white/8 bg-black/25 p-3.5">
+    <div class="flex items-center justify-between border-b border-white/8 pb-2">
+      <span class="font-mono text-xs font-semibold text-ink">Las 4 Rotaciones de Rebalanceo O(1)</span>
+      <span class="font-mono text-[10px] text-dim">FE = altura(der) − altura(izq)</span>
+    </div>
+
+    <div class="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2 text-[10px] font-mono">
+      <!-- 1. RSD -->
+      <div class="rounded-md border border-white/6 bg-white/[0.015] p-2.5">
+        <div class="flex items-center justify-between text-indigo-300 font-semibold">
+          <span>1. RSD (Simple Derecha)</span>
+          <span class="rounded bg-indigo-500/10 px-1.5 py-0.5 text-[9px]">Caso II</span>
+        </div>
+        <p class="mt-1 text-dim text-[9px]">Inserción en subárbol izquierdo de hijo izquierdo.</p>
+        <pre class="mt-2 text-ink/90 bg-black/30 p-2 rounded border border-white/5 leading-4">    (C) [-2]              (B) [0]
+    /   \                 /     \
+  (B)   T3    ──►       (A)     (C)
+  / \                   / \     / \
+(A)  T2                T0 T1   T2 T3</pre>
+      </div>
+
+      <!-- 2. RSI -->
+      <div class="rounded-md border border-white/6 bg-white/[0.015] p-2.5">
+        <div class="flex items-center justify-between text-indigo-300 font-semibold">
+          <span>2. RSI (Simple Izquierda)</span>
+          <span class="rounded bg-indigo-500/10 px-1.5 py-0.5 text-[9px]">Caso DD</span>
+        </div>
+        <p class="mt-1 text-dim text-[9px]">Inserción en subárbol derecho de hijo derecho.</p>
+        <pre class="mt-2 text-ink/90 bg-black/30 p-2 rounded border border-white/5 leading-4">    (A) [+2]              (B) [0]
+    /   \                 /     \
+   T0   (B)   ──►       (A)     (C)
+        / \             / \     / \
+       T1 (C)          T0 T1   T2 T3</pre>
+      </div>
+
+      <!-- 3. RDID -->
+      <div class="rounded-md border border-white/6 bg-white/[0.015] p-2.5">
+        <div class="flex items-center justify-between text-emerald-300 font-semibold">
+          <span>3. RDID (Doble Izq-Der)</span>
+          <span class="rounded bg-emerald-500/10 px-1.5 py-0.5 text-[9px]">Caso ID</span>
+        </div>
+        <p class="mt-1 text-dim text-[9px]">RSI en hijo (B) + RSD en raíz (C) (zig-zag).</p>
+        <pre class="mt-2 text-ink/90 bg-black/30 p-2 rounded border border-white/5 leading-4">   (C) [-2]              (X) [0]
+   /   \                 /     \
+ (B)   T3    ──►       (B)     (C)
+   \                   / \     / \
+   (X)                T0 T1   T2 T3</pre>
+      </div>
+
+      <!-- 4. RDDI -->
+      <div class="rounded-md border border-white/6 bg-white/[0.015] p-2.5">
+        <div class="flex items-center justify-between text-emerald-300 font-semibold">
+          <span>4. RDDI (Doble Der-Izq)</span>
+          <span class="rounded bg-emerald-500/10 px-1.5 py-0.5 text-[9px]">Caso DI</span>
+        </div>
+        <p class="mt-1 text-dim text-[9px]">RSD en hijo (C) + RSI en raíz (A) (zig-zag).</p>
+        <pre class="mt-2 text-ink/90 bg-black/30 p-2 rounded border border-white/5 leading-4">   (A) [+2]              (X) [0]
+   /   \                 /     \
+  T0   (C)   ──►       (A)     (C)
+       /               / \     / \
+     (X)              T0 T1   T2 T3</pre>
+      </div>
+    </div>
+  </div>
 </div>
