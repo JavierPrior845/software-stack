@@ -24,6 +24,7 @@ export const DIAGRAM_IDS = [
   'grasp-diagram',
   'solid-principles',
   'gof-patterns',
+  'jpa-lifecycle',
 ] as const;
 
 export type DiagramId = (typeof DIAGRAM_IDS)[number];

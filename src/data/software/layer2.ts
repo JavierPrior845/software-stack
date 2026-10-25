@@ -159,108 +159,142 @@ class UndoRedoManager {
       slug: 'arquitectura-y-ciclo-de-vida',
       title: 'Arquitectura y ciclo de vida (PDS)',
       summary:
-        'Requisitos, estilos arquitectónicos, testing y persistencia. El diseño sobrevive si el ciclo de vida lo acompaña.',
+        'Requisitos, modelado de dominio, estilos arquitectónicos, APIs REST, testing y persistencia. El diseño sobrevive si el ciclo de vida lo acompaña.',
       concepts: [
         {
           slug: 'requisitos',
-          name: 'Requisitos funcionales y no funcionales',
-          tagline: 'Lo que el sistema hace es fácil; cuánto tarda, cuánto aguanta y cuánto cuesta mantenerlo es el proyecto.',
+          name: 'Requisitos, Casos de Uso y Modelado de Dominio',
+          tagline: 'Lo que el sistema hace es el contrato; cómo se modela el dominio decide si resistirá el cambio.',
           summary:
-            'Los requisitos funcionales describen comportamiento; los no funcionales (latencia, disponibilidad, seguridad, coste) deciden la arquitectura. Un sistema que cumple todas las funciones pero tarda 3 segundos por petición ha fallado. Los NFR deben expresarse con números y medirse, o son deseos.',
+            'La ingeniería de requisitos abarca elicitación, análisis, especificación y validación. Se dividen en Requisitos Funcionales (entradas/salidas, reglas de negocio) y No Funcionales (rendimiento, disponibilidad, seguridad, coste: deben tener umbrales medibles). Los Casos de Uso (CdU) formalizan los requisitos funcionales con actor principal, flujo básico y flujos alternativos, estructurados con relaciones de Generalización, Inclusión (<<include>>) y Extensión (<<extend>>). En el modelado de dominio se distingue formalmente la Agregación (todo-parte débil, ciclo de vida independiente: si el todo muere, las partes sobreviven) de la Composición (todo-parte fuerte, ciclo de vida dependiente: si el todo muere, las partes mueren con él).',
           keyPoints: [
-            'Un NFR sin umbral medible no es un requisito.',
-            'La mayoría de decisiones arquitectónicas son compromisos entre NFR incompatibles.',
+            'Criterios de Calidad: necesario, libre de implementación, consistente, completo, no ambiguo, trazable y verificable.',
+            'Casos de Uso: <<include>> factoriza flujos comunes obligatorios; <<extend>> añade comportamiento condicional opcional.',
+            'Agregación (◇──): Concesionario-Coche; el Coche sobrevive si el Concesionario quiebra (shared_ptr o referencia externa).',
+            'Composición (◆──): Pedido-LíneasPedido / Coche-Motor; el ciclo de vida de las partes está atado al contenedor (unique_ptr o por valor).',
           ],
-          tags: ['arquitectura', 'requisitos'],
+          tags: ['arquitectura', 'requisitos', 'modelado', 'uml', 'umu'],
+          tradeoffs: {
+            whenToUse: ['Siempre antes de codificar para acordar el alcance con stakeholders y modelar el ciclo de vida'],
+            whenToAvoid: ['Sobre-especificar detalles de implementación tecnológica en documentos de requisitos'],
+            cost: 'Tiempo inicial de análisis que ahorra semanas de reescritura en fases avanzadas.',
+          },
         },
         {
           slug: 'arquitectura-hexagonal',
-          name: 'Arquitectura hexagonal',
+          name: 'Arquitectura Hexagonal (Puertos y Adaptadores)',
           tagline: 'El dominio en el centro; la base de datos, la API y el framework son enchufes intercambiables.',
           summary:
-            'Puertos y adaptadores aíslan la lógica de negocio de la infraestructura. El dominio no importa nada del framework; los adaptadores traducen el mundo exterior a las interfaces del dominio. Cambiar de PostgreSQL a Mongo, o de REST a CLI, deja el núcleo intacto y testeable sin contenedores.',
+            'Aísla el núcleo de negocio de cualquier detalle tecnológico o framework. El núcleo contiene Entidades, Value Objects, Servicios de Dominio y Puertos (interfaces puras sin imports externos). Se estructura en Adaptadores Primarios / Driving (controladores HTTP/FastAPI, CLI, consumidores de colas que inician llamadas al dominio mediante Puertos de Entrada) y Adaptadores Secundarios / Driven (repositorios PostgreSQL, clientes HTTP, brokers de mensajería que reaccionan a Puertos de Salida). La Regla de Dependencia apunta siempre hacia adentro: la infraestructura conoce al dominio, el dominio jamás conoce la infraestructura.',
           keyPoints: [
-            'La regla de dependencia apunta siempre hacia dentro.',
-            'Si tu entidad importa el ORM, ya no tienes dominio: tienes un esquema con métodos.',
+            'Puertos de Entrada (Use Cases) vs Puertos de Salida (Repositories / Gateways).',
+            'Adaptadores Primarios (Driving) inician acciones; Adaptadores Secundarios (Driven) son invocados por el dominio.',
+            'Regla de Dependencia: 0 imports de frameworks, ORMs o librerías HTTP dentro del núcleo del dominio.',
+            'Permite testear el 100% de la lógica de negocio con fakes en memoria sin levantar contenedores Docker.',
           ],
-          tags: ['arquitectura', 'diseño'],
+          tags: ['arquitectura', 'diseño', 'clean-arch', 'umu'],
           diagram: 'hexagonal-arch',
           tradeoffs: {
-            whenToUse: ['Sistemas con vida útil larga', 'Reglas de negocio complejas y múltiples interfaces'],
-            whenToAvoid: ['CRUD simple de fin de semana', 'Prototipos donde el dominio aún no existe'],
-            cost: 'Más ficheros, más mapeos y una curva de entrada real para el equipo.',
+            whenToUse: ['Sistemas de ciclo de vida medio/largo con lógica de negocio rica y múltiples interfaces de entrada/salida'],
+            whenToAvoid: ['Scripts efímeros o CRUDs triviales donde no hay lógica de dominio que proteger'],
+            cost: 'Mayor número de archivos, mapeos explícitos entre DTOs y entidades, y curva de aprendizaje para el equipo.',
           },
         },
         {
           slug: 'eventos',
-          name: 'Colas y pub/sub',
+          name: 'Arquitecturas Asíncronas: Colas vs Pub/Sub',
           tagline: 'Desacoplar en tiempo y espacio: el productor no espera ni sabe quién consume.',
           summary:
-            'Las colas punto a punto garantizan entrega y absorben picos; pub/sub distribuye a múltiples suscriptores por topic. Resuelven acoplamiento temporal y escalado, pero introducen consistencia eventual, mensajes duplicados y la necesidad de idempotencia. No son una capa gratis: son un sistema distribuido más.',
+            'Los estilos orientados a eventos desacoplan temporal y espacialmente a los componentes. Las Colas de Mensajes (Point-to-Point) operan en modo pull con entrega ordenada, fiabilidad transaccional y absorción de picos de carga (load leveling); si el consumidor cae, los mensajes esperan en el broker. El patrón Publicar/Suscribir (Pub/Sub) opera en modo push desacoplado mediante topics, entregando copias de cada evento a múltiples suscriptores independientes en tiempo real. Exigen diseñar consumidores idempotentes y prever Dead Letter Queues (DLQ) para gestionar mensajes venenosos.',
           keyPoints: [
-            'Diseña consumidores idempotentes: la entrega exactly-once es casi siempre una ilusión.',
-            'Sin observabilidad, una cola se convierte en un agujero negro de mensajes.',
+            'Colas (Pull / Point-to-Point): RabbitMQ, SQS; un solo consumidor procesa cada mensaje; ideal para background jobs pesados.',
+            'Pub/Sub (Push / Broadcast): Kafka, SNS, Redis Streams; múltiples suscriptores por topic; ideal para event-driven y analítica.',
+            'Idempotencia: procesar el mismo mensaje $N$ veces debe producir el mismo estado final que procesarlo una vez.',
+            'Dead Letter Queue (DLQ): buzón de reintentos fallidos para evitar el bloqueo del pipeline ante mensajes corruptos.',
           ],
-          tags: ['arquitectura', 'distribuidos'],
+          tags: ['arquitectura', 'distribuidos', 'eventos', 'umu'],
           tradeoffs: {
-            whenToUse: ['Tareas pesadas en background (emails, inferencia IA, webhooks)', 'Absorber picos de tráfico (load leveling)'],
-            whenToAvoid: ['Flujos que requieren respuesta síncrona inmediata al usuario'],
-            cost: 'Operar un broker (RabbitMQ/Kafka/Redis), gestionar Dead Letter Queues (DLQ) y consistencia eventual.',
+            whenToUse: ['Tareas en background (procesamiento de imágenes, emails, LLMs) y absorción de picos de tráfico'],
+            whenToAvoid: ['Operaciones que exigen consistencia transaccional inmediata ACID con confirmación síncrona al usuario'],
+            cost: 'Complejidad operativa del broker, consistencia eventual y dificultad para trazar el flujo global de datos.',
           },
         },
         {
           slug: 'monolito-vs-microservicios',
-          name: 'Monolito vs microservicios',
-          tagline: 'Los microservicios no son una arquitectura mejor: son un coste operativo a cambio de autonomía.',
+          name: 'Estilos Arquitectónicos, Microservicios y APIs REST',
+          tagline: 'Los microservicios no son mejores: son una compensación organizativa a cambio de latencia de red.',
           summary:
-            'Un monolito despliega junto y transacciona en memoria; un microservicio escala y despliega solo, a cambio de latencia de red, consistencia eventual y complejidad operativa. Casi todos los equipos que empiezan con microservicios necesitaban primero un monolito modular bien separado.',
+            'PDS clasifica los estilos arquitectónicos en: Capas (N-Tier), Hexagonal, Microkernel (núcleo + plugins dinámicos), Pipes & Filters (pipeline funcional de datos), Cliente-Servidor, Orientado a Eventos y Microservicios. El monolito modular despliega como un único proceso y transacciona en memoria sin latencia de red. Los microservicios descomponen en tiempo de ejecución en procesos independientes comunicados por APIs de red (HTTP/gRPC), facilitando escalabilidad y autonomía de equipos a costa de consistencia eventual y complejidad distribuida. En APIs REST se exige el Modelo de Madurez de Richardson (niveles 0 a 3 con HATEOAS) y respeto a la idempotencia: GET, PUT y DELETE son estrictamente idempotentes, mientras POST no lo es.',
           keyPoints: [
-            'Si no puedes desplegar un monolito con confianza, tampoco podrás operar microservicios.',
-            'La frontera correcta es la del contexto delimitado, no la del equipo.',
+            'Microkernel: núcleo estable mínimo que se expande mediante plugins dinámicos (ej. VS Code, Eclipse, sistemas operativos).',
+            'Pipes & Filters: datos en flujo unidireccional desacoplado; el rendimiento lo marca el filtro más lento (cuello de botella).',
+            'Monolito vs Microservicios: casi todos los sistemas deben nacer como monolitos modulares antes de fragmentarse en microservicios.',
+            'Idempotencia HTTP: GET (seguro e idempotente), PUT (idempotente: reemplaza), DELETE (idempotente: borra), POST (no idempotente: crea nuevo).',
+            'Nivel 3 Richardson (HATEOAS): la respuesta incluye enlaces (links) a las siguientes transiciones de estado válidas.',
           ],
-          tags: ['arquitectura', 'distribuidos'],
+          tags: ['arquitectura', 'distribuidos', 'rest', 'umu'],
           tradeoffs: {
-            whenToUse: ['Equipos grandes con dominios realmente independientes', 'Escalado desigual por componente'],
-            whenToAvoid: ['Equipos pequeños', 'Dominio aún mal entendido'],
-            cost: 'Latencia de red, tracing distribuido, versionado de contratos y fallos parciales.',
+            whenToUse: ['Monolito para equipos pequeños y dominios emergentes; Microservicios para organizaciones grandes con dominios maduros'],
+            whenToAvoid: ['Distribuir un sistema antes de que las fronteras de los bounded contexts estén firmemente consolidadas'],
+            cost: 'Latencia de red, serialización, tracing distribuido (OpenTelemetry) y gestión de fallos parciales.',
           },
         },
         {
           slug: 'piramide-testing',
-          name: 'Pirámide de testing',
-          tagline: 'Muchos tests rápidos abajo, pocos tests lentos arriba, y ningún hueco en el medio.',
+          name: 'Verificación, Pirámide y los 5 Test Doubles',
+          tagline: 'Muchos tests rápidos abajo, pocos tests lentos arriba, y la taxonomía canónica de Gerard Meszaros.',
           summary:
-            'Unitarios: rápidos, aislados, baratos. Integración: verifican la costura real con base de datos o HTTP. E2E: flujos completos, lentos y frágiles. La pirámide no es una ley física, pero invertirla produce suites de horas que nadie ejecuta y que fallan por motivos ajenos al código.',
+            'La verificación comprueba si construimos el producto correctamente (foco técnico); la validación comprueba si construimos el producto correcto (requisitos del cliente). La cadena formal de defectología define: Error humano -> Defecto/Bug en el código -> Fallo observable en ejecución. Las pruebas de Caja Negra emplean partición de equivalencia y análisis de valores límite. Las pruebas de Caja Blanca miden cobertura de líneas, ramas y MC/DC (Modified Condition Decision Coverage). La taxonomía de Gerard Meszaros formaliza los 5 Dobles de Prueba: Dummy (relleno no utilizado), Stub (respuestas fijas enlatadas), Spy (stub que audita llamadas y argumentos), Mock (simulador con expectativas estrictas de comportamiento) y Fake (implementación funcional real ligera en memoria).',
           keyPoints: [
-            'Un test que depende del orden de ejecución no es un test: es una bomba de relojería.',
-            'Mocks verifican interacción; stubs devuelven datos; fakes implementan de verdad.',
+            'Pirámide de Testing: Unitarios (~70%, < 1 ms, lógica aislada), Integración (~20%, BD real), E2E (~10%, navegador/flujo completo).',
+            'Dummy: objeto ficticio para rellenar firmas de métodos obligatorias; nunca se invoca.',
+            'Stub: devuelve datos preconfigurados para alimentar al sistema bajo prueba (SUT).',
+            'Spy: registra cuántas veces y con qué parámetros se invocó un método.',
+            'Mock: verifica comportamiento y orden de llamadas; falla si la interacción difiere de lo previsto.',
+            'Fake: implementación real simplificada en memoria (ej. InMemoryUserRepository) para tests ultrarrápidos y deterministas.',
+            'MC/DC: estándar de cobertura que demuestra que cada condición atómica altera el resultado de una decisión booleana.',
           ],
-          tags: ['testing', 'calidad'],
+          tags: ['testing', 'calidad', 'v&v', 'umu'],
           diagram: 'testing-pyramid',
           tradeoffs: {
-            whenToUse: ['Unitarios para reglas de dominio complejas', 'Integración con BD real para repositorios SQL'],
-            whenToAvoid: ['Mockear la base de datos en un test cuyo único propósito es probar una query SQL'],
-            cost: 'Los tests E2E son 100-1000× más lentos y frágiles ante cambios de UI que los unitarios.',
+            whenToUse: ['Unitarios con Fakes/Stubs para reglas de negocio; Integración con Testcontainers para repositorios SQL'],
+            whenToAvoid: ['Usar Mocks para emular la base de datos en tests cuyo propósito es validar queries complejas'],
+            cost: 'Tests E2E son 100-1000× más lentos y vulnerables a cambios estéticos que los unitarios.',
           },
         },
         {
           slug: 'impedance-mismatch',
-          name: 'Impedance mismatch y ORM',
-          tagline: 'Los objetos son grafos; las tablas son rectángulos. Alguien tiene que pagar esa traducción.',
+          name: 'Persistencia, Ciclo de Vida JPA y SQL vs NoSQL',
+          tagline: 'Los objetos son grafos; las tablas son rectángulos. Superar el desfase objeto-relacional y elegir el motor correcto.',
           summary:
-            'El modelo relacional no tiene herencia ni referencias directas, y el orientado a objetos no tiene joins ni claves foráneas. Los ORM automatizan el mapeo y el ciclo de vida (transient, persistent, detached, removed), pero esconden el coste real: consultas N+1, lazy loading inesperado y transacciones mal delimitadas.',
+            'El desfase objeto-relacional (Impedance Mismatch) radica en las diferencias de granularidad, herencia, identidad y navegabilidad entre el modelo OO y el relacional. En JPA/Hibernate, las entidades transitan por 4 estados gestionados por el EntityManager: Transient (new, no gestionado), Persistent (gestionado con Dirty Checking automático al hacer flush), Detached (sesión cerrada, cambios en memoria no persistidos) y Removed (marcado para DELETE). Se analizan las estrategias de herencia (@Inheritance: SINGLE_TABLE, JOINED, TABLE_PER_CLASS) y el peligroso problema N+1 (resuelto con JOIN FETCH). Finalmente, se contrastan las bases de datos Relacionales (SQL / ACID / escalabilidad vertical) frente a NoSQL (BASE / CAP / particionado horizontal masivo) y sus 5 familias: Documentales, Clave-Valor, Columnas Anchas, Grafos y Vectoriales.',
           keyPoints: [
-            'El N+1 es el bug de rendimiento más común en aplicaciones con ORM.',
-            'Conoce el SQL que genera tu ORM o el ORM te conocerá a ti.',
+            'Ciclo de Vida JPA: Transient -> persist() -> Persistent (Dirty Checking) -> detach() -> Detached -> merge() -> Persistent; y remove() -> Removed.',
+            'Problema N+1: 1 consulta para $N$ entidades + $N$ consultas perezosas (lazy loading) por red. Solución: JOIN FETCH o Eager Loading.',
+            'Herencia ORM: SINGLE_TABLE (rápida pero llena de nulos), JOINED (normalizada pero exige JOINs), TABLE_PER_CLASS (exige UNIONs).',
+            'ACID vs BASE: consistencia inmediata transaccional en SQL frente a consistencia eventual y alta disponibilidad en NoSQL.',
+            '5 Familias NoSQL: Documental (MongoDB), Clave-Valor (Redis), Columnar (Cassandra), Grafos (Neo4j) y Vectorial para IA (Qdrant).',
           ],
-          tags: ['persistencia', 'orm'],
+          tags: ['persistencia', 'orm', 'jpa', 'sql', 'nosql', 'umu'],
+          diagram: 'jpa-lifecycle',
           example: {
-            label: 'El problema N+1 clásico',
-            code: `const users = await db.users.findMany(); // 1 query
-for (const u of users) {
-  await db.orders.findByUserId(u.id);    // +N queries por red!
-} // Solución: JOIN / Eager Loading (include: { orders: true })`,
-            note: 'Con 200 usuarios y 2 ms de RTT a la base de datos, un N+1 añade 400 ms de latencia invisible.',
+            label: 'Dirty Checking automático vs Consulta N+1 en JPA',
+            code: `// 1. Dirty Checking (Entidad Persistent muta y se guarda sola en commit):
+User user = em.find(User.class, id); // Estado: Persistent
+user.setEmail("nuevo@correo.com");   // No hace falta llamar a save()!
+// Al hacer commit() / flush(), Hibernate emite automáticamente:
+// UPDATE users SET email = 'nuevo@correo.com' WHERE id = ?;
+
+// 2. Solución al N+1 mediante JOIN FETCH:
+List<User> users = em.createQuery(
+  "SELECT u FROM User u JOIN FETCH u.orders", User.class
+).getResultList(); // 1 sola consulta SQL con JOIN!`,
+            note: 'JOIN FETCH recupera las colecciones relacionadas en un solo viaje de red, evitando el desastre del N+1.',
+          },
+          tradeoffs: {
+            whenToUse: ['SQL/JPA para modelos transaccionales con relaciones ricas e integridad referencial estricta; NoSQL para alta concurrencia y modelos especializados'],
+            whenToAvoid: ['Usar NoSQL cuando el negocio requiere consistencia financiera inmediata multirregistro'],
+            cost: 'Sobrecarga de memoria de la caché de primer nivel de JPA y complejidad de mapeo relacional.',
           },
         },
       ],
