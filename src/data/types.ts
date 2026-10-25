@@ -17,6 +17,8 @@ export const DIAGRAM_IDS = [
   'rag-pipeline',
   'bit-layout',
   'process-memory-layout',
+  'trie-horizontal',
+  'graph-representation',
 ] as const;
 
 export type DiagramId = (typeof DIAGRAM_IDS)[number];
@@ -29,6 +31,7 @@ export const WIDGET_IDS = [
   'attention-explorer',
   'kv-cache',
   'logic-gates',
+  'graph-traversal',
 ] as const;
 
 export type WidgetId = (typeof WIDGET_IDS)[number];

@@ -9,7 +9,7 @@ export const layer1: Layer = {
   blocks: [
     {
       slug: 'estructuras-de-datos',
-      title: 'Estructuras de datos (AED1)',
+      title: 'Estructuras de datos',
       summary:
         'El TAD define el contrato; la estructura física decide el rendimiento real. Casi siempre gana quien respeta la caché.',
       concepts: [
@@ -30,16 +30,17 @@ export const layer1: Layer = {
           name: 'Arrays vs listas enlazadas',
           tagline: 'El array gana casi siempre, y no por su Big-O: gana por la caché.',
           summary:
-            'El array da acceso O(1) por aritmética de punteros y máxima localidad espacial; insertar en medio cuesta O(N). La lista enlazada inserta en O(1) con el puntero en mano, pero buscar cuesta O(N), cada nodo paga 8-16 bytes de punteros y los saltos destruyen la caché. En la práctica, un array de 10.000 elementos suele barrer a una lista de 10.000.',
+            'En arrays, el acceso es O(1) por aritmética de punteros y la memoria contigua aprovecha las líneas de caché L1 (64 bytes); insertar o borrar en medio exige desplazar memoria en bloque O(N). En listas enlazadas, insertar en cabeza o con nodo en mano es O(1), pero acceder por índice o buscar cuesta O(N), cada nodo paga 8-24 bytes de punteros y los saltos dispersos en el Heap destruyen la caché.',
           keyPoints: [
-            'La notación asintótica ignora las constantes; la caché no.',
-            'La lista enlazada solo brilla con inserciones/borrados masivos y nodos ya localizados.',
+            'Acceso indexado: array O(1) matemático directo; lista O(N) por traversal secuencial.',
+            'Inserción/Borrado: array O(N) por memmove salvo al final O(1) amortizado; lista O(1) con puntero local.',
+            'La notación asintótica ignora las constantes; la jerarquía de caché de la CPU no.',
           ],
-          tags: ['estructuras', 'rendimiento'],
+          tags: ['estructuras', 'rendimiento', 'lineales'],
           tradeoffs: {
-            whenToUse: ['Array: recorridos, índices, tamaño estable', 'Lista: colas, inserciones con nodo conocido'],
-            whenToAvoid: ['Lista para búsquedas frecuentes o datos pequeños', 'Array para inserciones en cabeza masivas'],
-            cost: 'Acceso: array O(1) real; lista O(N) con penalización de caché.',
+            whenToUse: ['Array: acceso por índice, búsquedas binarias, tamaño predecible, máximo rendimiento', 'Lista: colas donde solo tocas cabeza/cola, buffers con inserciones locales continuas'],
+            whenToAvoid: ['Lista para búsquedas frecuentes o conjuntos de datos numéricos pequeños', 'Array para inserciones masivas en cabeza'],
+            cost: 'Acceso: array O(1) real (~1 ns en L1); lista O(N) con saltos en RAM (~50-100 ns por fallo).',
           },
         },
         {
@@ -47,12 +48,13 @@ export const layer1: Layer = {
           name: 'Tablas hash',
           tagline: 'Conviertes una clave en un índice y, si tienes suerte, buscas en tiempo constante.',
           summary:
-            'Una función hash proyecta claves a índices de un array. Con un buen hash y un factor de carga controlado, búsqueda, inserción y borrado son O(1) de media. Todo el rendimiento depende de dos decisiones: cómo resuelves colisiones y cuándo haces rehash.',
+            'Una función hash proyecta claves a índices de un array. Con un buen hash y un factor de carga controlado, búsqueda, inserción y borrado son O(1) de media. Todo el rendimiento depende de dos decisiones: cómo resuelves colisiones (dispersión abierta vs cerrada) y cuándo haces rehash.',
           keyPoints: [
-            'Encadenamiento: cubetas con listas, simple y tolerante. Direccionamiento abierto: todo dentro del array, mejor localidad.',
-            'Un hash predecible es un vector de ataque (HashDoS): usa hash aleatorizado.',
+            'Dispersión Abierta (Encadenamiento): cubetas con listas o árboles en Heap, tolera α > 1.',
+            'Dispersión Cerrada (Open Addressing): todo en el array con sondeo lineal, cuadrático o doble hash.',
+            'Un hash predecible es un vector de ataque (HashDoS): usa hash aleatorizado con salting.',
           ],
-          tags: ['estructuras', 'diccionarios'],
+          tags: ['estructuras', 'diccionarios', 'dispersión'],
           complexity: 'O(1) medio · O(N) peor caso',
           widget: 'hash-probing',
           tradeoffs: {
@@ -66,12 +68,13 @@ export const layer1: Layer = {
           name: 'Tombstones y factor de carga',
           tagline: 'Borrar una celda en direccionamiento abierto puede romper la cadena de búsqueda de otros.',
           summary:
-            'Si vacías una celda, las búsquedas que colisionaron después dejan de encontrarse. Por eso se marca como "eliminado" (tombstone) para que la búsqueda siga avanzando. Los tombstones se acumulan y degradan la tabla: hay que rehashear periódicamente. El factor de carga α = N/M dispara colisiones por encima de ~0.7.',
+            'Si vacías una celda en dispersión cerrada, las búsquedas que colisionaron después dejan de encontrarse (falso negativo). Por eso se marca como "eliminado" (tombstone) para que la búsqueda siga avanzando. Los tombstones se acumulan y degradan la tabla: hay que rehashear periódicamente. El factor de carga α = N/M dispara colisiones por encima de ~0.7.',
           keyPoints: [
-            'Rehash: O(N), reserva el doble y reubica todo limpiando las marcas de borrado.',
-            'En Python, dict y set usan direccionamiento abierto con sondeo.',
+            'Tombstone: marca centinela que permite a las búsquedas continuar y a las inserciones reutilizar la celda.',
+            'Rehash: O(N), reserva el doble de memoria, reubica las claves y purga todos los tombstones.',
+            'En Python (dict/set) y C++ (absl::flat_hash_set) se usa direccionamiento abierto optimizado.',
           ],
-          tags: ['estructuras', 'implementación'],
+          tags: ['estructuras', 'implementación', 'dispersión'],
           widget: 'hash-probing',
           tradeoffs: {
             whenToUse: ['Tablas en direccionamiento abierto (Robin Hood / SwissTable) que soportan borrados'],
@@ -81,34 +84,37 @@ export const layer1: Layer = {
         },
         {
           slug: 'bst-avl',
-          name: 'BST y AVL',
-          tagline: 'Un árbol binario es rápido si está equilibrado; insertado en orden, se convierte en una lista lenta.',
+          name: 'BST y AVL (4 Rotaciones)',
+          tagline: 'Un árbol binario es rápido si está equilibrado; ante el desbalance, 4 rotaciones restauran el O(log N).',
           summary:
-            'Un BST mantiene el orden y busca en O(log N) si está balanceado. Insertar 1, 2, 3, 4, 5 en orden lo degenera en una lista con O(N). Los AVL garantizan que la diferencia de altura entre subárboles nunca supera 1, restaurando el equilibrio con rotaciones simples o dobles en O(1). El precio: escrituras más lentas.',
+            'Un BST mantiene el orden y busca en O(log N) si está balanceado, pero insertar en orden degenera en una lista lenta O(N). El árbol AVL garantiza |altura(der) - altura(izq)| ≤ 1 en todo nodo. Al insertar, si un nodo alcanza FE = ±2, se rebalancea en O(1) con 4 rotaciones: Simples (Derecha RSD o Izquierda RSI) para ramas rectas, o Dobles (Izq-Der RDID o Der-Izq RDDI) para zig-zag.',
           keyPoints: [
-            'AVL prioriza búsqueda; los árboles rojo-negro priorizan escritura.',
-            'En bases de datos relacionales el equivalente son los B-Tree, optimizados para páginas de disco.',
+            'Factor de Equilibrio: FE = altura(der) - altura(izq) ∈ {-1, 0, +1}.',
+            '4 Rotaciones O(1): RSD (caso II), RSI (caso DD), RDID (caso ID), RDDI (caso DI).',
+            'AVL prioriza lecturas rápidas; los árboles rojo-negro son más permisivos en escrituras.',
           ],
-          tags: ['estructuras', 'árboles'],
+          tags: ['estructuras', 'árboles', 'jerárquicas'],
           diagram: 'avl-vs-bst',
           complexity: 'Búsqueda O(log N) · Rotación O(1)',
           tradeoffs: {
             whenToUse: ['Lecturas frecuentes con orden garantizado', 'Rangos y búsquedas por intervalo'],
             whenToAvoid: ['Todo el working set cabe en un hash O(1) y no necesitas orden'],
-            cost: 'Cada rotación es barata, pero rebalancear en cada escritura cuesta en cargas write-heavy.',
+            cost: 'Cada rotación es barata O(1), pero rebalancear en cada escritura cuesta en cargas write-heavy.',
           },
         },
         {
           slug: 'trie',
-          name: 'Trie',
+          name: 'Trie (Árbol de Prefijos)',
           tagline: 'La búsqueda deja de depender de cuántas palabras tienes y pasa a depender de cuánto miden.',
           summary:
             'Un trie comparte nodos por prefijo: la búsqueda cuesta O(L), la longitud de la clave, independientemente de N. Es la estructura de autocompletado, correctores y routers de prefijos IP. A cambio, consume mucha memoria por puntero; las variantes comprimidas (radix tree) lo mitigan.',
           keyPoints: [
             'O(L) con L = longitud de la clave, no O(N).',
             'Útil para prefijos, no para claves arbitrarias o muy largas.',
+            'Palabras con prefijo compartido ("mar", "marea", "marino") reutilizan los mismos nodos.',
           ],
-          tags: ['estructuras', 'strings'],
+          tags: ['estructuras', 'strings', 'árboles'],
+          diagram: 'trie-horizontal',
           complexity: 'O(L) búsqueda e inserción',
           tradeoffs: {
             whenToUse: ['Autocompletado por prefijo, enrutamiento CIDR IP y diccionarios léxicos'],
@@ -118,15 +124,17 @@ export const layer1: Layer = {
         },
         {
           slug: 'union-find',
-          name: 'Union-Find (DSU)',
-          tagline: '¿Están estos dos elementos conectados? Con dos optimizaciones, la respuesta es casi instantánea.',
+          name: 'Conjuntos y Union-Find (DSU)',
+          tagline: 'El TAD Conjunto modela elementos únicos; Union-Find particiona y conecta componentes en O(1).',
           summary:
-            'Modela componentes conexas con punteros al padre. Unión por rango evita árboles altos y la compresión de caminos reorienta los nodos visitados directamente a la raíz. Juntas dan un coste amortizado O(α(N)), prácticamente constante. Es la pieza que hace viable Kruskal en O(E log E).',
+            'El TAD Conjunto almacena elementos únicos sin orden (HashSet O(1) o TreeSet O(log N)). Para particiones disjuntas, Union-Find (DSU) responde en tiempo casi constante si dos elementos pertenecen al mismo conjunto mediante un array de padres, unión por rango y compresión de caminos O(α(N)). Es el motor de Kruskal y la detección de ciclos.',
           keyPoints: [
-            'Sin compresión de caminos, el árbol degenera y el coste sube.',
-            'α(N) < 5 para cualquier N representable: se puede tratar como O(1).',
+            'TAD Conjunto: colecciones sin duplicados con operaciones de pertenencia e intersección.',
+            'Union-Find: array plano con find(x) y union(x,y) para conjuntos disjuntos.',
+            'Compresión de caminos + rango: coste amortizado O(α(N)) con α(N) < 5 para todo N real.',
+            'Pilar de Kruskal (árbol de expansión mínimo) y conectividad dinámica en redes.',
           ],
-          tags: ['estructuras', 'grafos'],
+          tags: ['estructuras', 'conjuntos', 'grafos'],
           complexity: 'O(α(N)) amortizado',
           example: {
             label: 'Compresión de caminos en 3 líneas',
@@ -138,17 +146,19 @@ export const layer1: Layer = {
         },
         {
           slug: 'representacion-grafos',
-          name: 'Representación de grafos',
-          tagline: 'Matriz para grafos densos, listas de adyacencia para grafos reales.',
+          name: 'Grafos: propiedades y modelos de memoria',
+          tagline: 'Propiedades topológicas (dirigido, ponderado, cíclico) y modelos de memoria (matriz vs listas).',
           summary:
-            'La matriz de adyacencia ocupa O(V²) pero comprueba aristas en O(1). Las listas de adyacencia ocupan O(V+E) e iteran vecinos en O(grado). Casi todos los grafos del mundo real son dispersos, así que las listas ganan por defecto; la matriz solo brilla en densidad alta o cuando necesitas operaciones matriciales.',
+            'Un grafo modela relaciones complejas entre vértices y aristas. Sus propiedades definen la solución: dirigido vs no dirigido, ponderado vs sin pesos, cíclico vs DAG (acíclico), denso vs disperso. En memoria, la matriz de adyacencia O(V²) consulta aristas en O(1) pero penaliza espacio; las listas de adyacencia O(V+E) iteran vecinos en O(grado) y son el estándar para grafos reales.',
           keyPoints: [
-            'Denso: E ≈ V². Disperso: E ≪ V².',
-            'Para pesos, la lista guarda pares (vecino, peso).',
+            'Propiedades clave: Dígrafo (orientado), Ponderado (pesos), Conexo/SCC y DAG (acíclico).',
+            'Matriz de Adyacencia: array contiguo 2D [V][V], ideal para grafos densos E ≈ V².',
+            'Listas de Adyacencia: array de punteros a cabeceras de lista, óptimo para grafos dispersos E ≪ V².',
           ],
-          tags: ['grafos', 'estructuras'],
+          tags: ['grafos', 'estructuras', 'relacionales'],
+          diagram: 'graph-representation',
           tradeoffs: {
-            whenToUse: ['Listas de adyacencia: redes reales, rutas, dependencias (E ≪ V²)', 'Matriz: grafos pequeños y densos o álgebra en GPU'],
+            whenToUse: ['Listas de adyacencia: redes reales, rutas, dependencias (E ≪ V²)', 'Matriz: grafos pequeños y densos o álgebra matricial en GPU'],
             whenToAvoid: ['Matriz de adyacencia con V > 50.000 (10 GB de RAM solo en ceros)'],
             cost: 'Matriz: O(V²) espacio fijo. Listas: O(V + E) espacio, comprobar arista (u,v) cuesta O(grado(u)).',
           },
@@ -158,13 +168,15 @@ export const layer1: Layer = {
           name: 'DFS, BFS y ordenación topológica',
           tagline: 'Explorar hasta el fondo con una pila, por olas con una cola, o linealizar dependencias en un DAG.',
           summary:
-            'DFS (profundidad) usa una pila o recursión y sirve para detectar ciclos, componentes fuertemente conexas y puntos de articulación. BFS (anchura) usa una cola FIFO y garantiza el camino más corto en grafos sin pesos. En un Grafo Acíclico Dirigido (DAG), la ordenación topológica pone cada nodo antes que sus dependientes: es el motor exacto de cualquier compilador, gestor de paquetes o grafo de agentes.',
+            'DFS (profundidad) usa una pila o recursión y sirve para detectar ciclos, componentes fuertemente conexas y puntos de articulación. BFS (anchura) usa una cola FIFO y garantiza el camino más corto en grafos sin pesos. En un Grafo Acíclico Dirigido (DAG), la ordenación topológica pone cada nodo antes que sus dependientes. Estos recorridos se conectan con Dijkstra, Prim y Kruskal.',
           keyPoints: [
             'Si la ordenación topológica no puede visitar todos los nodos, existe un ciclo de dependencias (deadlock).',
             'BFS en grafos ponderados se convierte en Dijkstra al cambiar la cola FIFO por un Min-Heap.',
+            'Prim (con Min-Heap) y Kruskal (con Union-Find) resuelven el Árbol de Expansión Mínimo (MST).',
           ],
           tags: ['grafos', 'algoritmos'],
           complexity: 'O(V + E) en listas de adyacencia',
+          widget: 'graph-traversal',
           tradeoffs: {
             whenToUse: ['BFS: distancia mínima en saltos', 'DFS: ciclos y topología', 'TopoSort: pipelines, builds y orquestadores'],
             whenToAvoid: ['BFS en árboles con factor de ramificación masivo si solo buscas una hoja cualquiera (consume mucha RAM)'],
@@ -175,7 +187,7 @@ export const layer1: Layer = {
     },
     {
       slug: 'algoritmos-complejidad',
-      title: 'Algoritmos y complejidad (AED2)',
+      title: 'Algoritmos y complejidad',
       summary:
         'El problema no es escribir código: es reconocer qué forma tiene y qué estrategia no te va a hacer perder semanas.',
       concepts: [
