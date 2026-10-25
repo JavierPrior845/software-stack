@@ -342,64 +342,495 @@ Partiendo del nodo **0**:
 
 ## Bloque 2: Algoritmos y Complejidad (AED2) — Paradigmas de Resolución
 
-Aquí no importa la estructura física de los datos, sino la **estrategia lógica de ataque** para resolver un problema de forma matemáticamente óptima.
+En este bloque la clave no es la disposición física de la memoria, sino la **estrategia lógica de ataque** para resolver un problema de optimización o búsqueda de forma matemáticamente probada y computacionalmente eficiente.
+
+Tomando como referencia canónica la metodología de **Aho** y el temario de **AED2 (Universidad de Murcia)**, el diseño de soluciones sigue un flujo formal riguroso:
+$$\text{Modelo matemático} \longrightarrow \text{Algoritmo informal} \longrightarrow \text{TAD} \longrightarrow \text{Pseudolenguaje} \longrightarrow \text{Estructuras de datos} \longrightarrow \text{Código final}$$
+
+Para comprender en profundidad las fortalezas, fallos y trade-offs de cada paradigma, utilizaremos un **vehículo conceptual unificador**: el **Problema de la Mochila (Knapsack Problem)** en sus variantes continua ($x_i \in [0, 1]$) y discreta ($x_i \in \{0, 1\}$).
 
 ```mermaid
-graph LR
-    P["Problema"] --> ASYMP["Análisis Asintótico\nBig-O, Recurrencias"]
-    P --> DYV["Divide y Vencerás\n(Subproblemas disjuntos)"]
-    P --> GREEDY["Algoritmos Voraces\n(Decisión óptima local irrevocable)"]
-    P --> DP["Programación Dinámica\n(Subproblemas superpuestos + Memorización)"]
-    P --> NP["Teoría de Complejidad\nP vs NP vs NP-Completo"]
+graph TD
+    P["Problema de la Mochila\n(Knapsack Problem)"] --> FRAC["Mochila Fraccionaria\n(x_i ∈ [0, 1])"]
+    P --> ZEROONE["Mochila 0/1 Discreta\n(x_i ∈ {0, 1}) — NP-Completo"]
+
+    FRAC --> VORAZ["Algoritmos Voraces (Greedy)\nCriterio b_i/p_i → O(N log N) ÓPTIMO"]
+
+    ZEROONE --> DYV["Divide y Vencerás Puro\nSubproblemas solapados → O(2ⁿ) FALLA"]
+    ZEROONE --> DP["Programación Dinámica\nMatriz Bellman V[i,j] → O(n·M) PSEUDO-POLINOMIAL"]
+    ZEROONE --> BT["Backtracking con Poda\nÁrbol binario + Cota Voraz → Poda bestimado ≤ VOA"]
+    ZEROONE --> BB["Branch & Bound\nBest-First Search (Cola Prioridad) + Cotas"]
 ```
-
-### 2.1 El Lenguaje de la Eficiencia: Notación Asintótica
-* **Big-O ($O$):** Cota superior asintótica (garantía del peor caso). Describe cómo escala el coste cuando la entrada tiende a infinito ($N \to \infty$).
-* **Omega ($\Omega$) y Theta ($\Theta$):** Cota inferior (mejor caso) y cota ajustada (crecimiento exacto).
-* **Teorema Maestro:** La fórmula matemática estándar para resolver la complejidad de algoritmos recursivos de la forma:
-  $$T(n) = a \, T(n/b) + f(n)$$
-  Permite saber instantáneamente si domina el coste de dividir los subproblemas, el de combinarlos o si están en equilibrio.
-
-### 2.2 Divide y Vencerás (Divide and Conquer)
-* **La estrategia:** Descomponer el problema en subproblemas del mismo tipo pero más pequeños, **estrictamente disjuntos** (que no se solapan), resolverlos recursivamente y combinarlos.
-* **Ejemplos canónicos:**
-  * **MergeSort:** Divide en $n/2$, resuelve y combina fusionando listas ordenadas. Siempre es $O(N \log N)$, pero requiere $O(N)$ de memoria auxiliar.
-  * **QuickSort:** Elige un pivote, particiona los elementos menores a un lado y mayores al otro. No requiere memoria extra ($O(1)$ auxiliar) y su caso medio es $O(N \log N)$, pero en el peor caso (pivote pésimo) degenera a $O(N^2)$.
-  * **Multiplicación de matrices de Strassen:** Reduce las multiplicaciones de 8 a 7 descomponiendo matrices, rebajando el coste de $O(N^3)$ a $O(N^{2.81})$.
-
-### 2.3 Algoritmos Voraces (Greedy)
-* **La estrategia:** Construir la solución paso a paso. En cada decisión, elegir la opción que parece **localmente más óptima** bajo una regla heurística, **sin volver atrás jamás** (sin marcha atrás/backtracking).
-* **Cuándo funciona:** Solo si el problema cumple la **propiedad de elección voraz** y la **subestructura óptima** (la suma de óptimos locales converge matemáticamente al óptimo global).
-* **Ejemplos canónicos:**
-  * **Árbol de Expansión Mínimo (MST):**
-    * **Kruskal:** Ordena aristas globalmente y las añade una a una usando *Union-Find* para evitar ciclos ($O(E \log E)$, ideal para grafos dispersos).
-    * **Prim:** Crece un árbol desde un vértice seleccionando la arista más barata con una cola de prioridad ($O(E \log V)$, ideal para grafos densos).
-  * **Camino Mínimo de Dijkstra:** Selecciona vorazmente el nodo no visitado con menor distancia acumulada en grafos con pesos positivos.
-  * **Fracaso de Greedy:** El problema de la Mochila 0/1 (donde no puedes partir los objetos). La estrategia voraz (elegir mayor relación valor/peso) puede dar una solución mediocre; requiere Programación Dinámica.
-
-### 2.4 Programación Dinámica (Dynamic Programming - DP)
-* **La estrategia:** Se usa cuando los subproblemas **se solapan** (el mismo cálculo se repite una y otra vez, como en Fibonacci o alineamiento de secuencias).
-* **Las dos condiciones indispensables:**
-  1. **Subestructura Óptima (Principio de Optimalidad de Bellman):** La solución óptima del problema global se construye a partir de las soluciones óptimas de sus partes.
-  2. **Subproblemas Superpuestos:** A diferencia de Divide y Vencerás (donde los subproblemas son independientes), aquí los mismos subproblemas aparecen en múltiples ramas del árbol de llamadas.
-* **Técnica:**
-  * **Top-Down con Memoization:** Recursión estándar guardando los resultados ya calculados en un array o hash table.
-  * **Bottom-Up (Tabulación):** Empezar resolviendo sistemáticamente los casos base más pequeños y rellenar una tabla iterativamente hacia arriba sin usar la pila de recursión.
-* **Ejemplos canónicos:** Problema de la Mochila 0/1, Algoritmo de Floyd-Warshall (caminos mínimos entre todos los pares de nodos), Distancia de Levenshtein (edición de cadenas).
-
-### 2.5 Teoría de Complejidad Computacional ($P$, $NP$ y $NP$-Completo)
-* **Clase P:** Problemas resolubles en tiempo polinómico ($O(N^k)$).
-* **Clase NP:** Problemas cuya solución puede ser **verificada** en tiempo polinómico, aunque encontrarla cueste exponencial.
-* **NP-Completos:** Los problemas más difíciles de NP. Si se encontrara un algoritmo polinómico para cualquiera de ellos, todos los problemas de NP se resolverían en tiempo polinómico ($P = NP$).
-  * *Ejemplos:* Problema del Viajante de Comercio (TSP), Coloración de Grafos, SAT (Satisfacibilidad Booleana).
-* **Por qué esto es vital en la industria:** Saber reconocer un problema NP-Completo te evita perder semanas intentando programar un algoritmo exacto imposible. Te dice cuándo abandonar la búsqueda exacta y pasar directamente a **heurísticas de aproximación** o algoritmos de búsqueda guiada.
 
 ---
 
-### 💡 Síntesis del Nivel
+### 2.1 El Lenguaje de la Eficiencia: Notación Asintótica y Ecuaciones de Recurrencia
 
-Si tienes claros estos conceptos, tus decisiones arquitectónicas serán sólidas:
-* **AED1** te enseña **dónde residen los datos y cuánto cuesta tocarlos**.
-* **AED2** te enseña **qué patrón algorítmico aplicar para no reinventar la rueda de forma ineficiente**.
+El análisis *a priori* (teórico) evalúa el crecimiento del consumo de recursos (tiempo $t(n)$ e instrucciones ejecutadas, o memoria consumida) en función del tamaño de la entrada $n$.
 
-Con esto cubierto a nivel conceptual, podemos dar el siguiente paso. ¿Pasamos a la **Capa 2: Inteligencia Artificial Simbólica, Representación del Conocimiento y Búsqueda Heurística** (donde entran asignaturas como [[SSII_Sistemas_Inteligentes]] y procesadores de lenguaje de [[CMP_Compiladores]])?
+#### La Familia Completa de Notaciones Asintóticas ($O$, $\Omega$, $\Theta$, $o$, $\omega$)
+
+Para clasificar rigurosamente el comportamiento de un algoritmo cuando $n \to \infty$, la ciencia de la computación define cinco operadores fundamentales. Mientras que Big-$O$ y Big-$\Omega$ actúan como cotas "débiles" (admiten igualdad de ritmo), **Little-$o$** y **Little-$\omega$** actúan como cotas "estrictas":
+
+```
+                  LA FAMILIA COMPLETA DE COTAS ASINTÓTICAS
+  ┌───────────────┬───────────────┬───────────────────────────────┬──────────────┐
+  │ Notación      │ Relación      │ Definición de Límite (n → ∞)  │ Significado  │
+  ├───────────────┼───────────────┼───────────────────────────────┼──────────────┤
+  │ Big-O: O(g)   │ f(n) ≤ g(n)   │ lim [f(n) / g(n)] < ∞         │ Cota superior│
+  │ Big-Ω: Ω(g)   │ f(n) ≥ g(n)   │ lim [f(n) / g(n)] > 0         │ Cota inferior│
+  │ Big-Θ: Θ(g)   │ f(n) = g(n)   │ lim [f(n) / g(n)] = k ∈ (0,∞) │ Orden exacto │
+  │ Little-o: o(g)│ f(n) < g(n)   │ lim [f(n) / g(n)] = 0         │ Cota estricta│
+  │ Little-ω: ω(g)│ f(n) > g(n)   │ lim [f(n) / g(n)] = ∞         │ Cota estricta│
+  └───────────────┴───────────────┴───────────────────────────────┴──────────────┘
+```
+
+##### 1. Definiciones Formales con Cuantificadores
+* **$O(g(n))$ (Cota superior débil):**
+  $$O(g(n)) = \big\{ f(n) \mid \exists c > 0, n_0 > 0 \text{ tal que } 0 \le f(n) \le c \cdot g(n), \; \forall n \ge n_0 \big\}$$
+  *Indica que $f(n)$ no crece más rápido que $g(n)$. Admite cotas holgadas (ej. $n^2 \in O(n^3)$).*
+
+* **$\Omega(g(n))$ (Cota inferior débil):**
+  $$\Omega(g(n)) = \big\{ f(n) \mid \exists c > 0, n_0 > 0 \text{ tal que } 0 \le c \cdot g(n) \le f(n), \; \forall n \ge n_0 \big\}$$
+  *Indica que $f(n)$ crece al menos tan rápido como $g(n)$.*
+
+* **$\Theta(g(n))$ (Cota ajustada / Orden exacto):**
+  $$\Theta(g(n)) = O(g(n)) \cap \Omega(g(n)) = \big\{ f(n) \mid \exists c_1, c_2 > 0, n_0 > 0 \text{ tales que } c_1 g(n) \le f(n) \le c_2 g(n), \; \forall n \ge n_0 \big\}$$
+  *Atrapa a la función en un "sándwich" constante. Es la notación más informativa y deseada.*
+
+* **$o(g(n))$ (Little-$o$ / Cota superior estricta):**
+  $$o(g(n)) = \big\{ f(n) \mid \forall c > 0, \exists n_0 > 0 \text{ tal que } 0 \le f(n) < c \cdot g(n), \; \forall n \ge n_0 \big\}$$
+  *Nótese la diferencia capital frente a Big-$O$: la desigualdad se cumple **para toda constante** $c > 0$ por diminuta que sea ($c = 0.0001$). Significa que $f(n)$ se vuelve **insignificante** comparada con $g(n)$ a medida que $n$ crece.*
+  $$\lim_{n \to \infty} \frac{f(n)}{g(n)} = 0$$
+
+* **$\omega(g(n))$ (Little-$\omega$ / Cota inferior estricta):**
+  $$\omega(g(n)) = \big\{ f(n) \mid \forall c > 0, \exists n_0 > 0 \text{ tal que } 0 \le c \cdot g(n) < f(n), \; \forall n \ge n_0 \big\}$$
+  $$\lim_{n \to \infty} \frac{f(n)}{g(n)} = \infty$$
+  *Propiedad de simetría traspuesta:* $f(n) \in o(g(n)) \iff g(n) \in \omega(f(n))$.
+
+---
+
+##### 2. Caso de Estudio Completo: Comparación de Todas las Cotas para $f(n) = 3n^2 + 5n + 10$
+
+Para entender cómo operan los límites y las envolventes, evaluemos la función cuadrática $f(n) = 3n^2 + 5n + 10$ frente a distintas funciones de referencia $g(n)$:
+
+```
+Gráfica Conceptual de Envolventes y Cotas:
+Coste ↑
+      │                                       / g(n) = n³ [o(n³): Se dispara a ∞]
+      │                                      /
+      │                                /---- c₂·n² = 4n² [O(n²): Techo cuadrático]
+      │                         /-----*----- f(n) = 3n² + 5n + 10 [Θ(n²): Real]
+      │                  /-----/----- c₁·n² = 3n² [Ω(n²): Suelo cuadrático]
+      │           /-----/
+      │     /----/                      /--- g(n) = n [ω(n): Se queda abajo]
+      │    / |                         /
+      └───┴──┼───────────────────────────────→ n
+          0  n₀ (Umbral asintótico)
+```
+
+1. **Frente a $g(n) = n^2$ (Mismo orden polinómico):**
+   $$\lim_{n \to \infty} \frac{3n^2 + 5n + 10}{n^2} = \lim_{n \to \infty} \left( 3 + \frac{5}{n} + \frac{10}{n^2} \right) = 3$$
+   * Como el límite es una constante finita estrictamente mayor que cero ($k = 3 \in (0, \infty)$):
+     - $\mathbf{f(n) \in \Theta(n^2)}$ (Cota ajustada perfecta).
+     - $\mathbf{f(n) \in O(n^2)}$ (con $c = 4$ y $n_0 = 7$: $3n^2 + 5n + 10 \le 4n^2$).
+     - $\mathbf{f(n) \in \Omega(n^2)}$ (con $c = 3$ y $n_0 = 1$: $3n^2 \le 3n^2 + 5n + 10$).
+     - **¡$f(n) \notin o(n^2)$!** Falla porque el límite es $3 \neq 0$. Big-$O$ permite $3n^2 \in O(n^2)$, pero Little-$o$ lo prohíbe categóricamente porque sus ritmos son idénticos.
+     - **¡$f(n) \notin \omega(n^2)$!** Falla porque el límite es $3 \neq \infty$.
+
+2. **Frente a $g(n) = n^3$ (Orden superior):**
+   $$\lim_{n \to \infty} \frac{3n^2 + 5n + 10}{n^3} = \lim_{n \to \infty} \left( \frac{3}{n} + \frac{5}{n^2} + \frac{10}{n^3} \right) = 0$$
+   * Como el límite es exactamente **0**:
+     - $\mathbf{f(n) \in o(n^3)}$ (**Cota superior estricta cumplida**).
+     - $\mathbf{f(n) \in O(n^3)}$ (Cota superior válida, aunque holgada).
+     - $f(n) \notin \Theta(n^3)$ y $f(n) \notin \Omega(n^3)$.
+
+3. **Frente a $g(n) = n$ (Orden inferior):**
+   $$\lim_{n \to \infty} \frac{3n^2 + 5n + 10}{n} = \lim_{n \to \infty} \left( 3n + 5 + \frac{10}{n} \right) = \infty$$
+   * Como el límite diverge a **$\infty$**:
+     - $\mathbf{f(n) \in \omega(n)}$ (**Cota inferior estricta cumplida**).
+     - $\mathbf{f(n) \in \Omega(n)}$ (Cota inferior válida, aunque holgada).
+     - $f(n) \notin \Theta(n)$ y $f(n) \notin O(n)$.
+
+> [!TIP]
+> **Regla nemotécnica para entrevistas técnicas:**
+> Piensa en las notaciones asintóticas como comparadores numéricos entre funciones:
+> * $f \in O(g) \iff f \le g$
+> * $f \in \Omega(g) \iff f \ge g$
+> * $f \in \Theta(g) \iff f = g$
+> * $f \in o(g) \iff f < g$ *(estrictamente más rápido el divisor)*
+> * $f \in \omega(g) \iff f > g$ *(estrictamente más rápido el dividendo)*
+
+#### Ecuaciones de Recurrencia: División ($n/d$) vs. Sustracción ($n-c$)
+Los algoritmos recursivos reducen progresivamente el tamaño del problema. La naturaleza matemática de esa reducción dicta si el algoritmo es escalable o si colapsa exponencialmente:
+
+1. **Recurrencia por División ($n/b$):**
+   $$T(n) = a \, T(n/b) + f(n)$$
+   El tamaño del problema se fracciona a la mitad o en $b$ partes. La altura del árbol de llamadas recursivas es **logarítmica** ($\log_b n$).
+   * *Ejemplo:* MergeSort ($T(n) = 2T(n/2) + O(n) \implies O(n \log n)$).
+
+2. **Recurrencia por Sustracción ($n-c$):**
+   $$T(n) = a \, T(n-c) + f(n)$$
+   El tamaño del problema se reduce en una constante fija ($c$). La altura del árbol de recursión es **lineal** ($n/c$). Si hay $a \ge 2$ llamadas recursivas por nivel, el número de hojas es **$a^{n/c}$**, produciendo una **explosión combinatoria exponencial**:
+   $$T(n) = 2T(n-1) + O(1) \implies O(2^n)$$
+   *Este es el destino fatídico si intentas resolver la Mochila 0/1 o Fibonacci con recursión ingenua sin reutilización de estados.*
+
+#### El Teorema Maestro
+Permite resolver de forma inmediata recurrencias por división $T(n) = a \, T(n/b) + f(n)$ comparando el peso asintótico de las hojas del árbol ($n^{\log_b a}$) con el coste de dividir y combinar en la raíz ($f(n)$):
+
+| Caso | Condición Matemática | Complejidad Resultante | Dominancia | Ejemplo Canónico |
+| :--- | :--- | :--- | :--- | :--- |
+| **Caso 1** | $f(n) = O(n^{\log_b a - \epsilon})$ para $\epsilon > 0$ | $T(n) = \Theta(n^{\log_b a})$ | Dominan las **hojas** (división) | Multiplicación de Strassen ($a=7, b=2, f(n)=O(n^2) \implies O(n^{2.807})$) |
+| **Caso 2** | $f(n) = \Theta(n^{\log_b a} \log^k n)$ con $k \ge 0$ | $T(n) = \Theta(n^{\log_b a} \log^{k+1} n)$ | **Equilibrio** hojas/combinación | MergeSort ($a=2, b=2, k=0 \implies \Theta(n \log n)$) |
+| **Caso 3** | $f(n) = \Omega(n^{\log_b a + \epsilon})$ y $a f(n/b) \le c f(n)$ | $T(n) = \Theta(f(n))$ | Domina la **raíz** (combinación) | Algoritmos con partición pesada y pocas llamadas |
+
+---
+
+### 2.2 Taxonomía del Problema de la Mochila y la Falla de Divide y Vencerás
+
+Dados $n$ objetos, donde cada objeto $i$ posee un beneficio $b_i > 0$ y un peso $p_i > 0$, y una mochila con capacidad máxima de carga $M$:
+$$\text{Maximizar } \sum_{i=1}^n b_i x_i \quad \text{sujeto a} \quad \sum_{i=1}^n p_i x_i \le M$$
+
+#### Las Dos Variantes Fundamentales
+1. **Problema de la Mochila Fraccionaria:** $x_i \in [0, 1]$. Se permite partir objetos y tomar fracciones continuas. El espacio de soluciones es un politopo convexo navegable en **tiempo polinomial**.
+2. **Problema de la Mochila 0/1:** $x_i \in \{0, 1\}$. Restricción de integridad: el objeto se toma íntegro o se descarta. Esta restricción convierte el problema en **NP-Completo**.
+
+> [!NOTE]
+> **La Capa del "The So What?":** Al pasar de variables continuas ($[0, 1]$) a discretas ($\{0, 1\}$), el espacio de búsqueda deja de ser una superficie suave optimizable por derivadas o reglas lineales simples y pasa a ser un conjunto discreto de $2^n$ combinaciones posibles.
+
+#### ¿Por qué Divide y Vencerás Puro Fracasa en la Mochila 0/1?
+El esquema clásico de Divide y Vencerás exige descomponer el problema en subproblemas **estrictamente disjuntos** (como ordenar la mitad izquierda y la mitad derecha en QuickSort/MergeSort).
+
+Si intentáramos plantear la Mochila 0/1 ramificando recursivamente la decisión del objeto $n$:
+$$\text{Mochila}(n, M) = \max\Big(\text{Mochila}(n-1, M), \; b_n + \text{Mochila}(n-1, M - p_n)\Big)$$
+
+Los subproblemas resultantes **no son disjuntos, sino masivamente superpuestos**: ramas independientes en el árbol evaluarán repetidamente la misma tupla $(i, \text{capacidad restante } c)$. Al ser una recurrencia por sustracción ($n-1$), el árbol genera $2^n$ llamadas, recalculando los mismos estados miles de veces. Divide y Vencerás sin persistencia de estados colapsa en $O(2^n)$.
+
+#### 2.2.1 El Paradigma en Acción: Ordenación por Divide y Vencerás (MergeSort vs. QuickSort)
+
+Donde el paradigma Divide y Vencerás brilla con máximo esplendor es en la **ordenación eficiente**, donde los subproblemas sí son **estrictamente disjuntos**. Los dos algoritmos canónicos representan las dos caras opuestas del paradigma: **dónde se paga el trabajo computacional**:
+
+```
+                       DIVIDE Y VENCERÁS EN ORDENACIÓN
+   ┌───────────────────────────────────┬───────────────────────────────────┐
+   │             MERGESORT             │             QUICKSORT             │
+   ├───────────────────────────────────┼───────────────────────────────────┤
+   │ 1. Dividir: TRIVIAL O(1)          │ 1. Dividir (Partición): PESADA O(N)│
+   │    (Punto medio m = (p+q)/2)      │    (Clasificar según pivote)      │
+   │ 2. Vencer: 2 llamadas recursivas  │ 2. Vencer: 2 llamadas recursivas  │
+   │ 3. Combinar: PESADA O(N)          │ 3. Combinar: ¡GRATIS! O(1)        │
+   │    (Fusión con 2 punteros en RAM) │    (El array ya está in-place)    │
+   └───────────────────────────────────┴───────────────────────────────────┘
+```
+
+---
+
+#### A) MergeSort: Fusión Ordenada (John von Neumann, 1945)
+
+* **Estrategia:** Divide el array exactamente a la mitad sin mirar su contenido ($O(1)$), ordena recursivamente ambas mitades y realiza todo el trabajo pesado en la fase de **Combinar (Merge)**.
+
+```cpp
+void mergeSort(std::vector<int>& A, int p, int q) {
+  if (p >= q) return; // Caso base: tamaño 0 ó 1 (ya ordenado)
+  int m = p + (q - p) / 2; // Dividir: O(1)
+  mergeSort(A, p, m);     // Vencer subproblema izquierdo
+  mergeSort(A, m + 1, q); // Vencer subproblema derecho
+  combinar(A, p, m, q);   // Combinar: O(N) con dos punteros
+}
+```
+
+##### Traza Paso a Paso sobre $A = [38, 27, 43, 3, 9, 82, 10]$ ($N = 7$):
+1. **Fase de Descomposición (Hacia abajo en el árbol):**
+   - Nivel 0: $[38, 27, 43, 3, 9, 82, 10]$ se divide en punto medio $m=3$:
+     - Mitad izquierda: $[38, 27, 43, 3]$
+     - Mitad derecha: $[9, 82, 10]$
+   - Nivel 1:
+     - $[38, 27, 43, 3] \to [38, 27]$ y $[43, 3]$
+     - $[9, 82, 10] \to [9, 82]$ y $[10]$
+   - Nivel 2 (Casos base de tamaño 1): $[38], [27], [43], [3], [9], [82], [10]$.
+2. **Fase de Combinación / Fusión (Hacia arriba en el árbol):**
+   - Se fusiona $[38]$ con $[27]$: compara $38$ y $27 \implies [27, 38]$.
+   - Se fusiona $[43]$ con $[3]$: compara $43$ y $3 \implies [3, 43]$.
+   - Se fusionan $[27, 38]$ y $[3, 43]$ con dos punteros:
+     - Puntero $i$ en $27$, puntero $j$ en $3 \implies$ Menor: $3$.
+     - Puntero $i$ en $27$, puntero $j$ en $43 \implies$ Menor: $27$.
+     - Puntero $i$ en $38$, puntero $j$ en $43 \implies$ Menor: $38$.
+     - Queda resto: $43 \implies$ Resultado sublista izquierda: $\mathbf{[3, 27, 38, 43]}$.
+   - Análogamente, la mitad derecha fusiona $[9, 82]$ con $[10] \implies \mathbf{[9, 10, 82]}$.
+   - **Fusión final:** Dos punteros sobre $[3, 27, 38, 43]$ y $[9, 10, 82]$:
+     - Compara $3$ y $9 \to 3$
+     - Compara $27$ y $9 \to 9$
+     - Compara $27$ y $10 \to 10$
+     - Compara $27$ y $82 \to 27$
+     - Compara $38$ y $82 \to 38$
+     - Compara $43$ y $82 \to 43$
+     - Vuelca $82 \to$ Array final: $\mathbf{[3, 9, 10, 27, 38, 43, 82]}$.
+
+* **Recurrencia:** $T(n) = 2T(n/2) + O(n) \implies \mathbf{\Theta(N \log N)}$ en **todos los casos** (mejor, peor y promedio).
+* **Trade-off:** Es un algoritmo **estable** (no altera el orden relativo de elementos con claves duplicadas), pero requiere un buffer de memoria auxiliar de tamaño **$O(N)$** para la fusión.
+
+---
+
+#### B) QuickSort: Partición In-Place (Tony Hoare, 1959)
+
+* **Estrategia:** Realiza el trabajo pesado en la fase de **Dividir** mediante el procedimiento de **Partición**. Elige un elemento pivote y reorganiza los datos directamente en el array para que todos los elementos menores al pivote queden a su izquierda y los mayores a su derecha.
+* Como el pivote queda en su posición definitiva y las dos mitades están separadas espacialmente, la fase de **Combinar es $O(1)$ (gratis)**.
+
+```cpp
+void quickSort(std::vector<int>& A, int p, int q) {
+  if (p >= q) return; // Caso base
+  int s = particionLomuto(A, p, q); // Dividir pesada: O(N)
+  quickSort(A, p, s - 1);           // Subproblema izquierdo
+  quickSort(A, s + 1, q);           // Subproblema derecho
+  // Combinar: O(1) (no hace falta hacer nada, ya está in-place)
+}
+```
+
+##### Traza Paso a Paso sobre $A = [38, 27, 43, 3, 9, 82, 10]$ con Partición de Lomuto:
+1. **Elección del Pivote:** Tomamos el último elemento como pivote: $\mathbf{pivote = 10}$ en el rango $[0 .. 6]$.
+2. **Barrido de Partición ($O(N)$):**
+   - Punteros exploran el array. Cada vez que encontramos un elemento $< 10$, lo intercambiamos al frente:
+     - $38 > 10$ (no se mueve).
+     - $27 > 10$ (no se mueve).
+     - $43 > 10$ (no se mueve).
+     - $3 < 10 \implies$ Intercambia con $A[0]$ (38): array pasa a $[3, 27, 43, 38, 9, 82, 10]$.
+     - $9 < 10 \implies$ Intercambia con $A[1]$ (27): array pasa a $[3, 9, 43, 38, 27, 82, 10]$.
+     - $82 > 10$ (no se mueve).
+3. **Colocación Definitiva del Pivote:**
+   - Se intercambia el pivote ($10$) con el primer elemento de los mayores ($A[2] = 43$):
+     $$\text{Array resultante: } [\underbrace{3, \; 9}_{\text{menores}}, \; \mathbf{\underline{10}}, \; \underbrace{38, \; 27, \; 82, \; 43}_{\text{mayores}}]$$
+   - **¡El valor 10 ha alcanzado su posición final absoluta $A[2]$ para siempre!**
+4. **Llamadas Recursivas In-Place:**
+   - `quickSort(A, 0, 1)` sobre $[3, 9] \implies$ queda $[3, 9]$.
+   - `quickSort(A, 3, 6)` sobre $[38, 27, 82, 43] \implies$ elige $43$ de pivote, particiona en $[38, 27]$ y $[82]$, y ordena a $[27, 38, 43, 82]$.
+5. **Resultado Final:** $[3, 9, 10, 27, 38, 43, 82]$ in-place sin reservar un solo byte auxiliar.
+
+* **El Dilema del Pivote:**
+  - **Caso Promedio / Mejor Caso (Pivote centrado):** $T(n) = 2T(n/2) + O(n) \implies \mathbf{O(N \log N)}$.
+  - **Peor Caso (Pivote pésimo, array ya ordenado con pivote extremo):** $T(n) = T(n-1) + O(n) \implies \mathbf{O(N^2)}$.
+  - **Solución Industrial:** Elegir pivote aleatorio o **mediana de tres** ($\text{mediana}(A[p], A[\text{centro}], A[q])$). Si la recursión se vuelve muy profunda, los compiladores modernos conmutan a HeapSort (**Introsort**, estándar de `std::sort` de C++).
+
+---
+
+#### C) Matriz Comparativa Canónica: MergeSort vs. QuickSort
+
+| Dimensión | MergeSort | QuickSort |
+| :--- | :--- | :--- |
+| **Dónde reside el coste** | En la **Combinación (Merge)**: $O(N)$ | En la **División (Partición)**: $O(N)$ |
+| **Coste de Combinar** | Pesado: requiere bucle de fusión de 2 punteros | **Gratis**: $O(1)$ (in-place) |
+| **Complejidad Mejor Caso** | $\Theta(N \log N)$ | $\Theta(N \log N)$ |
+| **Complejidad Caso Promedio** | $\Theta(N \log N)$ | $\Theta(N \log N)$ |
+| **Complejidad Peor Caso** | $\Theta(N \log N)$ (inmune a peores casos) | $O(N^2)$ (con pivote extremo no mitigado) |
+| **Memoria Auxiliar** | **$O(N)$** (buffer en Heap) | **$O(1)$** in-place ($O(\log N)$ en pila de llamadas) |
+| **Estabilidad** | **Sí** (preserva orden relativo de duplicados) | **No** (los swaps a través del pivote alteran orden) |
+| **Localidad de Caché CPU** | Regular (saltos continuos entre array y buffer) | **Excelente** (recorrido secuencial contiguo en RAM) |
+| **Uso Predilecto en la Industria** | Ordenar listas enlazadas, bases de datos externas (`Timsort` en Python/Java) | Ordenación de propósito general en memoria (`std::sort` en C++/Rust) |
+
+---
+
+### 2.3 Algoritmos Voraces (Greedy): La Búsqueda de la Proporción Óptima
+
+La filosofía voraz encarna la **"miopía estratégica"**: construye la solución paso a paso, tomando en cada etapa la decisión localmente más prometedora según un criterio heurístico, **sin volver atrás jamás** (sin marcha atrás ni backtracking).
+
+#### Evaluación de Criterios de Selección Voraz
+Para llenar la mochila, se pueden considerar tres criterios:
+1. **Beneficio Máximo ($b_i$):** Sesgo hacia el valor absoluto. Criterio miope: un objeto puede valer mucho pero ocupar casi toda la mochila.
+2. **Peso Mínimo ($p_i$):** Sesgo hacia el volumen. Criterio miope: mete muchos objetos diminutos que apenas aportan beneficio.
+3. **Proporción Óptima / Densidad de Valor ($b_i / p_i$):** Cuánto beneficio aporta cada unidad de peso consumida (€/kg).
+
+#### Éxito en la Mochila Fraccionaria: Óptimo Global Garantizado
+En la variante fraccionaria, ordenar los objetos por $b_i / p_i$ descendente y tomarlos en ese orden hasta agotar la capacidad garantiza matemáticamente el **óptimo global**:
+* Se toman al 100% los objetos con mayor densidad.
+* Si el último objeto no cabe entero, se toma exactamente la fracción requerida: $x_k = \frac{M_{\text{restante}}}{p_k}$.
+* **Complejidad:** $O(n \log n)$ dominada por la ordenación inicial de los $n$ candidatos, seguida de una pasada lineal $O(n)$.
+* **Demostración matemática:** Se prueba por el argumento de intercambio (exchange argument). Si existiera una solución óptima distinta, necesariamente sustituye una fracción de un objeto con mayor ratio $b_i/p_i$ por otro con menor ratio, lo que reduce estrictamente el beneficio total acumulado.
+
+#### El Fallo Matroide en la Mochila 0/1: Contraejemplo Formal de AED2
+En la Mochila 0/1, la estrategia voraz por densidad **falla estrepitosamente**. La razón teórica es que el problema **no cumple con la propiedad de Matroide**: la indivisibilidad de los objetos impide rellenar los "huecos" restantes con fracciones de otros objetos.
+
+```
+CONTRAEJEMPLO MATEMÁTICO CANÓNICO (UMU):
+Capacidad de la mochila: M = 100 kg
+- Objeto 1: Peso p₁ = 1 kg,   Beneficio b₁ = 2 €    → Ratio = 2.0 €/kg
+- Objeto 2: Peso p₂ = 100 kg, Beneficio b₂ = 190 €  → Ratio = 1.9 €/kg
+
+1. Algoritmo Voraz (Greedy):
+   Ordena por ratio: primero Objeto 1 (ratio 2.0 > 1.9).
+   Toma Objeto 1: peso acumulado = 1 kg, beneficio = 2 €.
+   Capacidad restante: 100 - 1 = 99 kg.
+   Evalúa Objeto 2: pesa 100 kg > 99 kg → ¡NO CABE!
+   Resultado Voraz: Beneficio Total = 2 € (con 99 kg vacíos desaprovechados).
+
+2. Solución Óptima Real (0/1):
+   Tomar exclusivamente el Objeto 2 (100 kg).
+   Resultado Óptimo: Beneficio Total = 190 € (¡95 veces superior al voraz!).
+```
+
+> [!WARNING]
+> **Fallo Voraz en Sistemas Monetarios No Canónicos:** El problema del cambio de monedas con greedy funciona en euros (sistema canónico), pero falla ante conjuntos arbitrarios.
+> * *Contraejemplo:* Objetivo $M = 8$, monedas $\{7, 3, 2\}$. El voraz toma $7$, le resta $8 - 7 = 1$ y se bloquea sin solución. El óptimo es $3 + 3 + 2 = 8$ (3 monedas).
+
+---
+
+### 2.4 Programación Dinámica (DP): Construcción Bottom-Up de la Mochila 0/1
+
+La Programación Dinámica es la respuesta matemática rigurosa cuando un problema presenta:
+1. **Subestructura Óptima (Principio de Optimalidad de Bellman):** Una solución global óptima está compuesta por decisiones óptimas tomadas en cada uno de sus subproblemas intermedios.
+2. **Solapamiento Masivo de Subproblemas:** Los mismos subproblemas aparecen una y otra vez en ramas distintas del árbol de exploración. En lugar de recalcularlos, se memorizan.
+
+#### Ecuación de Recurrencia Formal de Bellman
+Definimos la matriz $V[i, j]$ como el **beneficio máximo obtenible** considerando únicamente un subconjunto de los primeros $i$ objetos ($1 \le i \le n$) y disponiendo de una capacidad de mochila exacta de $j$ ($0 \le j \le M$).
+
+$$V[i, j] = \begin{cases} 
+0 & \text{si } i = 0 \text{ ó } j = 0 \\ 
+V[i-1, j] & \text{si } p_i > j \quad \text{(el objeto } i \text{ no cabe, se hereda)} \\ 
+\max\Big(V[i-1, j], \; b_i + V[i-1, j - p_i]\Big) & \text{si } p_i \le j \quad \text{(se elige el mejor: no incluir vs. incluir)}
+\end{cases}$$
+
+#### Ejemplo Numérico Completo Paso a Paso
+Instancia con $n=4$ objetos y capacidad máxima $M = 7$:
+* Objeto 1: $p_1 = 1$, $b_1 = 1$
+* Objeto 2: $p_2 = 3$, $b_2 = 4$
+* Objeto 3: $p_3 = 4$, $b_3 = 5$
+* Objeto 4: $p_4 = 5$, $b_4 = 7$
+
+Construcción sistemática de la tabla $V[i, j]$ de tamaño $(4+1) \times (7+1)$:
+
+| $i$ \ $j$ | $0$ | $1$ | $2$ | $3$ | $4$ | $5$ | $6$ | $7$ | Objeto Considerado |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| **$0$** | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | Caso base (sin objetos) |
+| **$1$** | 0 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | $O_1 (p=1, b=1)$ |
+| **$2$** | 0 | 1 | 1 | **4** | 5 | 5 | 5 | 5 | $O_2 (p=3, b=4) \to \text{en } j=3: \max(1, 4+0)=4$ |
+| **$3$** | 0 | 1 | 1 | 4 | 5 | 6 | 6 | **9** | $O_3 (p=4, b=5) \to \text{en } j=7: \max(5, 5+4)=9$ |
+| **$4$** | 0 | 1 | 1 | 4 | 5 | 7 | 8 | **9** | $O_4 (p=5, b=7) \to \text{en } j=7: \max(9, 7+1)=9$ |
+
+El beneficio máximo alcanzable se encuentra en la esquina inferior derecha: **$V[4, 7] = 9 €$**.
+
+#### Algoritmo de Recomposición Inversa (Recuperar el Vector de Decisión $X$)
+La matriz $V$ solo indica el beneficio óptimo escalar, no qué objetos fueron elegidos. Para reconstruir el vector binario $X = (x_1, x_2, \dots, x_n)$ se realiza un recorrido inverso desde $(n, M)$ hacia $(0, 0)$:
+
+```cpp
+// Reconstrucción del vector de decisión X en O(n)
+int j = M;
+std::vector<int> X(n, 0);
+
+for (int i = n; i > 0; --i) {
+  if (V[i][j] != V[i - 1][j]) {
+    // Si el valor difiere, el objeto i FUE INCLUIDO obligatoriamente
+    X[i - 1] = 1;
+    j -= p[i - 1]; // Restamos el peso consumido
+  } else {
+    // Si el valor es idéntico, el objeto i NO fue incluido
+    X[i - 1] = 0;
+  }
+}
+```
+
+**Traza sobre nuestra tabla:**
+1. En $(4, 7)$: $V[4, 7] = 9 == V[3, 7] = 9 \implies \mathbf{x_4 = 0}$. La capacidad sigue siendo $j = 7$.
+2. En $(3, 7)$: $V[3, 7] = 9 \neq V[2, 7] = 5 \implies \mathbf{x_3 = 1}$. Restamos peso $p_3 = 4 \implies j = 7 - 4 = 3$.
+3. En $(2, 3)$: $V[2, 3] = 4 \neq V[1, 3] = 1 \implies \mathbf{x_2 = 1}$. Restamos peso $p_2 = 3 \implies j = 3 - 3 = 0$.
+4. En $(1, 0)$: $j = 0 \implies \mathbf{x_1 = 0}$.
+* **Solución Óptima:** Incluir Objetos 2 y 3. Peso total = $3 + 4 = 7 \le 7$, Beneficio = $4 + 5 = 9 €$.
+
+#### Análisis de Complejidad y la Trampa "Pseudo-Polinomial"
+* **Tiempo:** $O(n \cdot M)$ bucles anidados para computar cada celda en $O(1)$.
+* **Espacio:** $O(n \cdot M)$ para la matriz completa (optimizables a $O(M)$ si solo interesa el valor máximo y no la recomposición de los objetos, pues cada fila solo depende de la anterior).
+* **¿Por qué es Pseudo-Polinomial?** En ciencias de la computación, el tamaño de la entrada de un número entero $M$ no es el valor $M$, sino su representación binaria: **$k = \log_2 M$ bits**. En función del tamaño real en bits de la entrada, la complejidad temporal es:
+  $$O(n \cdot M) = O(n \cdot 2^k)$$
+  ¡Es **exponencial** respecto al número de bits necesarios para codificar $M$! Si en un problema $M = 1.000.000.000$, la matriz DP exige gigabytes de RAM y colapsa la memoria antes de terminar.
+
+---
+
+### 2.5 Backtracking: Exploración Sistemática y Poda Inteligente
+
+Cuando la capacidad $M$ es astronómica y la tabla de Programación Dinámica desbordaría la memoria RAM, el **Backtracking** permite explorar el espacio combinatorio mediante un **árbol binario de decisión**, donde cada nivel $i$ representa la elección binaria sobre el objeto $i$: rama izquierda ($x_i = 1$) o rama derecha ($x_i = 0$).
+
+#### El Esquema Canónico de Funciones (Metodología UMU)
+Un algoritmo formal de Backtracking se vertebra en cinco funciones de control:
+1. `Generar(nivel, nodo)`: Crea las alternativas del objeto actual (primero $x_i = 1$, luego $x_i = 0$).
+2. `Criterio(nivel, nodo)`: Poda por restricciones de factibilidad. Comprueba si $\sum_{k=1}^i p_k x_k \le M$. Si excede la capacidad, la rama es inviable y se corta inmediatamente.
+3. `Solución(nivel, nodo)`: Determina si hemos alcanzado una hoja ($i = n$). Si el beneficio acumulado supera al mejor récord conocido, se actualiza el **Valor Óptimo Actual (VOA)**.
+4. `MasHermanos(nivel, nodo)`: Controla si quedan ramas pendientes por probar en este nodo (pasa de $x_i = 1$ a $x_i = 0$).
+5. `Retroceder(nivel, nodo)`: Desapila en la recursión y restaura las variables de estado al ascender en el árbol.
+
+#### Poda por Optimización (Cota Superior / Bound)
+El verdadero poder del Backtracking no reside en explorar las $2^n$ ramas, sino en **podar subárboles enteros antes de visitarlos**:
+
+```mermaid
+graph TD
+    N["Nodo Actual (Nivel i)\nPeso acum, Ben acum"] --> EVAL{"Calcular bestimado\n(Cota Voraz Fraccionaria)"}
+    EVAL -->|"bestimado ≤ VOA"| PRUNE["✂️ PODA POR COTA SUPERIOR\n(Imposible superar el récord actual)"]
+    EVAL -->|"bestimado > VOA y Peso ≤ M"| EXPLORE["Explorar ramas x_i=1 y x_i=0"]
+```
+
+* **Cálculo de `bestimado`:** En cada nodo intermedio, sumamos el beneficio actual acumulado más el resultado de aplicar la **Mochila Voraz Fraccionaria** a los objetos pendientes $\{i+1, \dots, n\}$ con la capacidad residual disponible ($M - \text{peso acumulado}$).
+* **Condición de Corte:** Como la Mochila Fraccionaria es una relajación continua que proporciona una **cota superior matemática inalcanzable** para cualquier solución 0/1:
+  $$\text{Si } bestimado \le VOA \implies \text{Corte Inmediato (Poda)}$$
+  Ninguna combinación posible descendiente de esta rama podrá igualar o superar el récord $VOA$ que ya tenemos en mano.
+
+#### Aceleradores de Ingeniería Críticos
+1. **Ordenación Previa:** Ordenar los objetos por $b_i / p_i$ descendente **antes de iniciar el Backtracking**.
+2. **Exploración Prioritaria de la Rama $x_i = 1$:** Probar siempre la inclusión antes que la exclusión.
+* **Impacto:** Al probar los objetos más densos primero, el algoritmo encuentra rápidamente soluciones factibles de muy alto valor, elevando el umbral $VOA$ en los primeros pasos. Esto provoca que la condición de poda ($bestimado \le VOA$) se active en niveles altos del árbol, podando subárboles masivos de $2^{n-i}$ nodos de un solo golpe.
+
+---
+
+### 2.6 Branch & Bound (Ramificación y Poda)
+
+Branch & Bound traslada el principio de las cotas optimistas a una exploración guiada no en profundidad (DFS), sino por el **nodo vivo globalmente más prometedor**:
+
+* **Estructura de Datos Clave:** Una **Cola de Prioridad (Max-Heap)** de nodos vivos del árbol de búsqueda.
+* **Estrategia Best-First Search (LC - Least Cost / Best Bound):**
+  1. En lugar de sumergirse ciegamente por la rama izquierda con una pila recursiva, desencola del Heap el nodo con el mayor `bestimado`.
+  2. Genera sus hijos ($x_i = 1$ y $x_i = 0$).
+  3. Si un hijo viola el peso $M$, se descarta (poda por factibilidad).
+  4. Si un hijo tiene $bestimado \le VOA$, se descarta (poda por cota).
+  5. Si un hijo es hoja, actualiza el récord $VOA$.
+  6. Si es un nodo prometedor intermedio, se inserta en el Heap.
+* **Ventaja:** Suele expandir significativamente menos nodos que el Backtracking puro.
+* **Desventaja en Memoria:** La cola de prioridad mantiene simultáneamente en memoria todos los nodos de la frontera activa, lo que puede requerir memoria exponencial $O(2^n)$ en el peor caso, a diferencia del Backtracking que solo consume $O(n)$ en la pila de llamadas.
+
+---
+
+### 2.7 Teoría de Complejidad Computacional ($P$, $NP$, $NP$-Completo y $NP$-Hard)
+
+* **Clase P:** Problemas de decisión resolubles por una máquina determinista en tiempo **polinomial** respecto a la longitud en bits de la entrada ($O(n^k)$).
+  * *Mochila Fraccionaria:* Pertenece a $P$ ($O(n \log n)$).
+  * *Caminos mínimos en grafos (Dijkstra):* Pertenece a $P$ ($O((V+E)\log V)$).
+* **Clase NP (Nondeterministic Polynomial time):** Problemas cuya solución, una vez propuesta como un "certificado" o testigo (ejemplo: un vector binario $X = [1, 0, 1, 1]$), puede ser **verificada en tiempo polinomial** evaluando que $\sum p_i x_i \le M$ y $\sum b_i x_i \ge K$.
+* **NP-Completos:** Los problemas más difíciles de $NP$. Si se descubriera un algoritmo polinomial exacto para cualquiera de ellos, todos los problemas de $NP$ se resolverían en tiempo polinomial ($P = NP$).
+  * La **Mochila 0/1 (versión decisión)** es NP-Completa (mediante reducción polinomial desde el problema *Subset Sum*).
+  * Otros problemas canónicos: *SAT (Satisfacibilidad Booleana)*, *Viajante de Comercio (TSP decisión)*, *Coloración de Grafos*, *Clique Máximo*.
+* **NP-Hard (NP-Difíciles):** Problemas al menos tan difíciles como los NP-completos, no necesariamente restringidos a respuestas booleanas (ejemplo: la versión de optimización de la Mochila 0/1: "maximizar el beneficio exacto").
+
+---
+
+### 2.8 Síntesis Comparativa de Paradigmas Algorítmicos
+
+La siguiente matriz sintetiza el comportamiento de los paradigmas estudiados ante el problema de la mochila:
+
+| Criterio | Algoritmo Voraz (Greedy) | Programación Dinámica | Backtracking con Poda | Branch & Bound |
+| :--- | :--- | :--- | :--- | :--- |
+| **Variante Aplicable** | Fraccionaria ($x_i \in [0, 1]$) | Mochila 0/1 ($x_i \in \{0, 1\}$) | Mochila 0/1 ($x_i \in \{0, 1\}$) | Mochila 0/1 ($x_i \in \{0, 1\}$) |
+| **Complejidad Temporal** | $O(n \log n)$ (por ordenar) | $O(n \cdot M)$ (pseudo-polinomial) | $O(2^n)$ peor caso; muy ágil con poda | $O(2^n)$ peor caso; mínimo nodos evaluados |
+| **Complejidad Espacial** | $O(n)$ (candidatos) | $O(n \cdot M)$ o $O(M)$ | $O(n)$ (pila de recursión) | $O(2^n)$ (cola de prioridad / heap) |
+| **Garantía de Óptimo** | Sí en fraccionaria; **No en 0/1** | **Siempre (Exacto)** | **Siempre (Exacto)** | **Siempre (Exacto)** |
+| **Estructura Clave** | Array ordenado | Matriz bidimensional $V[i, j]$ | Árbol implícito / Pila DFS | Min/Max Heap (Priority Queue) |
+| **Estrategia de Poda** | Ninguna (avance irrevocable) | Reutilización de celdas | Poda $bestimado \le VOA$ | Poda de cotas en la frontera del Heap |
+| **Ventaja Principal** | Respuesta instantánea | Tiempo predecible si $M$ es moderado | **Memoria mínima** aunque $M$ sea astronómica | Menor número de expansiones de nodos |
+| **Desventaja Crítica** | Puede ser catastrófico en 0/1 | **Inviable si $M > 10^8$** (revienta la RAM) | Tiempo impredecible si las cotas son débiles | Explosión de memoria en la cola del Heap |
+
+#### Veredicto Técnico de Arquitectura de Software ("The So What?")
+Ante un problema de optimización en producción:
+1. **Si las variables son continuas o divisibles:** Usa **Voraz (Greedy)**. Máxima velocidad sin pagar memoria.
+2. **Si el problema es discreto (0/1) y la capacidad $M$ es pequeña o moderada ($M \le 10^5$):** Usa **Programación Dinámica**. Tiempo y consumo de memoria totalmente predecibles y estables en tiempo real.
+3. **Si el problema es 0/1, $n$ es moderado ($n \le 40$) pero $M$ es astronómica ($M = 10^{12}$):** La Programación Dinámica es inviable por memoria. Usa **Backtracking con poda por cota superior** (relajación voraz fraccionaria) ordenando previamente los candidatos. Protegerás la memoria física de tus servidores manteniendo exactitud matemática.
+4. **Si $n$ y $M$ son ambos gigantescos ($n > 1000$, NP-Hard):** La búsqueda exacta es imposible en tiempo de CPU viable. Pasa inmediatamente a **heurísticas y metaheurísticas** (GRASP, Algoritmos Genéticos, Enfriamiento Simulado) o solvers de programación entera mixta (MILP con Branch & Cut).
+
+---
+
+### 💡 Síntesis Global del Nivel 1
+
+* **AED1 (Estructuras de Datos):** Te enseña **dónde residen físicamente los bytes en la jerarquía de memoria** y cuál es el coste real en ciclos de CPU y transferencias de línea de caché al manipular arrays, listas, tablas hash, árboles, grafos y conjuntos.
+* **AED2 (Algoritmia y Complejidad):** Te enseña **qué estrategia lógica de diseño aplicar** (Voraz, Programación Dinámica, Backtracking o Branch & Bound) para evitar la trampa de reinventar soluciones exponenciales ante problemas computacionalmente difíciles.
