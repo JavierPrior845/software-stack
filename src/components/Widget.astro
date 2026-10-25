@@ -7,6 +7,7 @@ import StackSelector from './widgets/StackSelector.astro';
 import AttentionExplorer from './widgets/AttentionExplorer.astro';
 import KvCache from './widgets/KvCache.astro';
 import LogicGates from './widgets/LogicGates.astro';
+import GraphTraversal from './widgets/GraphTraversal.astro';
 
 interface Props {
   id: WidgetId;
@@ -22,6 +23,7 @@ const registry = {
   'attention-explorer': AttentionExplorer,
   'kv-cache': KvCache,
   'logic-gates': LogicGates,
+  'graph-traversal': GraphTraversal,
 } satisfies Record<WidgetId, unknown>;
 
 const Widget = registry[id];

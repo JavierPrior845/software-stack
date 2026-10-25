@@ -1,11 +1,13 @@
 ---
 const scenarios = [
   {
-    id: 'collision',
-    label: '1. Colisión lineal (insertar)',
+    id: 'open-linear',
+    category: 'closed',
+    label: '1. Cerrada: Sondeo Lineal',
+    badge: 'Dispersión Cerrada',
     probe: 'Buscar "mar": h("mar") = 2 → mira [2] ("ana") → mira [3] ("sol") → mira [4] ("mar" ✓)',
     status: 'ok',
-    note: 'Tres claves colisionan en el índice 2. El sondeo lineal las coloca en [2], [3] y [4].',
+    note: 'Direccionamiento abierto: tres claves colisionan en h=2. El sondeo lineal i avanza secuencialmente a [2], [3] y [4]. Genera "agrupamiento primario".',
     cells: [
       { idx: 0, state: 'empty', val: 'vacío' },
       { idx: 1, state: 'used', val: '"luz"' },
@@ -18,11 +20,13 @@ const scenarios = [
     ],
   },
   {
-    id: 'tombstone',
-    label: '2. Borrar "sol" con Tombstone (Correcto)',
-    probe: 'Buscar "mar": [2] ("ana") → [3] (TOMBSTONE: sigue buscando) → [4] ("mar" ✓)',
+    id: 'tombstone-ok',
+    category: 'closed',
+    label: '2. Cerrada: Borrar con Tombstone',
+    badge: 'Dispersión Cerrada',
+    probe: 'Buscar "mar": [2] ("ana") → [3] (🪦 TOMBSTONE: no para) → [4] ("mar" ✓)',
     status: 'ok',
-    note: 'La marca TOMBSTONE avisa al buscador de que ahí hubo un dato y no debe detener la cadena de búsqueda.',
+    note: 'Al borrar "sol", se deja la marca centinela TOMBSTONE. La búsqueda no se detiene y encuentra "mar" correctamente sin falsos negativos.',
     cells: [
       { idx: 0, state: 'empty', val: 'vacío' },
       { idx: 1, state: 'used', val: '"luz"' },
@@ -35,20 +39,41 @@ const scenarios = [
     ],
   },
   {
-    id: 'broken',
-    label: '3. Borrar vaciando celda (Bug clásico)',
-    probe: 'Buscar "mar": [2] ("ana") → [3] (VACÍO: se detiene antes de tiempo) → ✗ FALSO NEGATIVO',
+    id: 'broken-deletion',
+    category: 'closed',
+    label: '3. Cerrada: Borrado defectuoso',
+    badge: 'Bug Clásico',
+    probe: 'Buscar "mar": [2] ("ana") → [3] (VACÍO: para aquí) → ✗ FALSO NEGATIVO',
     status: 'error',
-    note: 'Si limpias [3] a vacío, cualquier búsqueda que pase por ahí cree que "mar" nunca existió.',
+    note: 'Si se limpia la celda dejándola como "vacía", la cadena de sondeo se interrumpe prematuramente. "mar" queda huérfana e inaccesible.',
     cells: [
       { idx: 0, state: 'empty', val: 'vacío' },
       { idx: 1, state: 'used', val: '"luz"' },
       { idx: 2, state: 'probed', val: '"ana" (h=2)' },
-      { idx: 3, state: 'broken', val: '✗ VACÍO (para)' },
-      { idx: 4, state: 'orphan', val: '"mar" (huérfano)' },
+      { idx: 3, state: 'broken', val: '✗ VACÍO (detiene)' },
+      { idx: 4, state: 'orphan', val: '"mar" (huérfana)' },
       { idx: 5, state: 'empty', val: 'vacío' },
       { idx: 6, state: 'used', val: '"red"' },
       { idx: 7, state: 'empty', val: 'vacío' },
+    ],
+  },
+  {
+    id: 'chaining-buckets',
+    category: 'open',
+    label: '4. Abierta: Encadenamiento (Chaining)',
+    badge: 'Dispersión Abierta',
+    probe: 'Buscar "mar": h("mar") = 2 → accede a cubeta [2] → recorre lista: "ana" ──► "sol" ──► "mar" ✓',
+    status: 'ok',
+    note: 'El array contiene punteros a listas. Si hay colisión en [2], las claves se encadenan fuera del array. Las demás celdas quedan libres y los borrados no necesitan tombstones.',
+    buckets: [
+      { idx: 0, nodes: [] },
+      { idx: 1, nodes: ['"luz"'] },
+      { idx: 2, nodes: ['"ana"', '"sol"', '"mar" ✓'], highlight: true },
+      { idx: 3, nodes: [] },
+      { idx: 4, nodes: [] },
+      { idx: 5, nodes: [] },
+      { idx: 6, nodes: ['"red"'] },
+      { idx: 7, nodes: [] },
     ],
   },
 ];
@@ -57,7 +82,20 @@ const initial = scenarios[1];
 ---
 
 <div class="widget rounded-xl border border-white/10 bg-black/25 p-4" data-hash-widget>
-  <div class="flex flex-wrap gap-1.5" role="tablist" aria-label="Escenarios de direccionamiento abierto">
+  <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/8 pb-3">
+    <div>
+      <span class="font-mono text-[10px] uppercase tracking-wider text-dim">Simulador de Resolución de Colisiones</span>
+      <p class="text-xs text-muted">Compara direccionamiento abierto (cerrada) frente a encadenamiento (abierta)</p>
+    </div>
+    <span
+      class="rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 font-mono text-[10px] text-ink"
+      data-hash-badge
+    >
+      {initial.badge}
+    </span>
+  </div>
+
+  <div class="mt-3 flex flex-wrap gap-1.5" role="tablist" aria-label="Escenarios de dispersión">
     {
       scenarios.map((sc) => (
         <button
@@ -72,20 +110,32 @@ const initial = scenarios[1];
     }
   </div>
 
-  <div class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8" data-hash-grid>
-    {
-      initial.cells.map((cell) => (
-        <div
-          data-cell-state={cell.state}
-          class="hash-cell rounded-lg border border-white/8 bg-white/[0.02] p-2 text-center"
-        >
-          <p class="font-mono text-[9px] text-dim">[{cell.idx}]</p>
-          <p class="mt-1 truncate font-mono text-[10px] font-medium" data-cell-val>
-            {cell.val}
-          </p>
-        </div>
-      ))
-    }
+  <!-- Vista Dispersión Cerrada (Array plano) -->
+  <div class="mt-4" data-view-closed>
+    <p class="font-mono text-[9px] uppercase tracking-wider text-dim">Array continuo de tamaño M=8</p>
+    <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8" data-hash-grid>
+      {
+        initial.cells?.map((cell) => (
+          <div
+            data-cell-state={cell.state}
+            class="hash-cell rounded-lg border border-white/8 bg-white/[0.02] p-2 text-center"
+          >
+            <p class="font-mono text-[9px] text-dim">[{cell.idx}]</p>
+            <p class="mt-1 truncate font-mono text-[10px] font-medium" data-cell-val>
+              {cell.val}
+            </p>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+
+  <!-- Vista Dispersión Abierta (Cubetas con enlaces) -->
+  <div class="mt-4 hidden" data-view-open>
+    <p class="font-mono text-[9px] uppercase tracking-wider text-dim">Array de cubetas con listas enlazadas en Heap</p>
+    <div class="mt-2 space-y-1.5 font-mono text-[11px]" data-buckets-list>
+      <!-- Se inyecta dinámicamente en el script -->
+    </div>
   </div>
 
   <div
@@ -105,6 +155,30 @@ const initial = scenarios[1];
     const probeEl = root.querySelector('[data-hash-probe]');
     const noteEl = root.querySelector('[data-hash-note]');
     const statusBox = root.querySelector('[data-hash-status]');
+    const badgeEl = root.querySelector('[data-hash-badge]');
+    const viewClosed = root.querySelector('[data-view-closed]');
+    const viewOpen = root.querySelector('[data-view-open]');
+    const bucketsList = root.querySelector('[data-buckets-list]');
+
+    const renderBuckets = (buckets) => {
+      if (!bucketsList) return;
+      bucketsList.innerHTML = buckets
+        .map((b) => {
+          const isHigh = b.highlight;
+          const chain = b.nodes.length > 0
+            ? b.nodes.map((n) => `<span class="rounded border ${isHigh ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200' : 'border-white/10 bg-white/5 text-ink'} px-2 py-0.5">${n}</span>`).join('<span class="text-dim"> ──► </span>') + '<span class="text-dim"> ──► null</span>'
+            : '<span class="text-dim/60">null (vacío)</span>';
+
+          return `
+            <div class="flex items-center gap-2 rounded-md border ${isHigh ? 'border-emerald-400/30 bg-emerald-400/[0.04]' : 'border-white/5 bg-white/[0.015]'} px-2.5 py-1.5">
+              <span class="w-12 text-dim">[${b.idx}]</span>
+              <span class="text-dim">──►</span>
+              <div class="flex flex-wrap items-center gap-1.5">${chain}</div>
+            </div>
+          `;
+        })
+        .join('');
+    };
 
     const selectScenario = (id) => {
       const sc = scenarios.find((item) => item.id === id);
@@ -114,14 +188,25 @@ const initial = scenarios[1];
         btn.toggleAttribute('data-active', btn.getAttribute('data-hash-btn') === id);
       }
 
-      sc.cells.forEach((cellData, idx) => {
-        const el = cells[idx];
-        if (!el) return;
-        el.setAttribute('data-cell-state', cellData.state);
-        const valEl = el.querySelector('[data-cell-val]');
-        if (valEl) valEl.textContent = cellData.val;
-      });
+      if (sc.category === 'open') {
+        if (viewClosed) viewClosed.classList.add('hidden');
+        if (viewOpen) viewOpen.classList.remove('hidden');
+        if (sc.buckets) renderBuckets(sc.buckets);
+      } else {
+        if (viewClosed) viewClosed.classList.remove('hidden');
+        if (viewOpen) viewOpen.classList.add('hidden');
+        if (sc.cells) {
+          sc.cells.forEach((cellData, idx) => {
+            const el = cells[idx];
+            if (!el) return;
+            el.setAttribute('data-cell-state', cellData.state);
+            const valEl = el.querySelector('[data-cell-val]');
+            if (valEl) valEl.textContent = cellData.val;
+          });
+        }
+      }
 
+      if (badgeEl) badgeEl.textContent = sc.badge;
       if (probeEl) probeEl.textContent = sc.probe;
       if (noteEl) noteEl.textContent = sc.note;
       if (statusBox) statusBox.setAttribute('data-hash-status', sc.status);
