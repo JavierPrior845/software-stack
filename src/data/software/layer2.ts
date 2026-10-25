@@ -9,7 +9,7 @@ export const layer2: Layer = {
   blocks: [
     {
       slug: 'diseno-y-poo',
-      title: 'Diseño, POO y patrones (TDS)',
+      title: 'Diseño, POO y patrones',
       summary:
         'Asignar responsabilidades bien es el 80% del diseño. Los patrones son vocabulario, no recetas mágicas.',
       concepts: [
@@ -18,79 +18,140 @@ export const layer2: Layer = {
           name: 'Patrones GRASP',
           tagline: 'La brújula para decidir en qué clase vive cada responsabilidad.',
           summary:
-            'GRASP es una guía de asignación: alta cohesión, bajo acoplamiento, experto en información, creador, fabricación pura y controlador. La regla de oro es el experto: la lógica debe vivir donde están los datos que necesita. Cuando una responsabilidad no encaja en el dominio, se crea una fabricación pura (servicio, repositorio, mapper) en vez de forzarla.',
+            'GRASP (General Responsibility Assignment Software Patterns) formaliza la asignación de responsabilidades dividiéndolas en taxonomía de Conocer (datos privados, objetos conectados, estado derivado) y Hacer (cálculos, instanciación, iniciar acciones en otros y coordinar actividades). El Experto en Información es la regla de oro: asignar el contrato a quien tiene los datos para cumplirlo. El Creador se rige por 5 reglas canónicas (agregación, composición, registro, uso específico y posesión de inicialización). El Controlador aísla la UI del modelo de dominio, y la Fabricación Pura crea abstracciones artificiales (servicios, repositorios) para no comprometer cohesión ni acoplamiento.',
           keyPoints: [
-            'Alta cohesión y bajo acoplamiento no son eslóganes: son la métrica real de mantenibilidad.',
-            'Una clase de servicio sin estado suele ser una fabricación pura, y eso es correcto.',
+            'Experto en Información: la lógica debe residir estrictamente donde están los datos requeridos.',
+            'Creador UMU: la clase B crea a A si B contiene/agrega a A, registra a A, usa íntimamente a A o tiene los datos de inicialización de A.',
+            'Controlador: primer objeto del dominio que recibe eventos de UI; las clases de dominio jamás acceden a la interfaz de usuario.',
+            '4 Fuentes de Acoplamiento: atributo de tipo B, parámetro/retorno/var local de tipo B, subclase de B, o implementación de interfaz B.',
+            'Fabricación Pura: clases helper, servicios y repositorios sin análogo en el mundo real creadas para evitar inflar las entidades de dominio.',
           ],
-          tags: ['diseño', 'poo'],
+          tags: ['diseño', 'poo', 'grasp', 'umu'],
+          diagram: 'grasp-diagram',
+          tradeoffs: {
+            whenToUse: ['Siempre al diseñar el modelo de dominio y asignar responsabilidades a clases'],
+            whenToAvoid: ['Crear controladores gordos (Fat Controllers) que acumulen lógica de negocio en lugar de delegar al dominio'],
+            cost: 'Requiere disciplina analítica previa antes de lanzarse a escribir código desordenado.',
+          },
         },
         {
           slug: 'solid',
-          name: 'Principios SOLID',
-          tagline: 'Cinco reglas para que cambiar una pieza no obligue a reescribir el sistema.',
+          name: 'Principios SOLID y Mandatos de Diseño',
+          tagline: 'Cinco leyes arquitectónicas y mandatos esenciales para evitar la fragilidad del software.',
           summary:
-            'SRP: una razón para cambiar. OCP: extender sin modificar. LSP: sustituir sin romper. ISP: interfaces pequeñas y específicas. DIP: depender de abstracciones, no de implementaciones. Aplicados con dogma generan sobreingeniería; aplicados en los bordes de módulos reducen el coste de cambio de forma brutal.',
+            'Formulados por Robert C. Martin y Bertrand Meyer para construir sistemas tolerantes al cambio. SRP exige una sola razón para cambiar ligada a actores de negocio. OCP permite extender capacidades mediante polimorfismo sin modificar código desplegado. LSP impone diseño por contrato (precondiciones no más fuertes, postcondiciones no más débiles, preservación de invariantes). ISP fragmenta interfaces gruesas en contratos específicos por cliente. DIP invierte el flujo de dependencias: módulos de alto nivel y bajo nivel dependen de abstracciones. Se complementan con la Ley de Deméter ("No hables con extraños") y el Principio de Acceso Uniforme.',
           keyPoints: [
-            'DIP es lo que permite testear sin base de datos real.',
-            'ISP y SRP suelen resolverse juntos: interfaces grandes acaban violando ambos.',
+            'SRP: un solo actor de negocio como motivo de cambio; evita las God Classes.',
+            'OCP: sustituye switches y cadenas de ifs dependientes de tipos por polimorfismo extensible.',
+            'LSP: si S es subtipo de T, debe reemplazar a T sin romper invariantes ni contratos (el cuadrado mutable NO es rectángulo).',
+            'ISP: interfaces magras; ninguna clase debe depender de métodos que no consume.',
+            'DIP: el dominio define las interfaces (puertos) y la infraestructura concreta las implementa (adaptadores).',
+            'Ley de Deméter (LoD): un método solo habla con su propio objeto, parámetros, objetos creados localmente y atributos directos.',
           ],
-          tags: ['diseño', 'solid'],
-          diagram: 'hexagonal-arch',
+          tags: ['diseño', 'solid', 'arquitectura'],
+          diagram: 'solid-principles',
           tradeoffs: {
-            whenToUse: ['En las fronteras de módulos y servicios externos (bases de datos, pagos, LLMs)'],
-            whenToAvoid: ['Crear una interfaz por cada clase interna que solo tiene una implementación y nunca cambiará'],
-            cost: 'Indirección adicional al navegar el código si se abusa de interfaces innecesarias.',
+            whenToUse: ['En fronteras de módulos, componentes desacoplables y capas de integración externa'],
+            whenToAvoid: ['Crear interfaces superfluas de un solo uso para clases internas privadas que nunca cambiarán'],
+            cost: 'Sobrecarga de indirección inicial si se aplican con dogma ciego en scripts triviales.',
+          },
+          example: {
+            label: 'DIP + Inyección de Dependencias (Java / TS)',
+            code: `// Alto nivel depende exclusivamente de la abstracción:
+interface FacturaRepository {
+  save(factura: Factura): Promise<void>;
+}
+
+class FacturacionService {
+  constructor(private readonly repo: FacturaRepository) {} // Inyección
+  async emitir(factura: Factura) {
+    // Lógica pura de dominio...
+    await this.repo.save(factura);
+  }
+}`,
+            note: 'Permite testear el servicio con un InMemoryFakeRepository instantáneo sin arrancar una BD real.',
           },
         },
         {
           slug: 'composicion-sobre-herencia',
           name: 'Composición sobre herencia',
-          tagline: 'La herencia acopla en compilación; la composición se cambia en ejecución.',
+          tagline: 'La herencia acopla en tiempo de compilación; la composición se intercambia en tiempo de ejecución.',
           summary:
-            'Heredar significa "es un" y arrastra toda la implementación del padre. Componer significa "tiene un" y permite intercambiar comportamiento sin tocar la jerarquía. La herencia profunda produce el problema del diamante y clases base frágiles; la composición con interfaces mantiene las piezas sustituibles.',
+            'Heredar implica una relación rígida "Es-un" de caja blanca donde cambios en la superclase rompen la encapsulación de las subclases (problema de la clase base frágil y herencia múltiple en diamante). Componer modela una relación "Tiene-un" de caja negra: delega comportamiento en colaboradores inyectados, permitiendo alterar estrategias dinámicamente en runtime mediante interfaces sin tocar la jerarquía de tipos.',
           keyPoints: [
-            'Si la subclase no puede sustituir a la base, la jerarquía está mal modelada (LSP).',
-            'Delega en un colaborador antes de crear otra subclase.',
+            'La herencia profunda (> 2 niveles) acopla de manera irreversible la arquitectura del sistema.',
+            'Delega en un colaborador antes de crear una nueva subclase especializada.',
+            'Facilita el mocking y el testing unitario al poder inyectar sustitutos en cualquier momento.',
           ],
-          tags: ['diseño', 'poo'],
+          tags: ['diseño', 'poo', 'mandatos'],
           tradeoffs: {
-            whenToUse: ['Composición por defecto para reutilizar comportamiento e inyectar estrategias'],
-            whenToAvoid: ['Árboles de herencia de más de 2 niveles de profundidad'],
-            cost: 'Escribir pequeños métodos delegados explícitos en lugar de heredarlos implícitamente.',
+            whenToUse: ['Como diseño por defecto para reutilizar lógica y estructurar servicios colaborativos'],
+            whenToAvoid: ['Jerarquías verdaderamente polimórficas donde existe relación taxonómica estricta y contrato LSP idéntico'],
+            cost: 'Requiere escribir métodos delegados explícitos en lugar de herencia implícita.',
           },
         },
         {
           slug: 'patrones-gof',
-          name: 'Patrones GoF',
-          tagline: 'Vocabulario compartido para problemas que ya resolvió alguien en 1994.',
+          name: 'Patrones GoF (Gang of Four)',
+          tagline: 'Taxonomía tripartita: Creacionales, Estructurales y de Comportamiento.',
           summary:
-            'Los 23 patrones se agrupan en creacionales, estructurales y de comportamiento. En la práctica importan diez: Factory, Builder, Singleton (con cuidado), Adapter, Facade, Decorator, Proxy, Strategy, State, Observer y Chain of Responsibility. Un patrón mal aplicado es una capa extra de indirección para un problema que no existe.',
+            'Catálogo clásico de 23 patrones clasificados por intención: Creacionales (Factory Method con reflexión, Abstract Factory para familias, Builder paso a paso, Singleton), Estructurales (Adapter vs Facade, Composite con dilema seguridad vs transparencia, Decorator para evitar explosión de subclases, Proxy de acceso/carga perezosa) y de Comportamiento (Strategy vs State, Command con Manager y Lista Historial para Undo/Redo reversible, Observer pub/sub, Chain of Responsibility). Cada patrón balancea flexibilidad frente a complejidad de indirección.',
           keyPoints: [
-            'Strategy y State eliminan los switch sobre tipos.',
-            'Observer es la base del event-driven; Decorator, la del middleware.',
+            'Factory Method con reflexión: Class.forName().getDeclaredConstructor().newInstance() evita jerarquías infinitas de creadores.',
+            'Composite (UMU): trade-off entre Transparencia (operaciones en Componente) vs Seguridad (operaciones solo en Composite).',
+            'Decorator vs Strategy: si el componente base no es ligero, prioriza Strategy para variar el algoritmo.',
+            'Command con Undo/Redo: exige un Manager y una Lista de Historia que almacene copias o mementos del estado previo.',
+            'Strategy vs State: Strategy resuelve "el cómo" con algoritmos intercambiables; State resuelve "el qué" según el estado interno.',
+            'Adapter vs Facade: Adapter unifica dos interfaces incompatibles (1 a 1); Facade simplifica un subsistema complejo (1 a muchos).',
           ],
-          tags: ['diseño', 'patrones'],
+          tags: ['diseño', 'patrones', 'gof', 'umu'],
+          diagram: 'gof-patterns',
           example: {
-            label: 'Adapter / Strategy en TypeScript',
-            code: `interface Notifier { send(msg: string): Promise<void>; }
-class OrderService {
-  constructor(private readonly notifier: Notifier) {} // DIP + Strategy
+            label: 'Command con Undo/Redo en TypeScript',
+            code: `interface Command {
+  execute(): void;
+  undo(): void;
+}
+
+class UndoRedoManager {
+  private undoStack: Command[] = [];
+  private redoStack: Command[] = [];
+
+  executeCommand(cmd: Command) {
+    cmd.execute();
+    this.undoStack.push(cmd);
+    this.redoStack = []; // Resetea historia futura
+  }
+
+  undo() {
+    const cmd = this.undoStack.pop();
+    if (cmd) {
+      cmd.undo();
+      this.redoStack.push(cmd);
+    }
+  }
 }`,
-            note: 'Cambiar de Email a Slack o a un Fake en un test unitario no toca ni una línea de OrderService.',
+            note: 'Cada comando concreto almacena un memento/copia de respaldo para restaurar el estado original.',
+          },
+          tradeoffs: {
+            whenToUse: ['Para resolver desacoplamiento probado en problemas estructurales recurrentes'],
+            whenToAvoid: ['Aplicar patrones anticipadamente antes de que emerja la complejidad real (Patternitis)'],
+            cost: 'Aumenta el número de clases y añade niveles de indirección al flujo de ejecución.',
           },
         },
         {
           slug: 'ddd',
-          name: 'DDD: entidades y value objects',
+          name: 'DDD: Entidades, Value Objects y Ciclo de Vida',
           tagline: 'Una entidad tiene identidad; un value object tiene solo significado.',
           summary:
-            'Una entidad se define por su ID y persiste aunque cambien sus atributos. Un value object es inmutable y se define por sus valores: dos `Dinero(10, EUR)` son el mismo concepto. Modelar bien esta distinción evita bugs sutiles de igualdad, mutabilidad compartida y validación dispersa.',
+            'El Diseño Dirigido por el Dominio (DDD) clasifica los objetos en: Entidades (poseen identidad única persistente en el tiempo), Value Objects (inmutables, sin ID, definidos exclusivamente por sus atributos y auto-validados en el constructor), Servicios de Dominio (lógica orquestadora que no pertenece conceptualmente a una entidad) y Módulos. Para el ciclo de vida se definen Agregados (frontera transaccional con una raíz), Factorías (creación de agregados consistentes) y Repositorios (colecciones aparentes en memoria que median con la persistencia).',
           keyPoints: [
-            'Value objects validan en el constructor: un objeto inválido no debería existir.',
-            'Los repositorios abstraen la persistencia como si fuera una colección en memoria.',
+            'Value Object: inmutable (campos final o readonly) y con igualdad estructural (ej. Dinero, Email, Coordenada).',
+            'Entidad: la igualdad se basa estrictamente en su identificador único (ID), sin importar que sus atributos muten.',
+            'Agregado: unidad de consistencia transaccional; el acceso exterior solo ocurre a través de la Entidad Raíz (Aggregate Root).',
+            'Repositorios: desacoplan el dominio del ORM o base de datos, simulando una colección en memoria.',
           ],
-          tags: ['ddd', 'diseño'],
+          tags: ['ddd', 'diseño', 'dominio', 'umu'],
         },
       ],
     },

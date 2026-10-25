@@ -21,6 +21,9 @@ export const DIAGRAM_IDS = [
   'graph-representation',
   'recurrence-tree',
   'asymptotic-bounds',
+  'grasp-diagram',
+  'solid-principles',
+  'gof-patterns',
 ] as const;
 
 export type DiagramId = (typeof DIAGRAM_IDS)[number];
