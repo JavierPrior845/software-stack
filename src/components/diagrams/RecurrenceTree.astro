@@ -1,0 +1,164 @@
+---
+// RecurrenceTree.astro: Visual comparison between Division recurrences (Master Theorem) and Subtraction recurrences
+---
+
+<div class="space-y-6" data-diagram="recurrence-tree">
+  <!-- Header / Concept introduction -->
+  <div class="rounded-lg border border-white/10 bg-white/[0.02] p-4 text-xs leading-relaxed text-muted">
+    <span class="font-semibold text-slate-200">La regla de oro de la algoritmia recursiva:</span>
+    Dividir el tamaño del problema (<span class="font-mono text-cyan-400">n / b</span>) genera árboles de profundidad
+    <span class="font-mono text-cyan-300">logarítmica</span> ($O(\log n)$); mientras que restar (<span class="font-mono text-rose-400">n - c</span>)
+    genera árboles de profundidad <span class="font-mono text-rose-300">lineal</span> ($O(n)$) provocando una
+    <span class="font-semibold text-rose-400">explosión combinatoria exponencial</span> ($O(2^n)$).
+  </div>
+
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <!-- Panel Izquierdo: División (Divide y Vencerás / Teorema Maestro) -->
+    <div class="rounded-xl border border-cyan-500/20 bg-cyan-950/10 p-4">
+      <div class="flex items-center justify-between border-b border-cyan-500/20 pb-2.5">
+        <div class="flex items-center gap-2">
+          <span class="h-2 w-2 rounded-full bg-cyan-400"></span>
+          <h4 class="font-mono text-xs font-semibold text-cyan-200 uppercase tracking-wider">
+            1. Recurrencia por División: $n / b$
+          </h4>
+        </div>
+        <span class="rounded bg-cyan-500/20 px-2 py-0.5 font-mono text-[10px] text-cyan-300">
+          T(n) = 2T(n/2) + O(n)
+        </span>
+      </div>
+
+      <!-- Diagrama de árbol de división -->
+      <div class="my-4 flex flex-col items-center gap-2 font-mono text-xs">
+        <!-- Nivel 0 -->
+        <div class="flex flex-col items-center">
+          <div class="rounded-md border border-cyan-400/40 bg-cyan-500/20 px-4 py-1.5 font-bold text-cyan-200 shadow-sm shadow-cyan-950">
+            Tamaño n (Coste: cn)
+          </div>
+          <div class="h-4 w-px bg-cyan-400/40"></div>
+          <div class="h-px w-36 bg-cyan-400/40"></div>
+        </div>
+
+        <!-- Nivel 1 -->
+        <div class="flex w-56 justify-between">
+          <div class="flex flex-col items-center">
+            <div class="h-3 w-px bg-cyan-400/40"></div>
+            <div class="rounded border border-cyan-400/30 bg-cyan-500/10 px-2.5 py-1 text-[11px] text-cyan-200">
+              n / 2
+            </div>
+          </div>
+          <div class="flex flex-col items-center">
+            <div class="h-3 w-px bg-cyan-400/40"></div>
+            <div class="rounded border border-cyan-400/30 bg-cyan-500/10 px-2.5 py-1 text-[11px] text-cyan-200">
+              n / 2
+            </div>
+          </div>
+        </div>
+
+        <!-- Conexiones a nivel 2 -->
+        <div class="flex w-64 justify-around text-cyan-400/40">
+          <span>↓</span>
+          <span>↓</span>
+          <span>↓</span>
+          <span>↓</span>
+        </div>
+
+        <!-- Hojas -->
+        <div class="flex w-full items-center justify-between rounded-lg border border-cyan-500/30 bg-black/40 px-3 py-2 text-[11px]">
+          <span class="text-dim">Profundidad del árbol:</span>
+          <span class="font-bold text-cyan-300">log₂ n niveles</span>
+        </div>
+        <div class="flex w-full items-center justify-between rounded-lg border border-cyan-500/30 bg-black/40 px-3 py-2 text-[11px]">
+          <span class="text-dim">Número de hojas base:</span>
+          <span class="font-bold text-cyan-300">n hojas</span>
+        </div>
+      </div>
+
+      <!-- Resumen Teorema Maestro -->
+      <div class="space-y-1.5 border-t border-cyan-500/20 pt-3 text-[11px] text-muted">
+        <p class="font-semibold text-cyan-200">Casos del Teorema Maestro $T(n) = aT(n/b) + f(n)$:</p>
+        <div class="rounded bg-black/30 p-2 font-mono text-[10px] space-y-1">
+          <div class="text-cyan-300">✦ Caso 1 (Hojas dominan): $f(n) &lt; n^&#123;\log_b a&#125; \implies \Theta(n^&#123;\log_b a&#125;)$</div>
+          <div class="text-emerald-300">✦ Caso 2 (Equilibrio): $f(n) = \Theta(n^&#123;\log_b a&#125;) \implies \Theta(n^&#123;\log_b a&#125; \log n)$</div>
+          <div class="text-amber-300">✦ Caso 3 (Raíz domina): $f(n) &gt; n^&#123;\log_b a&#125; \implies \Theta(f(n))$</div>
+        </div>
+        <p class="text-[10px] text-dim">
+          <strong class="text-cyan-300">Strassen:</strong> 7 multiplicaciones en vez de 8 con $n/2 \implies a=7, b=2 \implies O(n^&#123;\log_2 7&#125;) \approx O(n^&#123;2.807&#125;)$.
+        </p>
+      </div>
+    </div>
+
+    <!-- Panel Derecho: Sustracción (Explosión Exponencial) -->
+    <div class="rounded-xl border border-rose-500/20 bg-rose-950/10 p-4">
+      <div class="flex items-center justify-between border-b border-rose-500/20 pb-2.5">
+        <div class="flex items-center gap-2">
+          <span class="h-2 w-2 rounded-full bg-rose-400"></span>
+          <h4 class="font-mono text-xs font-semibold text-rose-200 uppercase tracking-wider">
+            2. Recurrencia por Sustracción: $n - c$
+          </h4>
+        </div>
+        <span class="rounded bg-rose-500/20 px-2 py-0.5 font-mono text-[10px] text-rose-300">
+          T(n) = 2T(n-1) + O(1)
+        </span>
+      </div>
+
+      <!-- Diagrama de árbol de sustracción -->
+      <div class="my-4 flex flex-col items-center gap-2 font-mono text-xs">
+        <!-- Nivel 0 -->
+        <div class="flex flex-col items-center">
+          <div class="rounded-md border border-rose-400/40 bg-rose-500/20 px-4 py-1.5 font-bold text-rose-200 shadow-sm shadow-rose-950">
+            Tamaño n (Coste: c)
+          </div>
+          <div class="h-4 w-px bg-rose-400/40"></div>
+          <div class="h-px w-36 bg-rose-400/40"></div>
+        </div>
+
+        <!-- Nivel 1 -->
+        <div class="flex w-56 justify-between">
+          <div class="flex flex-col items-center">
+            <div class="h-3 w-px bg-rose-400/40"></div>
+            <div class="rounded border border-rose-400/30 bg-rose-500/10 px-2.5 py-1 text-[11px] text-rose-200">
+              n - 1
+            </div>
+          </div>
+          <div class="flex flex-col items-center">
+            <div class="h-3 w-px bg-rose-400/40"></div>
+            <div class="rounded border border-rose-400/30 bg-rose-500/10 px-2.5 py-1 text-[11px] text-rose-200">
+              n - 1
+            </div>
+          </div>
+        </div>
+
+        <!-- Conexiones a nivel 2 -->
+        <div class="flex w-64 justify-around text-rose-400/40">
+          <span>↓</span>
+          <span>↓</span>
+          <span>↓</span>
+          <span>↓</span>
+        </div>
+
+        <!-- Hojas -->
+        <div class="flex w-full items-center justify-between rounded-lg border border-rose-500/30 bg-black/40 px-3 py-2 text-[11px]">
+          <span class="text-dim">Profundidad del árbol:</span>
+          <span class="font-bold text-rose-300">n niveles (lineal)</span>
+        </div>
+        <div class="flex w-full items-center justify-between rounded-lg border border-rose-500/30 bg-black/40 px-3 py-2 text-[11px]">
+          <span class="text-dim">Número de hojas base:</span>
+          <span class="font-bold text-rose-300">2ⁿ hojas (¡exponencial!)</span>
+        </div>
+      </div>
+
+      <!-- Consecuencia técnica -->
+      <div class="space-y-1.5 border-t border-rose-500/20 pt-3 text-[11px] text-muted">
+        <p class="font-semibold text-rose-200">El peligro en la Mochila 0/1 y Fibonacci:</p>
+        <p class="text-[11px] leading-relaxed">
+          Si intentas resolver la Mochila 0/1 o Fibonacci mediante <strong class="text-rose-300">Divide y Vencerás puro</strong> sin almacenar estados,
+          cada objeto bifurca en "tomar" o "no tomar" (<span class="font-mono text-rose-300">n-1</span>).
+          El árbol tiene <strong class="text-rose-300">2ⁿ hojas</strong> y recalcula exactamente los mismos subproblemas miles de veces.
+        </p>
+        <div class="rounded border border-rose-500/30 bg-rose-500/10 p-2 text-[10px] text-rose-200">
+          ⚡ <strong>Solución:</strong> Programación Dinámica (reutilizar memoria) o Backtracking con Poda por Cota Superior.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

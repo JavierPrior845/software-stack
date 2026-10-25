@@ -18,6 +18,8 @@ import BitLayout from './diagrams/BitLayout.astro';
 import ProcessMemoryLayout from './diagrams/ProcessMemoryLayout.astro';
 import TrieHorizontal from './diagrams/TrieHorizontal.astro';
 import GraphRepresentation from './diagrams/GraphRepresentation.astro';
+import RecurrenceTree from './diagrams/RecurrenceTree.astro';
+import AsymptoticBounds from './diagrams/AsymptoticBounds.astro';
 
 interface Props {
   id: DiagramId;
@@ -44,6 +46,8 @@ const registry = {
   'process-memory-layout': ProcessMemoryLayout,
   'trie-horizontal': TrieHorizontal,
   'graph-representation': GraphRepresentation,
+  'recurrence-tree': RecurrenceTree,
+  'asymptotic-bounds': AsymptoticBounds,
 } satisfies Record<DiagramId, unknown>;
 
 const Diagram = registry[id];

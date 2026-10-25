@@ -1,0 +1,408 @@
+---
+// AsymptoticBounds.astro: Visual comparison of the full family of asymptotic notations (O, Ω, Θ, o, ω)
+// Demonstrates the function f(n) = 3n² + 5n + 10 against different bounding functions with limits and envelope bands.
+---
+
+<div class="asymptotic-diagram rounded-xl border border-white/10 bg-black/30 p-4 sm:p-5 space-y-5" data-asymptotic-diagram>
+  <!-- Header -->
+  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
+    <div>
+      <div class="flex items-center gap-2">
+        <span class="inline-block h-2.5 w-2.5 rounded-full bg-cyan-400"></span>
+        <h4 class="font-mono text-sm font-semibold text-slate-100">
+          La Familia Completa de Notaciones Asintóticas
+        </h4>
+      </div>
+      <p class="mt-0.5 text-xs text-dim">
+        Estudio gráfico de la función <span class="font-mono text-cyan-300">f(n) = 3n² + 5n + 10</span> y sus cotas
+      </p>
+    </div>
+
+    <!-- Mode Selector Buttons -->
+    <div class="inline-flex flex-wrap gap-1 rounded-lg border border-white/10 bg-black/50 p-1" role="tablist">
+      <button
+        type="button"
+        class="asymp-btn active rounded px-2.5 py-1 font-mono text-xs font-semibold text-slate-200 hover:text-white transition-colors"
+        data-mode="all"
+      >
+        Todas
+      </button>
+      <button
+        type="button"
+        class="asymp-btn rounded px-2.5 py-1 font-mono text-xs font-semibold text-purple-300 hover:text-white transition-colors"
+        data-mode="theta"
+      >
+        Θ(n²) Ajustada
+      </button>
+      <button
+        type="button"
+        class="asymp-btn rounded px-2.5 py-1 font-mono text-xs font-semibold text-indigo-300 hover:text-white transition-colors"
+        data-mode="big-o"
+      >
+        O(n²) Superior
+      </button>
+      <button
+        type="button"
+        class="asymp-btn rounded px-2.5 py-1 font-mono text-xs font-semibold text-blue-300 hover:text-white transition-colors"
+        data-mode="omega"
+      >
+        Ω(n²) Inferior
+      </button>
+      <button
+        type="button"
+        class="asymp-btn rounded px-2.5 py-1 font-mono text-xs font-semibold text-rose-300 hover:text-white transition-colors"
+        data-mode="little-o"
+      >
+        o(n³) Estricta
+      </button>
+      <button
+        type="button"
+        class="asymp-btn rounded px-2.5 py-1 font-mono text-xs font-semibold text-emerald-300 hover:text-white transition-colors"
+        data-mode="little-omega"
+      >
+        ω(n) Estricta
+      </button>
+    </div>
+  </div>
+
+  <!-- SVG Plot Area -->
+  <div class="relative overflow-hidden rounded-xl border border-white/10 bg-black/60 p-4">
+    <div class="flex items-center justify-between text-[11px] font-mono text-dim pb-2 border-b border-white/5">
+      <span>Eje Y: Coste computacional / Operaciones</span>
+      <span>Eje X: Tamaño de entrada n &rarr; &infin;</span>
+    </div>
+
+    <svg
+      viewBox="0 0 600 320"
+      class="w-full h-64 sm:h-72 select-none"
+      aria-label="Gráfica de cotas asintóticas para f(n) = 3n² + 5n + 10"
+    >
+      <defs>
+        <!-- Gradients -->
+        <linearGradient id="bandTheta" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#a855f7" stop-opacity="0.25" />
+          <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.1" />
+        </linearGradient>
+      </defs>
+
+      <!-- Grid lines -->
+      <line x1="50" y1="280" x2="570" y2="280" stroke="#334155" stroke-width="1.5" />
+      <line x1="50" y1="20" x2="50" y2="280" stroke="#334155" stroke-width="1.5" />
+
+      <!-- Grid ticks -->
+      <line x1="180" y1="20" x2="180" y2="280" stroke="#1e293b" stroke-dasharray="4 4" />
+      <line x1="320" y1="20" x2="320" y2="280" stroke="#1e293b" stroke-dasharray="4 4" />
+      <line x1="460" y1="20" x2="460" y2="280" stroke="#1e293b" stroke-dasharray="4 4" />
+
+      <!-- n0 Threshold line -->
+      <line x1="160" y1="20" x2="160" y2="280" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5 5" />
+      <text x="165" y="45" fill="#f59e0b" font-size="11" font-family="monospace" font-weight="bold">
+        n₀ (Región asintótica n &ge; n₀)
+      </text>
+
+      <!-- Shaded Theta Envelope Area (between 3n² and 4.2n² for x >= 160) -->
+      <path
+        d="M 160 190 Q 350 115 550 35 L 550 110 Q 350 170 160 215 Z"
+        fill="url(#bandTheta)"
+        class="curve-band transition-opacity duration-300"
+        data-curve="theta"
+      />
+
+      <!-- CURVE 1: o(n³) - 0.08 n³ (Red / Pink, explodes upward) -->
+      <path
+        d="M 50 279 Q 200 270 340 180 T 510 25"
+        fill="none"
+        stroke="#f43f5e"
+        stroke-width="2.5"
+        stroke-dasharray="6 3"
+        class="curve-line transition-all duration-300"
+        data-curve="little-o"
+      />
+      <text x="515" y="30" fill="#f43f5e" font-size="11" font-family="monospace" font-weight="bold">
+        g(n) = n³ [o(n³)]
+      </text>
+
+      <!-- CURVE 2: c2 * g(n) = 4.2 n² (Purple, Big-O Upper Bound) -->
+      <path
+        d="M 50 277 Q 250 225 550 35"
+        fill="none"
+        stroke="#a855f7"
+        stroke-width="2.5"
+        class="curve-line transition-all duration-300"
+        data-curve="big-o"
+      />
+      <text x="555" y="40" fill="#c084fc" font-size="11" font-family="monospace" font-weight="bold">
+        c₂·n² [O(n²)]
+      </text>
+
+      <!-- CURVE 3: TARGET f(n) = 3n² + 5n + 10 (Cyan, prominent) -->
+      <path
+        d="M 50 275 Q 250 235 550 70"
+        fill="none"
+        stroke="#22d3ee"
+        stroke-width="3.5"
+        class="curve-line transition-all duration-300"
+        data-curve="target"
+      />
+      <text x="555" y="75" fill="#22d3ee" font-size="12" font-family="monospace" font-weight="bold">
+        f(n) = 3n²+5n+10
+      </text>
+
+      <!-- CURVE 4: c1 * g(n) = 2.8 n² (Blue, Omega Lower Bound) -->
+      <path
+        d="M 50 278 Q 250 245 550 110"
+        fill="none"
+        stroke="#3b82f6"
+        stroke-width="2.5"
+        class="curve-line transition-all duration-300"
+        data-curve="omega"
+      />
+      <text x="555" y="115" fill="#60a5fa" font-size="11" font-family="monospace" font-weight="bold">
+        c₁·n² [Ω(n²)]
+      </text>
+
+      <!-- CURVE 5: ω(n) - Linear 12 n (Emerald, stays low) -->
+      <path
+        d="M 50 280 L 550 210"
+        fill="none"
+        stroke="#10b981"
+        stroke-width="2.5"
+        stroke-dasharray="6 3"
+        class="curve-line transition-all duration-300"
+        data-curve="little-omega"
+      />
+      <text x="555" y="215" fill="#34d399" font-size="11" font-family="monospace" font-weight="bold">
+        g(n) = n [ω(n)]
+      </text>
+
+      <!-- Axis Labels -->
+      <text x="60" y="295" fill="#64748b" font-size="10" font-family="monospace">0</text>
+      <text x="550" y="295" fill="#64748b" font-size="10" font-family="monospace">n &rarr;</text>
+    </svg>
+  </div>
+
+  <!-- Narrative Card for the Selected Notation -->
+  <div class="rounded-xl border border-white/10 bg-black/40 p-4 space-y-3 font-mono text-xs" data-asymp-narrative>
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-2">
+      <div class="flex items-center gap-2">
+        <span class="rounded px-2 py-0.5 font-bold" data-asymp-badge>Vista General</span>
+        <span class="text-slate-300 font-bold" data-asymp-title>La Envolvente Asintótica</span>
+      </div>
+      <div class="text-[11px] text-cyan-300" data-asymp-analogy>Relación de orden: f(n) vs g(n)</div>
+    </div>
+
+    <!-- Mathematical Formula Box -->
+    <div class="rounded-lg border border-white/5 bg-black/60 p-3 font-mono text-xs space-y-1.5" data-asymp-formula>
+      <!-- Populated by JS -->
+    </div>
+
+    <!-- Practical Insight Description -->
+    <p class="text-xs leading-relaxed text-slate-300 font-sans" data-asymp-desc>
+      <!-- Populated by JS -->
+    </p>
+  </div>
+
+  <!-- The 5 Asymptotic Notations Reference Table -->
+  <div class="overflow-x-auto rounded-lg border border-white/5 bg-black/25">
+    <table class="w-full text-left font-mono text-[11px]">
+      <thead class="border-b border-white/10 text-dim">
+        <tr>
+          <th class="p-2.5">Notación</th>
+          <th class="p-2.5">Analogía</th>
+          <th class="p-2.5">Definición Formal por Límites</th>
+          <th class="p-2.5">Comportamiento en f(n) = 3n² + 5n + 10</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-white/5 text-muted">
+        <tr class="hover:bg-white/[0.02]">
+          <td class="p-2.5 font-bold text-indigo-300">Big-O: O(g(n))</td>
+          <td class="p-2.5 font-bold text-slate-200">f &le; g</td>
+          <td class="p-2.5 text-slate-300">lim (f/g) &lt; &infin; (menor o igual)</td>
+          <td class="p-2.5 text-emerald-400">✓ &isin; O(n²) y también &isin; O(n³)</td>
+        </tr>
+        <tr class="hover:bg-white/[0.02]">
+          <td class="p-2.5 font-bold text-blue-300">Big-&Omega;: &Omega;(g(n))</td>
+          <td class="p-2.5 font-bold text-slate-200">f &ge; g</td>
+          <td class="p-2.5 text-slate-300">lim (f/g) &gt; 0 (mayor o igual)</td>
+          <td class="p-2.5 text-emerald-400">✓ &isin; &Omega;(n²) y también &isin; &Omega;(n)</td>
+        </tr>
+        <tr class="hover:bg-white/[0.02] bg-purple-500/[0.04]">
+          <td class="p-2.5 font-bold text-purple-300">Big-&Theta;: &Theta;(g(n))</td>
+          <td class="p-2.5 font-bold text-purple-200">f = g</td>
+          <td class="p-2.5 text-purple-200">lim (f/g) = k &isin; (0, &infin;) (cota ajustada)</td>
+          <td class="p-2.5 text-emerald-300 font-bold">✓ &isin; &Theta;(n²) ¡Exacta!</td>
+        </tr>
+        <tr class="hover:bg-white/[0.02] bg-rose-500/[0.04]">
+          <td class="p-2.5 font-bold text-rose-300">Little-o: o(g(n))</td>
+          <td class="p-2.5 font-bold text-rose-200">f &lt; g</td>
+          <td class="p-2.5 text-rose-200">lim (f/g) = 0 (estrictamente menor)</td>
+          <td class="p-2.5 text-slate-300">
+            <span class="text-emerald-400">✓ &isin; o(n³)</span> · <span class="text-rose-400 font-bold">&cross; &notin; o(n²)</span> (porque lim=3 &ne; 0)
+          </td>
+        </tr>
+        <tr class="hover:bg-white/[0.02] bg-emerald-500/[0.04]">
+          <td class="p-2.5 font-bold text-emerald-300">Little-&omega;: &omega;(g(n))</td>
+          <td class="p-2.5 font-bold text-emerald-200">f &gt; g</td>
+          <td class="p-2.5 text-emerald-200">lim (f/g) = &infin; (estrictamente mayor)</td>
+          <td class="p-2.5 text-slate-300">
+            <span class="text-emerald-400">✓ &isin; &omega;(n)</span> · <span class="text-rose-400 font-bold">&cross; &notin; &omega;(n²)</span> (porque lim=3 &ne; &infin;)
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  function setupAsymptoticDiagram(root: HTMLElement) {
+    const buttons = root.querySelectorAll<HTMLButtonElement>('.asymp-btn');
+    const badgeEl = root.querySelector<HTMLElement>('[data-asymp-badge]');
+    const titleEl = root.querySelector<HTMLElement>('[data-asymp-title]');
+    const analogyEl = root.querySelector<HTMLElement>('[data-asymp-analogy]');
+    const formulaEl = root.querySelector<HTMLElement>('[data-asymp-formula]');
+    const descEl = root.querySelector<HTMLElement>('[data-asymp-desc]');
+
+    const curveLines = root.querySelectorAll<SVGElement>('.curve-line');
+    const bandTheta = root.querySelector<SVGElement>('.curve-band');
+
+    const modesData: Record<
+      string,
+      {
+        badge: string;
+        badgeClass: string;
+        title: string;
+        analogy: string;
+        formula: string;
+        desc: string;
+        activeCurves: string[];
+      }
+    > = {
+      all: {
+        badge: 'Familia Completa',
+        badgeClass: 'bg-white/10 text-slate-200',
+        title: 'La Envolvente Asintótica Global',
+        analogy: 'Todas las notaciones convergen a partir del umbral n₀',
+        formula: `
+          <div class="text-slate-300">f(n) = 3n² + 5n + 10 está acotada entre las curvas c₁·n² y c₂·n² para todo n &ge; n₀.</div>
+          <div class="text-dim text-[11px] mt-1">La banda sombreada representa la región &Theta;(n²). Las funciones o(n³) y &omega;(n) representan cotas estrictas.</div>
+        `,
+        desc: 'Para valores pequeños de n, las constantes y los términos de menor orden pueden alterar las curvas; pero a partir de n₀ (región asintótica), el término de mayor grado domina de forma absoluta.',
+        activeCurves: ['target', 'big-o', 'omega', 'theta', 'little-o', 'little-omega'],
+      },
+      theta: {
+        badge: 'Big-Θ (Theta)',
+        badgeClass: 'bg-purple-500/20 text-purple-300 font-bold',
+        title: 'Cota Ajustada Asintótica (Orden Exacto: f = g)',
+        analogy: 'Equivalente matemático a f(n) = g(n) a escala asintótica',
+        formula: `
+          <div class="text-purple-300 font-bold">&Theta;(g(n)) = &#123; f(n) &mid; &exist; c₁, c₂ &gt; 0, n₀ &gt; 0 tales que c₁·g(n) &le; f(n) &le; c₂·g(n), &forall; n &ge; n₀ &#125;</div>
+          <div class="text-slate-200 mt-1">Cálculo de Límite: <span class="font-bold text-purple-200">lim (3n² + 5n + 10) / n² = 3 &isin; (0, &infin;) &rarr; f(n) &isin; &Theta;(n²)</span></div>
+        `,
+        desc: 'Theta es la cota más precisa y exigente: sandwich entre dos múltiplos constantes de n². Garantiza que el algoritmo ni va más rápido ni más despacio que n².',
+        activeCurves: ['target', 'big-o', 'omega', 'theta'],
+      },
+      'big-o': {
+        badge: 'Big-O',
+        badgeClass: 'bg-indigo-500/20 text-indigo-300 font-bold',
+        title: 'Cota Superior Asintótica (Peor Caso: f ≤ g)',
+        analogy: 'Equivalente matemático a f(n) &le; g(n) (menor o igual)',
+        formula: `
+          <div class="text-indigo-300 font-bold">O(g(n)) = &#123; f(n) &mid; &exist; c &gt; 0, n₀ &gt; 0 tal que f(n) &le; c·g(n), &forall; n &ge; n₀ &#125;</div>
+          <div class="text-slate-200 mt-1">Para c = 4 y n &ge; 7: <span class="font-bold text-indigo-200">3n² + 5n + 10 &le; 4n² &rarr; f(n) &isin; O(n²)</span></div>
+          <div class="text-dim text-[11px]">¡Ojo!: También es formalmente cierto que f(n) &isin; O(n³) y f(n) &isin; O(2ⁿ), pues Big-O admite cotas holgadas.</div>
+        `,
+        desc: 'Big-O establece un techo que el coste no rebasará jamás. Al ser un "menor o igual", decir que un algoritmo es O(n³) cuando es cuadrático es técnicamente verdadero, pero impreciso.',
+        activeCurves: ['target', 'big-o'],
+      },
+      omega: {
+        badge: 'Big-Ω (Omega)',
+        badgeClass: 'bg-blue-500/20 text-blue-300 font-bold',
+        title: 'Cota Inferior Asintótica (Mejor Caso: f ≥ g)',
+        analogy: 'Equivalente matemático a f(n) &ge; g(n) (mayor o igual)',
+        formula: `
+          <div class="text-blue-300 font-bold">&Omega;(g(n)) = &#123; f(n) &mid; &exist; c &gt; 0, n₀ &gt; 0 tal que c·g(n) &le; f(n), &forall; n &ge; n₀ &#125;</div>
+          <div class="text-slate-200 mt-1">Para c = 3 y n &ge; 1: <span class="font-bold text-blue-200">3n² &le; 3n² + 5n + 10 &rarr; f(n) &isin; &Omega;(n²)</span></div>
+        `,
+        desc: 'Omega establece un suelo: el algoritmo requerirá como mínimo c·g(n) pasos. f(n) también pertenece a Ω(n) y Ω(1).',
+        activeCurves: ['target', 'omega'],
+      },
+      'little-o': {
+        badge: 'Little-o (o-pequeña)',
+        badgeClass: 'bg-rose-500/20 text-rose-300 font-bold',
+        title: 'Cota Superior Estricta (f < g asintótico)',
+        analogy: 'Equivalente matemático a f(n) &lt; g(n) (estrictamente menor)',
+        formula: `
+          <div class="text-rose-300 font-bold">o(g(n)) = &#123; f(n) &mid; &forall; c &gt; 0, &exist; n₀ &gt; 0 tal que f(n) &lt; c·g(n), &forall; n &ge; n₀ &#125;</div>
+          <div class="text-slate-200 mt-1">Definición de Límite Infinitesimal: <span class="font-bold text-rose-200">lim (f(n) / g(n)) = 0</span> cuando n &rarr; &infin;</div>
+          <div class="rounded border border-rose-500/30 bg-rose-950/20 p-2 mt-1.5 space-y-1 text-[11px]">
+            <div>✦ <span class="text-emerald-300">lim (3n² + 5n + 10) / n³ = 0</span> &rarr; <strong class="text-emerald-300">f(n) &isin; o(n³) ✓</strong></div>
+            <div>✦ <span class="text-rose-300">lim (3n² + 5n + 10) / n² = 3 &ne; 0</span> &rarr; <strong class="text-rose-300">f(n) &notin; o(n²) ✗</strong></div>
+          </div>
+        `,
+        desc: 'La diferencia esencial entre Big-O y Little-o: Big-O dice "no crece más rápido que g(n)" (permite igualdad de ritmo); Little-o dice "crece a un ritmo insignificante comparado con g(n)". Por eso 3n² es O(n²) pero NO es o(n²).',
+        activeCurves: ['target', 'little-o'],
+      },
+      'little-omega': {
+        badge: 'Little-ω (omega-pequeña)',
+        badgeClass: 'bg-emerald-500/20 text-emerald-300 font-bold',
+        title: 'Cota Inferior Estricta (f > g asintótico)',
+        analogy: 'Equivalente matemático a f(n) &gt; g(n) (estrictamente mayor)',
+        formula: `
+          <div class="text-emerald-300 font-bold">&omega;(g(n)) = &#123; f(n) &mid; &forall; c &gt; 0, &exist; n₀ &gt; 0 tal que c·g(n) &lt; f(n), &forall; n &ge; n₀ &#125;</div>
+          <div class="text-slate-200 mt-1">Definición de Límite Infinitesimal: <span class="font-bold text-emerald-200">lim (f(n) / g(n)) = &infin;</span> cuando n &rarr; &infin;</div>
+          <div class="rounded border border-emerald-500/30 bg-emerald-950/20 p-2 mt-1.5 space-y-1 text-[11px]">
+            <div>✦ <span class="text-emerald-300">lim (3n² + 5n + 10) / n = &infin;</span> &rarr; <strong class="text-emerald-300">f(n) &isin; &omega;(n) ✓</strong></div>
+            <div>✦ <span class="text-rose-300">lim (3n² + 5n + 10) / n² = 3 &ne; &infin;</span> &rarr; <strong class="text-rose-300">f(n) &notin; &omega;(n²) ✗</strong></div>
+          </div>
+        `,
+        desc: 'Little-ω establece que f(n) supera asintóticamente a g(n) hasta volverla despreciable. Es la relación traspuesta directa de Little-o: f &isin; o(g) &hArr; g &isin; &omega;(f).',
+        activeCurves: ['target', 'little-omega'],
+      },
+    };
+
+    function updateView(mode: string) {
+      const data = modesData[mode] || modesData.all;
+
+      if (badgeEl) {
+        badgeEl.textContent = data.badge;
+        badgeEl.className = `rounded px-2 py-0.5 font-bold ${data.badgeClass}`;
+      }
+      if (titleEl) titleEl.textContent = data.title;
+      if (analogyEl) analogyEl.textContent = data.analogy;
+      if (formulaEl) formulaEl.innerHTML = data.formula;
+      if (descEl) descEl.textContent = data.desc;
+
+      // Update curve opacities
+      curveLines.forEach((line) => {
+        const c = line.getAttribute('data-curve');
+        if (c && data.activeCurves.includes(c)) {
+          line.style.opacity = '1';
+          line.setAttribute('stroke-width', c === 'target' ? '3.5' : '2.5');
+        } else {
+          line.style.opacity = '0.12';
+          line.setAttribute('stroke-width', '1.5');
+        }
+      });
+
+      if (bandTheta) {
+        bandTheta.style.opacity = data.activeCurves.includes('theta') ? '1' : '0';
+      }
+    }
+
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        buttons.forEach((b) => {
+          b.classList.remove('active', 'bg-white/20', 'text-white');
+        });
+        btn.classList.add('active', 'bg-white/20', 'text-white');
+        const mode = btn.dataset.mode || 'all';
+        updateView(mode);
+      });
+    });
+
+    updateView('all');
+  }
+
+  // Auto-init
+  document.querySelectorAll<HTMLElement>('[data-asymptotic-diagram]').forEach(setupAsymptoticDiagram);
+</script>
