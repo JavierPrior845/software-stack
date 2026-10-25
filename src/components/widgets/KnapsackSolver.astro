@@ -1,0 +1,868 @@
+---
+// KnapsackSolver.astro: Interactive multi-paradigm simulator for the Knapsack problem
+// Implements Greedy (Fractional vs 0/1), Dynamic Programming (interactive matrix + backtrace), and Backtracking with Upper Bound Pruning.
+---
+
+<div class="knapsack-widget rounded-xl border border-white/10 bg-black/30 p-4 sm:p-5" data-knapsack-widget>
+  <!-- Header: Mode Selector -->
+  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <span class="inline-block h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
+        <h3 class="font-mono text-sm font-semibold text-slate-100">
+          Simulador Multiparadigma: El Problema de la Mochila
+        </h3>
+      </div>
+      <p class="mt-0.5 text-xs text-dim">
+        Compara Voraz (Greedy), Programación Dinámica (Bottom-Up) y Backtracking con Poda
+      </p>
+    </div>
+
+    <!-- Tab navigation -->
+    <div class="inline-flex rounded-lg border border-white/10 bg-black/40 p-1" role="tablist">
+      <button
+        type="button"
+        class="tab-btn active rounded-md px-3 py-1.5 font-mono text-xs font-medium text-slate-300 transition-colors hover:text-white"
+        data-tab="greedy"
+      >
+        1. Voraz (Fraccionario vs 0/1)
+      </button>
+      <button
+        type="button"
+        class="tab-btn rounded-md px-3 py-1.5 font-mono text-xs font-medium text-slate-400 transition-colors hover:text-white"
+        data-tab="dp"
+      >
+        2. Prog. Dinámica (Matriz V[i,j])
+      </button>
+      <button
+        type="button"
+        class="tab-btn rounded-md px-3 py-1.5 font-mono text-xs font-medium text-slate-400 transition-colors hover:text-white"
+        data-tab="backtrack"
+      >
+        3. Backtracking y Poda
+      </button>
+    </div>
+  </div>
+
+  <!-- TAB 1: VORAZ (GREEDY) -->
+  <div class="tab-panel mt-5 space-y-5" data-panel="greedy">
+    <!-- Controls bar -->
+    <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/5 bg-white/[0.02] p-3">
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-dim">Instancia:</span>
+        <button
+          type="button"
+          class="btn-dataset active rounded border border-cyan-500/30 bg-cyan-500/20 px-2.5 py-1 font-mono text-xs text-cyan-200"
+          data-dataset="general"
+        >
+          Caso General (4 objetos, M=8)
+        </button>
+        <button
+          type="button"
+          class="btn-dataset rounded border border-white/10 bg-black/30 px-2.5 py-1 font-mono text-xs text-muted hover:text-white"
+          data-dataset="counterexample"
+        >
+          Contraejemplo UMU (2 objetos, M=100)
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2 text-xs">
+        <span class="text-dim">Criterio Voraz:</span>
+        <select
+          class="rounded border border-white/10 bg-black/60 px-2 py-1 font-mono text-xs text-slate-200"
+          data-greedy-criterion
+        >
+          <option value="ratio">Densidad (b_i / p_i) — Óptimo fraccionario</option>
+          <option value="benefit">Beneficio Máximo (b_i)</option>
+          <option value="weight">Peso Mínimo (p_i)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Objects list -->
+    <div class="space-y-2">
+      <div class="flex items-center justify-between text-xs text-dim">
+        <span>Objetos disponibles en la instancia:</span>
+        <span class="font-mono" data-knapsack-cap-label>Capacidad M = 8 kg</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2 sm:grid-cols-4" data-greedy-objects>
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Comparative visual bars: Fractional vs 0/1 -->
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <!-- Fractional -->
+      <div class="rounded-xl border border-emerald-500/30 bg-emerald-950/15 p-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+            <h4 class="font-mono text-xs font-bold text-emerald-200 uppercase tracking-wider">
+              A) Mochila Fraccionaria ($x_i \in [0, 1]$)
+            </h4>
+          </div>
+          <span class="rounded bg-emerald-500/20 px-2 py-0.5 font-mono text-[11px] font-bold text-emerald-300" data-frac-profit>
+            Beneficio: 38.0 €
+          </span>
+        </div>
+        <p class="mt-1 text-[11px] text-emerald-200/70">
+          Garantía de óptimo global dividiendo el último objeto para llenar la capacidad al 100%.
+        </p>
+
+        <!-- Progress bar -->
+        <div class="mt-3">
+          <div class="h-6 w-full overflow-hidden rounded-md border border-emerald-500/30 bg-black/50 flex" data-frac-bar>
+            <!-- Slices populated by JS -->
+          </div>
+        </div>
+        <div class="mt-2 text-xs text-muted" data-frac-breakdown>
+          <!-- Breakdown text populated by JS -->
+        </div>
+      </div>
+
+      <!-- 0/1 Greedy -->
+      <div class="rounded-xl border border-rose-500/30 bg-rose-950/15 p-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full bg-rose-400"></span>
+            <h4 class="font-mono text-xs font-bold text-rose-200 uppercase tracking-wider">
+              B) Voraz en Mochila 0/1 ($x_i \in &#123;0, 1&#125;$)
+            </h4>
+          </div>
+          <span class="rounded bg-rose-500/20 px-2 py-0.5 font-mono text-[11px] font-bold text-rose-300" data-zeroone-profit>
+            Beneficio: 22.0 €
+          </span>
+        </div>
+        <p class="mt-1 text-[11px] text-rose-200/70">
+          Falla por indivisibilidad (falta de propiedad de Matroide). Los huecos quedan desperdiciados.
+        </p>
+
+        <!-- Progress bar -->
+        <div class="mt-3">
+          <div class="h-6 w-full overflow-hidden rounded-md border border-rose-500/30 bg-black/50 flex" data-zeroone-bar>
+            <!-- Slices populated by JS -->
+          </div>
+        </div>
+        <div class="mt-2 text-xs text-muted" data-zeroone-breakdown>
+          <!-- Breakdown text populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Mathematical Insight Box -->
+    <div class="rounded-lg border border-amber-500/25 bg-amber-950/15 p-3.5 text-xs text-amber-200/90 leading-relaxed" data-greedy-insight>
+      <!-- Populated by JS based on dataset -->
+    </div>
+  </div>
+
+  <!-- TAB 2: DYNAMIC PROGRAMMING (MATRIX V[i, j]) -->
+  <div class="tab-panel hidden mt-5 space-y-4" data-panel="dp">
+    <div class="rounded-lg border border-cyan-500/20 bg-cyan-950/15 p-3.5 text-xs text-cyan-200 leading-relaxed">
+      <p class="font-bold">Ecuación de Recurrencia de Bellman (Mochila 0/1):</p>
+      <div class="mt-1 font-mono text-[11px] text-slate-200 bg-black/40 p-2 rounded border border-white/5">
+        V[i, j] = si p_i &gt; j: V[i-1, j] | si p_i &le; j: max(V[i-1, j], b_i + V[i-1, j - p_i])
+      </div>
+      <p class="mt-1 text-dim text-[11px]">
+        Haz click o pasa el cursor sobre cualquier celda para ver qué subproblemas compiten para formar el valor óptimo.
+      </p>
+    </div>
+
+    <!-- Actions & explanation bar -->
+    <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          class="rounded border border-amber-500/40 bg-amber-500/20 px-3 py-1 font-mono text-xs font-semibold text-amber-200 hover:bg-amber-500/30"
+          data-btn-trace-solution
+        >
+          ✦ Reconstruir Solución Óptima X
+        </button>
+        <button
+          type="button"
+          class="rounded border border-white/10 bg-black/30 px-2.5 py-1 font-mono text-xs text-muted hover:text-white"
+          data-btn-reset-dp
+        >
+          Limpiar Selección
+        </button>
+      </div>
+
+      <div class="font-mono text-xs text-slate-300" data-dp-cell-info>
+        Selecciona una celda para ver la fórmula evaluada
+      </div>
+    </div>
+
+    <!-- DP Matrix Table -->
+    <div class="overflow-x-auto rounded-xl border border-white/10 bg-black/40 p-3">
+      <table class="w-full text-center font-mono text-xs" data-dp-table>
+        <!-- Populated by JS -->
+      </table>
+    </div>
+
+    <!-- Reconstruction Explanation Box -->
+    <div class="hidden rounded-lg border border-amber-500/30 bg-amber-950/20 p-3.5 text-xs text-amber-200/90 leading-relaxed space-y-1.5" data-dp-reconstruct-box>
+      <div class="flex items-center justify-between">
+        <span class="font-bold text-amber-300 uppercase tracking-wider">Traza Inversa de Recomposición:</span>
+        <span class="rounded bg-amber-400/20 px-2 py-0.5 font-bold text-amber-200 font-mono" data-dp-optimal-val>
+          Beneficio Óptimo = 9 €
+        </span>
+      </div>
+      <p data-dp-trace-steps class="text-slate-300 text-[11px]"></p>
+      <div class="font-mono text-[11px] text-amber-300 font-semibold" data-dp-vector-x></div>
+      <p class="text-[10px] text-dim border-t border-amber-500/20 pt-1.5">
+        <strong>Complejidad pseudo-polinomial:</strong> O(n · M) en tiempo y memoria. Si M fuera 1.000.000.000, esta tabla requeriría gigabytes de RAM y colapsaría.
+      </p>
+    </div>
+  </div>
+
+  <!-- TAB 3: BACKTRACKING & BOUND -->
+  <div class="tab-panel hidden mt-5 space-y-4" data-panel="backtrack">
+    <div class="rounded-lg border border-purple-500/25 bg-purple-950/15 p-3.5 text-xs text-purple-200 leading-relaxed">
+      <p class="font-bold">Backtracking con Poda por Cota Superior (Esquema Formal UMU):</p>
+      <p class="mt-1 text-dim text-[11px]">
+        En cada nodo del árbol binario de decisiones (<span class="font-mono text-slate-200">x_i = 1</span> o <span class="font-mono text-slate-200">x_i = 0</span>),
+        se calcula una cota superior optimista <span class="font-mono text-cyan-300">bestimado</span> aplicando la relajación de la
+        <strong class="text-slate-200">Mochila Voraz Fraccionaria</strong> sobre la capacidad restante.
+        Si <span class="font-mono text-rose-300">bestimado &le; VOA</span> (Valor Óptimo Actual),
+        <strong class="text-rose-300">se poda la rama entera</strong> sin explorar sus descendientes.
+      </p>
+    </div>
+
+    <!-- Stepper Controls -->
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/5 pb-3 text-xs">
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          class="rounded border border-white/10 bg-black/40 px-3 py-1 font-mono text-xs font-medium text-slate-200 hover:bg-white/10"
+          data-btn-bt-prev
+        >
+          ← Paso Anterior
+        </button>
+        <button
+          type="button"
+          class="rounded border border-purple-500/30 bg-purple-500/20 px-3 py-1 font-mono text-xs font-semibold text-purple-200 hover:bg-purple-500/30"
+          data-btn-bt-next
+        >
+          Paso Siguiente →
+        </button>
+      </div>
+
+      <div class="flex items-center gap-4 font-mono text-xs">
+        <div class="text-muted">
+          Paso: <span class="text-white font-bold" data-bt-step-counter>1 / 8</span>
+        </div>
+        <div class="rounded border border-emerald-500/30 bg-emerald-950/30 px-2.5 py-0.5 text-emerald-300">
+          VOA Actual: <span class="font-bold" data-bt-voa>0 €</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step Visual Card -->
+    <div class="rounded-xl border border-white/10 bg-black/40 p-4 space-y-3" data-bt-card>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2 font-mono text-xs">
+          <span class="rounded bg-white/10 px-2 py-0.5 font-bold text-slate-200" data-bt-node-name>Nodo Raíz</span>
+          <span class="text-dim" data-bt-path>Decisiones: []</span>
+        </div>
+        <span class="rounded px-2.5 py-0.5 font-mono text-xs font-bold" data-bt-badge>Explorando</span>
+      </div>
+
+      <!-- State meters -->
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 font-mono text-xs">
+        <div class="rounded border border-white/5 bg-white/[0.02] p-2">
+          <div class="text-[10px] text-dim uppercase">Peso Acumulado</div>
+          <div class="mt-0.5 text-slate-200 font-bold" data-bt-weight>0 / 8 kg</div>
+        </div>
+        <div class="rounded border border-white/5 bg-white/[0.02] p-2">
+          <div class="text-[10px] text-dim uppercase">Beneficio Acumulado</div>
+          <div class="mt-0.5 text-emerald-300 font-bold" data-bt-profit>0 €</div>
+        </div>
+        <div class="rounded border border-cyan-500/20 bg-cyan-950/20 p-2">
+          <div class="text-[10px] text-cyan-300 uppercase">Cota Optimista (bestimado)</div>
+          <div class="mt-0.5 text-cyan-200 font-bold" data-bt-bound>38.0 €</div>
+        </div>
+        <div class="rounded border border-white/5 bg-white/[0.02] p-2">
+          <div class="text-[10px] text-dim uppercase">Condición de Poda</div>
+          <div class="mt-0.5 font-bold" data-bt-prune-cond>bestimado &gt; VOA</div>
+        </div>
+      </div>
+
+      <!-- Explanation narrative -->
+      <div class="rounded-lg border border-white/5 bg-black/30 p-3 text-xs leading-relaxed text-slate-300" data-bt-explanation>
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- The 5 canonical functions summary -->
+    <div class="grid grid-cols-2 gap-2 sm:grid-cols-5 text-[11px] font-mono">
+      <div class="rounded border border-white/5 bg-black/25 p-2">
+        <span class="text-cyan-400 font-bold">1. Generar()</span>
+        <p class="text-[10px] text-dim font-sans mt-0.5">Bifurca en x_i = 1 y luego x_i = 0.</p>
+      </div>
+      <div class="rounded border border-white/5 bg-black/25 p-2">
+        <span class="text-amber-400 font-bold">2. Criterio()</span>
+        <p class="text-[10px] text-dim font-sans mt-0.5">Verifica peso &le; M (factibilidad).</p>
+      </div>
+      <div class="rounded border border-white/5 bg-black/25 p-2">
+        <span class="text-emerald-400 font-bold">3. Solución()</span>
+        <p class="text-[10px] text-dim font-sans mt-0.5">Llega a hoja (i = n) y actualiza VOA.</p>
+      </div>
+      <div class="rounded border border-white/5 bg-black/25 p-2">
+        <span class="text-purple-400 font-bold">4. MasHermanos()</span>
+        <p class="text-[10px] text-dim font-sans mt-0.5">Pasa de la rama '1' a la rama '0'.</p>
+      </div>
+      <div class="rounded border border-white/5 bg-black/25 p-2">
+        <span class="text-rose-400 font-bold">5. Retroceder()</span>
+        <p class="text-[10px] text-dim font-sans mt-0.5">Desapila y restaura pesos y cotas.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function setupKnapsackWidget(root: HTMLElement) {
+    // --- TAB SWITCHING ---
+    const tabButtons = root.querySelectorAll<HTMLButtonElement>('.tab-btn');
+    const tabPanels = root.querySelectorAll<HTMLElement>('.tab-panel');
+
+    tabButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        tabButtons.forEach((b) => {
+          b.classList.remove('active', 'text-slate-300');
+          b.classList.add('text-slate-400');
+        });
+        btn.classList.add('active', 'text-slate-300');
+        btn.classList.remove('text-slate-400');
+
+        tabPanels.forEach((p) => {
+          if (p.dataset.panel === tab) {
+            p.classList.remove('hidden');
+          } else {
+            p.classList.add('hidden');
+          }
+        });
+      });
+    });
+
+    // --- TAB 1: GREEDY LOGIC ---
+    interface Item {
+      id: number;
+      name: string;
+      weight: number;
+      benefit: number;
+      ratio: number;
+      color: string;
+    }
+
+    const datasets: Record<string, { M: number; items: Item[]; insight: string }> = {
+      general: {
+        M: 8,
+        items: [
+          { id: 1, name: 'Obj 1', weight: 2, benefit: 12, ratio: 6.0, color: 'bg-emerald-500' },
+          { id: 2, name: 'Obj 2', weight: 2, benefit: 10, ratio: 5.0, color: 'bg-cyan-500' },
+          { id: 3, name: 'Obj 3', weight: 5, benefit: 20, ratio: 4.0, color: 'bg-blue-500' },
+          { id: 4, name: 'Obj 4', weight: 5, benefit: 15, ratio: 3.0, color: 'bg-purple-500' },
+        ],
+        insight:
+          '💡 <strong>Análisis:</strong> El enfoque voraz por ratio elige primero Obj 1 (2kg, 12€) y Obj 2 (2kg, 10€), consumiendo 4 kg. En la mochila fraccionaria toma 4/5 de Obj 3, logrando un beneficio de <strong>38 €</strong>. Sin embargo, en la mochila 0/1, Obj 3 (5kg) ya no cabe; ¡quedan 4 kg vacíos y solo suma <strong>22 €</strong>! El óptimo 0/1 real (de Prog. Dinámica) combina Obj 1 y Obj 3 sumando <strong>32 €</strong>.',
+      },
+      counterexample: {
+        M: 100,
+        items: [
+          { id: 1, name: 'Obj 1 (Pequeño)', weight: 1, benefit: 2, ratio: 2.0, color: 'bg-amber-500' },
+          { id: 2, name: 'Obj 2 (Grande)', weight: 100, benefit: 190, ratio: 1.9, color: 'bg-indigo-500' },
+        ],
+        insight:
+          '⚠️ <strong>Contraejemplo canónico de AED2:</strong> Obj 1 tiene un ratio superior (2.0 > 1.9), por lo que la regla voraz lo toma primero. Esto deja 99 kg libres donde Obj 2 (100 kg) no cabe. <strong>Beneficio voraz 0/1: solo 2 €</strong>. Solución óptima real: tomar únicamente Obj 2 con <strong>190 €</strong> (¡95 veces superior!). Voraz no tiene visión global.',
+      },
+    };
+
+    let activeDatasetKey = 'general';
+    let activeCriterion = 'ratio';
+
+    const datasetButtons = root.querySelectorAll<HTMLButtonElement>('.btn-dataset');
+    const criterionSelect = root.querySelector<HTMLSelectElement>('[data-greedy-criterion]');
+    const objectsContainer = root.querySelector<HTMLElement>('[data-greedy-objects]');
+    const capLabel = root.querySelector<HTMLElement>('[data-knapsack-cap-label]');
+    const fracProfit = root.querySelector<HTMLElement>('[data-frac-profit]');
+    const fracBar = root.querySelector<HTMLElement>('[data-frac-bar]');
+    const fracBreakdown = root.querySelector<HTMLElement>('[data-frac-breakdown]');
+    const zerooneProfit = root.querySelector<HTMLElement>('[data-zeroone-profit]');
+    const zerooneBar = root.querySelector<HTMLElement>('[data-zeroone-bar]');
+    const zerooneBreakdown = root.querySelector<HTMLElement>('[data-zeroone-breakdown]');
+    const insightBox = root.querySelector<HTMLElement>('[data-greedy-insight]');
+
+    datasetButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        datasetButtons.forEach((b) => {
+          b.classList.remove('active', 'border-cyan-500/30', 'bg-cyan-500/20', 'text-cyan-200');
+          b.classList.add('border-white/10', 'bg-black/30', 'text-muted');
+        });
+        btn.classList.add('active', 'border-cyan-500/30', 'bg-cyan-500/20', 'text-cyan-200');
+        btn.classList.remove('border-white/10', 'bg-black/30', 'text-muted');
+
+        activeDatasetKey = btn.dataset.dataset || 'general';
+        renderGreedy();
+      });
+    });
+
+    criterionSelect?.addEventListener('change', () => {
+      activeCriterion = criterionSelect.value;
+      renderGreedy();
+    });
+
+    function renderGreedy() {
+      const data = datasets[activeDatasetKey];
+      if (!data) return;
+
+      if (capLabel) capLabel.textContent = `Capacidad M = ${data.M} kg`;
+      if (insightBox) insightBox.innerHTML = data.insight;
+
+      // Render cards of objects
+      if (objectsContainer) {
+        objectsContainer.innerHTML = data.items
+          .map(
+            (it) => `
+          <div class="rounded-lg border border-white/10 bg-black/40 p-2 text-xs font-mono">
+            <div class="flex items-center gap-1.5 font-bold text-slate-200">
+              <span class="h-2 w-2 rounded-full ${it.color}"></span>
+              ${it.name}
+            </div>
+            <div class="mt-1 text-dim text-[11px]">Peso: <strong class="text-slate-300">${it.weight} kg</strong></div>
+            <div class="text-dim text-[11px]">Valor: <strong class="text-emerald-300">${it.benefit} €</strong></div>
+            <div class="text-dim text-[11px]">Ratio: <strong class="text-cyan-300">${it.ratio.toFixed(2)}</strong></div>
+          </div>
+        `
+          )
+          .join('');
+      }
+
+      // Sort items according to active criterion
+      const sorted = [...data.items].sort((a, b) => {
+        if (activeCriterion === 'benefit') return b.benefit - a.benefit;
+        if (activeCriterion === 'weight') return a.weight - b.weight;
+        return b.ratio - a.ratio; // default: ratio
+      });
+
+      // --- FRACTIONAL CALCULATION ---
+      let remCapFrac = data.M;
+      let totalFracBenefit = 0;
+      const fracSlices: { name: string; weight: number; benefit: number; fraction: number; color: string }[] = [];
+
+      for (const item of sorted) {
+        if (remCapFrac <= 0) break;
+        if (item.weight <= remCapFrac) {
+          fracSlices.push({ ...item, fraction: 1.0 });
+          totalFracBenefit += item.benefit;
+          remCapFrac -= item.weight;
+        } else {
+          const frac = remCapFrac / item.weight;
+          fracSlices.push({ ...item, fraction: frac, benefit: item.benefit * frac, weight: remCapFrac });
+          totalFracBenefit += item.benefit * frac;
+          remCapFrac = 0;
+        }
+      }
+
+      if (fracProfit) fracProfit.textContent = `Beneficio: ${totalFracBenefit.toFixed(1)} €`;
+      if (fracBar) {
+        fracBar.innerHTML = fracSlices
+          .map((sl) => {
+            const pct = (sl.weight / data.M) * 100;
+            return `<div class="${sl.color} h-full flex items-center justify-center text-[10px] font-mono font-bold text-black" style="width: ${pct}%" title="${sl.name}: ${sl.weight}kg (${(sl.fraction * 100).toFixed(0)}%)">
+              ${pct > 12 ? `${sl.name} (${(sl.fraction * 100).toFixed(0)}%)` : ''}
+            </div>`;
+          })
+          .join('');
+      }
+      if (fracBreakdown) {
+        fracBreakdown.innerHTML = `Tomados: ${fracSlices
+          .map((s) => `${s.name} (${s.fraction < 1 ? `${(s.fraction * 100).toFixed(0)}%` : '100%'} = +${s.benefit.toFixed(1)}€)`)
+          .join(' + ')}`;
+      }
+
+      // --- 0/1 GREEDY CALCULATION ---
+      let remCap01 = data.M;
+      let total01Benefit = 0;
+      const zerooneSlices: { name: string; weight: number; benefit: number; color: string }[] = [];
+
+      for (const item of sorted) {
+        if (item.weight <= remCap01) {
+          zerooneSlices.push(item);
+          total01Benefit += item.benefit;
+          remCap01 -= item.weight;
+        }
+      }
+
+      if (zerooneProfit) zerooneProfit.textContent = `Beneficio: ${total01Benefit.toFixed(1)} €`;
+      if (zerooneBar) {
+        const slicesHtml = zerooneSlices
+          .map((sl) => {
+            const pct = (sl.weight / data.M) * 100;
+            return `<div class="${sl.color} h-full flex items-center justify-center text-[10px] font-mono font-bold text-black" style="width: ${pct}%" title="${sl.name}: ${sl.weight}kg">
+              ${pct > 12 ? `${sl.name}` : ''}
+            </div>`;
+          })
+          .join('');
+        const unusedPct = (remCap01 / data.M) * 100;
+        const emptyHtml =
+          unusedPct > 0
+            ? `<div class="bg-white/5 h-full flex items-center justify-center text-[10px] font-mono text-dim border-l border-white/10" style="width: ${unusedPct}%" title="Capacidad desaprovechada: ${remCap01}kg">
+            ${unusedPct > 15 ? `Hueco libre (${remCap01}kg)` : ''}
+          </div>`
+            : '';
+        zerooneBar.innerHTML = slicesHtml + emptyHtml;
+      }
+      if (zerooneBreakdown) {
+        zerooneBreakdown.innerHTML = zerooneSlices.length
+          ? `Tomados: ${zerooneSlices.map((s) => `${s.name} (+${s.benefit}€)`).join(' + ')}${remCap01 > 0 ? ` · Desperdicio: ${remCap01} kg vacíos` : ''}`
+          : 'Ningún objeto cabe.';
+      }
+    }
+
+    renderGreedy();
+
+    // --- TAB 2: DYNAMIC PROGRAMMING LOGIC ---
+    const dpItems = [
+      { name: 'Obj 1', p: 1, b: 1 },
+      { name: 'Obj 2', p: 3, b: 4 },
+      { name: 'Obj 3', p: 4, b: 5 },
+      { name: 'Obj 4', p: 5, b: 7 },
+    ];
+    const dpM = 7;
+    const dpN = dpItems.length;
+
+    // Build matrix
+    const V: number[][] = [];
+    for (let i = 0; i <= dpN; i++) {
+      V[i] = [];
+      for (let j = 0; j <= dpM; j++) {
+        if (i === 0 || j === 0) {
+          V[i][j] = 0;
+        } else {
+          const item = dpItems[i - 1];
+          if (item.p > j) {
+            V[i][j] = V[i - 1][j];
+          } else {
+            V[i][j] = Math.max(V[i - 1][j], item.b + V[i - 1][j - item.p]);
+          }
+        }
+      }
+    }
+
+    const dpTable = root.querySelector<HTMLTableElement>('[data-dp-table]');
+    const dpCellInfo = root.querySelector<HTMLElement>('[data-dp-cell-info]');
+    const dpTraceBtn = root.querySelector<HTMLButtonElement>('[data-btn-trace-solution]');
+    const dpResetBtn = root.querySelector<HTMLButtonElement>('[data-btn-reset-dp]');
+    const dpReconstructBox = root.querySelector<HTMLElement>('[data-dp-reconstruct-box]');
+    const dpTraceSteps = root.querySelector<HTMLElement>('[data-dp-trace-steps]');
+    const dpVectorX = root.querySelector<HTMLElement>('[data-dp-vector-x]');
+
+    function renderDpTable() {
+      if (!dpTable) return;
+      let html = '<thead><tr class="text-[11px] text-dim border-b border-white/10">';
+      html += '<th class="p-2 text-left">i / Objeto</th>';
+      for (let j = 0; j <= dpM; j++) {
+        html += `<th class="p-2">j=${j}</th>`;
+      }
+      html += '</tr></thead><tbody>';
+
+      for (let i = 0; i <= dpN; i++) {
+        const itemLabel = i === 0 ? 'Base (0)' : `${dpItems[i - 1].name} (p=${dpItems[i - 1].p}, b=${dpItems[i - 1].b})`;
+        html += `<tr class="border-b border-white/5 hover:bg-white/[0.02]">`;
+        html += `<td class="p-2 text-left font-sans text-xs text-slate-300 font-semibold">${itemLabel}</td>`;
+        for (let j = 0; j <= dpM; j++) {
+          html += `<td
+            class="dp-cell p-2 cursor-pointer transition-all rounded hover:bg-white/10"
+            data-row="${i}"
+            data-col="${j}"
+          >
+            <span class="cell-val px-1.5 py-0.5 rounded">${V[i][j]}</span>
+          </td>`;
+        }
+        html += '</tr>';
+      }
+      html += '</tbody>';
+      dpTable.innerHTML = html;
+
+      // Event listeners for cells
+      dpTable.querySelectorAll<HTMLElement>('.dp-cell').forEach((cell) => {
+        cell.addEventListener('click', () => {
+          const r = parseInt(cell.dataset.row || '0');
+          const c = parseInt(cell.dataset.col || '0');
+          highlightDpCell(r, c);
+        });
+      });
+    }
+
+    function clearDpHighlights() {
+      dpTable?.querySelectorAll<HTMLElement>('.dp-cell').forEach((c) => {
+        c.classList.remove('bg-cyan-500/30', 'bg-emerald-500/30', 'bg-amber-500/30', 'ring-2', 'ring-cyan-400');
+        const span = c.querySelector('.cell-val');
+        if (span) span.className = 'cell-val px-1.5 py-0.5 rounded';
+      });
+    }
+
+    function highlightDpCell(r: number, c: number) {
+      clearDpHighlights();
+      if (dpReconstructBox) dpReconstructBox.classList.add('hidden');
+
+      const target = dpTable?.querySelector<HTMLElement>(`[data-row="${r}"][data-col="${c}"]`);
+      if (target) {
+        target.classList.add('ring-2', 'ring-cyan-400', 'bg-cyan-500/20');
+      }
+
+      if (r === 0 || c === 0) {
+        if (dpCellInfo) dpCellInfo.innerHTML = `V[${r}, ${c}] = 0 (Caso base: 0 objetos o 0 capacidad)`;
+        return;
+      }
+
+      const item = dpItems[r - 1];
+      if (item.p > c) {
+        // Excluded
+        const above = dpTable?.querySelector<HTMLElement>(`[data-row="${r - 1}"][data-col="${c}"]`);
+        above?.classList.add('bg-amber-500/30');
+        if (dpCellInfo) {
+          dpCellInfo.innerHTML = `
+            <span class="text-amber-300 font-bold">V[${r}, ${c}] = ${V[r][c]}</span>:
+            ${item.name} pesa ${item.p}kg &gt; capacidad j=${c}kg &rarr;
+            Hereda celda superior <span class="text-amber-300 font-bold">V[${r - 1}, ${c}] = ${V[r - 1][c]}</span>
+          `;
+        }
+      } else {
+        // Competes
+        const above = dpTable?.querySelector<HTMLElement>(`[data-row="${r - 1}"][data-col="${c}"]`);
+        const diag = dpTable?.querySelector<HTMLElement>(`[data-row="${r - 1}"][data-col="${c - item.p}"]`);
+        above?.classList.add('bg-cyan-500/30');
+        diag?.classList.add('bg-emerald-500/30');
+
+        const noTake = V[r - 1][c];
+        const take = item.b + V[r - 1][c - item.p];
+        if (dpCellInfo) {
+          dpCellInfo.innerHTML = `
+            <span class="text-slate-100 font-bold">V[${r}, ${c}] = max(</span>
+            <span class="text-cyan-300">V[${r - 1}, ${c}] = ${noTake}</span>,
+            <span class="text-emerald-300">b_${r}(${item.b}) + V[${r - 1}, ${c - item.p}](${V[r - 1][c - item.p]}) = ${take}</span>
+            <span class="text-slate-100 font-bold">) = ${V[r][c]}</span>
+          `;
+        }
+      }
+    }
+
+    dpTraceBtn?.addEventListener('click', () => {
+      clearDpHighlights();
+      let currI = dpN;
+      let currJ = dpM;
+      const steps: string[] = [];
+      const X = [0, 0, 0, 0];
+
+      while (currI > 0 && currJ > 0) {
+        const cell = dpTable?.querySelector<HTMLElement>(`[data-row="${currI}"][data-col="${currJ}"]`);
+        cell?.classList.add('ring-2', 'ring-amber-400', 'bg-amber-500/20');
+
+        if (V[currI][currJ] !== V[currI - 1][currJ]) {
+          // Object currI was included
+          X[currI - 1] = 1;
+          const it = dpItems[currI - 1];
+          steps.push(`V[${currI}, ${currJ}] (${V[currI][currJ]}) &ne; V[${currI - 1}, ${currJ}] (${V[currI - 1][currJ]}) &rarr; <strong>Incluir ${it.name}</strong> (x_${currI}=1). Resta peso p_${currI}=${it.p} &rarr; nueva cap j=${currJ - it.p}`);
+          currJ -= it.p;
+        } else {
+          steps.push(`V[${currI}, ${currJ}] == V[${currI - 1}, ${currJ}] (${V[currI][currJ]}) &rarr; <strong>No incluir ${dpItems[currI - 1].name}</strong> (x_${currI}=0).`);
+        }
+        currI--;
+      }
+
+      if (dpReconstructBox) dpReconstructBox.classList.remove('hidden');
+      if (dpTraceSteps) dpTraceSteps.innerHTML = steps.map((s, idx) => `<p>${idx + 1}. ${s}</p>`).join('');
+      if (dpVectorX) dpVectorX.textContent = `Vector Solución: X = [${X.join(', ')}] (Objetos 2 y 3 incluidos · Peso total = 3+4=7 kg · Beneficio = 4+5 = 9 €)`;
+      if (dpCellInfo) dpCellInfo.innerHTML = '<span class="text-amber-300 font-bold">Solución óptima reconstruida con éxito.</span>';
+    });
+
+    dpResetBtn?.addEventListener('click', () => {
+      clearDpHighlights();
+      if (dpReconstructBox) dpReconstructBox.classList.add('hidden');
+      if (dpCellInfo) dpCellInfo.textContent = 'Selecciona una celda para ver la fórmula evaluada';
+    });
+
+    renderDpTable();
+
+    // --- TAB 3: BACKTRACKING LOGIC ---
+    interface BtStep {
+      node: string;
+      path: string;
+      weight: number;
+      profit: number;
+      bound: number;
+      voa: number;
+      pruned: boolean;
+      status: string;
+      badgeClass: string;
+      cond: string;
+      desc: string;
+    }
+
+    const btSteps: BtStep[] = [
+      {
+        node: 'Nodo 0 (Raíz)',
+        path: '[]',
+        weight: 0,
+        profit: 0,
+        bound: 38.0,
+        voa: 0,
+        pruned: false,
+        status: 'Explorando',
+        badgeClass: 'bg-cyan-500/20 text-cyan-300',
+        cond: 'bestimado (38) > VOA (0)',
+        desc: 'Comienza en la raíz. Los objetos están ordenados por ratio b_i / p_i descendente [Obj 1, Obj 2, Obj 3, Obj 4]. Se calcula bestimado mediante relajación voraz fraccionaria: 38 €. Se genera prioritariamente la rama x_1 = 1.',
+      },
+      {
+        node: 'Nodo 1 (x₁=1)',
+        path: '[x₁=1]',
+        weight: 2,
+        profit: 12,
+        bound: 38.0,
+        voa: 0,
+        pruned: false,
+        status: 'Factible',
+        badgeClass: 'bg-cyan-500/20 text-cyan-300',
+        cond: 'peso (2) &le; 8 y bound (38) > VOA (0)',
+        desc: 'Se incluye Obj 1 (p=2, b=12). Peso acumulado = 2 kg &le; 8 kg. Cota optimista = 38.0 €. Se avanza en profundidad hacia x_2 = 1.',
+      },
+      {
+        node: 'Nodo 2 (x₁=1, x₂=1)',
+        path: '[x₁=1, x₂=1]',
+        weight: 4,
+        profit: 22,
+        bound: 38.0,
+        voa: 0,
+        pruned: false,
+        status: 'Factible',
+        badgeClass: 'bg-cyan-500/20 text-cyan-300',
+        cond: 'peso (4) &le; 8 y bound (38) > VOA (0)',
+        desc: 'Se incluye Obj 2 (p=2, b=10). Peso acumulado = 4 kg. Beneficio actual = 22 €. Capacidad restante = 4 kg. Se avanza a x_3 = 1.',
+      },
+      {
+        node: 'Nodo 3 (x₁=1, x₂=1, x₃=1)',
+        path: '[x₁=1, x₂=1, x₃=1]',
+        weight: 9,
+        profit: 42,
+        bound: 42.0,
+        voa: 0,
+        pruned: true,
+        status: '✂️ PODA POR FACTIBILIDAD',
+        badgeClass: 'bg-rose-500/20 text-rose-300',
+        cond: 'peso (9) > M (8) &rarr; INVIABLE',
+        desc: 'La función Criterio() detecta que peso acumulado 4 + 5 = 9 kg supera la capacidad M=8 kg. Se poda la rama inmediatamente sin generar descendientes. MasHermanos() prueba x_3 = 0.',
+      },
+      {
+        node: 'Nodo 4 (x₁=1, x₂=1, x₃=0)',
+        path: '[x₁=1, x₂=1, x₃=0]',
+        weight: 4,
+        profit: 22,
+        bound: 22.0,
+        voa: 0,
+        pruned: false,
+        status: 'Solución Factible (Hoja)',
+        badgeClass: 'bg-emerald-500/20 text-emerald-300',
+        cond: 'Alcanzada hoja factible &rarr; VOA = 22',
+        desc: 'Obj 4 tampoco cabe (pesa 5 kg y solo quedan 4 kg). Solución completa alcanzada con {Obj 1, Obj 2}. Se actualiza el récord global: VOA = 22 €. Retroceder() vuelve a explorar alternativas.',
+      },
+      {
+        node: 'Nodo 5 (x₁=1, x₂=0, x₃=1)',
+        path: '[x₁=1, x₂=0, x₃=1]',
+        weight: 7,
+        profit: 32,
+        bound: 35.0,
+        voa: 22,
+        pruned: false,
+        status: '¡Nuevo Récord VOA!',
+        badgeClass: 'bg-emerald-500/20 text-emerald-300 font-bold',
+        cond: 'bestimado (35) > VOA (22) &rarr; VOA = 32',
+        desc: 'Alternativa x_2=0 y x_3=1: Peso = 2 + 5 = 7 kg &le; 8 kg. Beneficio = 12 + 20 = 32 €. ¡Supera el VOA previo (22)! Nuevo récord óptimo: VOA = 32 €.',
+      },
+      {
+        node: 'Nodo 6 (x₁=0)',
+        path: '[x₁=0]',
+        weight: 0,
+        profit: 0,
+        bound: 33.0,
+        voa: 32,
+        pruned: false,
+        status: 'Bajo Umbral',
+        badgeClass: 'bg-cyan-500/20 text-cyan-300',
+        cond: 'bestimado (33) > VOA (32)',
+        desc: 'Se explora la rama x_1 = 0. Con los objetos restantes {Obj 2, Obj 3, Obj 4}, la cota voraz fraccionaria es 10 + 20 + (1/5 * 15) = 33 €. Apenas supera VOA (32), por lo que se explora cautelosamente.',
+      },
+      {
+        node: 'Nodo 7 (x₁=0, x₂=0)',
+        path: '[x₁=0, x₂=0]',
+        weight: 0,
+        profit: 0,
+        bound: 29.0,
+        voa: 32,
+        pruned: true,
+        status: '✂️ PODA POR COTA SUPERIOR',
+        badgeClass: 'bg-rose-500/20 text-rose-300 font-bold',
+        cond: 'bestimado (29) &le; VOA (32) &rarr; PODA TOTAL',
+        desc: 'Sin Obj 1 ni Obj 2, el beneficio máximo fraccionario posible con Obj 3 y Obj 4 es 20 + (3/5 * 15) = 29 €. Como 29 &le; VOA (32), matemáticamente es imposible superar el récord. ¡Se descarta todo el subárbol de golpe ahorrando explorar 4 combinaciones!',
+      },
+    ];
+
+    let currentBtIndex = 0;
+    const btnBtPrev = root.querySelector<HTMLButtonElement>('[data-btn-bt-prev]');
+    const btnBtNext = root.querySelector<HTMLButtonElement>('[data-btn-bt-next]');
+    const btStepCounter = root.querySelector<HTMLElement>('[data-bt-step-counter]');
+    const btVoa = root.querySelector<HTMLElement>('[data-bt-voa]');
+    const btNodeName = root.querySelector<HTMLElement>('[data-bt-node-name]');
+    const btPath = root.querySelector<HTMLElement>('[data-bt-path]');
+    const btBadge = root.querySelector<HTMLElement>('[data-bt-badge]');
+    const btWeight = root.querySelector<HTMLElement>('[data-bt-weight]');
+    const btProfit = root.querySelector<HTMLElement>('[data-bt-profit]');
+    const btBound = root.querySelector<HTMLElement>('[data-bt-bound]');
+    const btPruneCond = root.querySelector<HTMLElement>('[data-bt-prune-cond]');
+    const btDesc = root.querySelector<HTMLElement>('[data-bt-explanation]');
+
+    function renderBtStep() {
+      const s = btSteps[currentBtIndex];
+      if (!s) return;
+
+      if (btStepCounter) btStepCounter.textContent = `${currentBtIndex + 1} / ${btSteps.length}`;
+      if (btVoa) btVoa.textContent = `${s.voa} €`;
+      if (btNodeName) btNodeName.textContent = s.node;
+      if (btPath) btPath.textContent = `Decisiones: ${s.path}`;
+      if (btBadge) {
+        btBadge.textContent = s.status;
+        btBadge.className = `rounded px-2.5 py-0.5 font-mono text-xs font-bold ${s.badgeClass}`;
+      }
+      if (btWeight) btWeight.textContent = `${s.weight} / 8 kg`;
+      if (btProfit) btProfit.textContent = `${s.profit} €`;
+      if (btBound) btBound.textContent = `${s.bound.toFixed(1)} €`;
+      if (btPruneCond) {
+        btPruneCond.innerHTML = s.cond;
+        btPruneCond.className = s.pruned ? 'mt-0.5 font-bold text-rose-400' : 'mt-0.5 font-bold text-emerald-400';
+      }
+      if (btDesc) btDesc.innerHTML = s.desc;
+
+      if (btnBtPrev) btnBtPrev.disabled = currentBtIndex === 0;
+      if (btnBtNext) btnBtNext.disabled = currentBtIndex === btSteps.length - 1;
+    }
+
+    btnBtPrev?.addEventListener('click', () => {
+      if (currentBtIndex > 0) {
+        currentBtIndex--;
+        renderBtStep();
+      }
+    });
+
+    btnBtNext?.addEventListener('click', () => {
+      if (currentBtIndex < btSteps.length - 1) {
+        currentBtIndex++;
+        renderBtStep();
+      }
+    });
+
+    renderBtStep();
+  }
+
+  // Auto-init
+  document.querySelectorAll<HTMLElement>('[data-knapsack-widget]').forEach(setupKnapsackWidget);
+</script>

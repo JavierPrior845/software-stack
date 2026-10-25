@@ -8,6 +8,8 @@ import AttentionExplorer from './widgets/AttentionExplorer.astro';
 import KvCache from './widgets/KvCache.astro';
 import LogicGates from './widgets/LogicGates.astro';
 import GraphTraversal from './widgets/GraphTraversal.astro';
+import KnapsackSolver from './widgets/KnapsackSolver.astro';
+import SortingVisualizer from './widgets/SortingVisualizer.astro';
 
 interface Props {
   id: WidgetId;
@@ -24,6 +26,8 @@ const registry = {
   'kv-cache': KvCache,
   'logic-gates': LogicGates,
   'graph-traversal': GraphTraversal,
+  'knapsack-solver': KnapsackSolver,
+  'sorting-visualizer': SortingVisualizer,
 } satisfies Record<WidgetId, unknown>;
 
 const Widget = registry[id];
