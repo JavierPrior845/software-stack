@@ -272,55 +272,222 @@ Eric Evans formaliza la arquitectura del software a partir de la riqueza del mod
 
 ## Bloque 2: Procesamiento y Desarrollo de Software (PDS) — Flujo, Arquitectura y Calidad
 
-PDS complementa el diseño centrándose en **el ciclo de vida completo de un sistema**, desde que se define el problema hasta que se valida en producción y se persisten los datos.
+PDS complementa el diseño centrándose en **el ciclo de vida completo de la ingeniería del software**, desde la elicitación rigurosa del problema hasta la arquitectura de sistemas distribuidos, la verificación industrial (V&V) y el almacenamiento persistente.
 
-### 2.1 Requisitos y Modelado Conceptual
-* **Requisitos Funcionales vs No Funcionales:**
-  * *Funcionales:* Qué debe hacer el sistema (casos de uso, entradas/salidas, reglas de negocio).
-  * *No Funcionales (Atributos de calidad):* Cómo debe comportarse el sistema bajo carga (latencia, rendimiento, disponibilidad, tolerancia a fallos, seguridad).
-* **Casos de Uso vs Historias de Usuario:**
-  * Casos de uso (formales, flujo básico y flujos alternativos de error, relaciones de inclusión y extensión).
-  * Historias de usuario ("Como [rol], quiero [acción], para [beneficio]").
-* **Modelado de Dominio:** Diferencia entre **Agregación** (las partes pueden existir de forma independiente al contenedor) y **Composición** (las partes mueren si el contenedor se destruye).
+---
 
-### 2.2 Estilos Arquitectónicos
-La forma en que se estructuran los componentes y sus conectores a alto nivel:
-* **Arquitectura en Capas (Layered / N-Tier):** Presentación $\to$ Lógica de Negocio $\to$ Acceso a Datos. Estructura clásica, pero propensa al acoplamiento si las capas superiores dependen directamente de las tablas de datos.
-* **Arquitectura Hexagonal (Ports & Adapters) / Clean Architecture:**
-  * El núcleo del dominio está en el centro y **no depende de nada**.
-  * Se comunica con el mundo exterior mediante **Puertos** (interfaces).
-  * Las bases de datos, APIs REST o frameworks externos son **Adaptadores** periféricos que se enchufan a esos puertos.
-* **Arquitecturas Orientadas a Eventos:**
-  * *Message Queues (Colas punto a punto):* Modelo *pull* con entrega garantizada, absorción de picos de carga.
-  * *Pub/Sub (Publicador/Suscriptor):* Modelo *push* organizado por *topics*, desacoplamiento total en tiempo y espacio.
-* **Monolito vs Microservicios:**
-  * Monolito: Un único proceso en memoria; transacciones atómicas simples, despliegue conjunto.
-  * Microservicios: Descomposición en servicios autónomos comunicados por red; despliegues independientes a costa de latencia de red, consistencia eventual y complejidad operativa.
+### 2.1 Requisitos, Casos de Uso y Modelado de Dominio
+
+La ingeniería de requisitos transforma las necesidades ambiguas de los usuarios en especificaciones verificables y contrastables.
+
+#### Factores de Calidad del Software (PDS Tema 1)
+- **Factores Externos (visibles para el usuario/cliente en producción):**
+  - *Corrección:* Grado en que el software satisface su especificación formal.
+  - *Fiabilidad:* Capacidad de mantener un rendimiento especificado a lo largo del tiempo.
+  - *Eficiencia:* Uso óptimo de hardware, memoria y ciclos de CPU.
+  - *Robustez:* Comportamiento admisible y degradación elegante ante situaciones anómalas no previstas.
+  - *Portabilidad:* Facilidad para transferir el sistema entre distintos entornos de hardware y SO.
+- **Factores Internos (visibles para los ingenieros de mantenimiento):**
+  - *Inteligibilidad:* Facilidad para comprender la estructura del código y su intención.
+  - *Mantenibilidad / Modificabilidad:* Coste y esfuerzo requerido para corregir defectos o adaptar el sistema a nuevas normativas.
+  - *Adaptabilidad / Extensibilidad:* Facilidad para incorporar nuevas funcionalidades sin alterar la arquitectura.
+  - *Reutilización:* Capacidad de aprovechar componentes en proyectos futuros.
+
+#### Tipos y Criterios de Calidad de los Requisitos
+- **Requisitos Funcionales (FR):** Servicios que el sistema debe proveer, transformaciones de datos, entradas y salidas esperadas.
+- **Requisitos No Funcionales (NFR / Atributos de Calidad):** Restricciones de rendimiento, disponibilidad (ej. 99.95%), latencia (ej. $p99 < 150\text{ ms}$), seguridad física (*safety*) y de datos (*security*), o normativas legales (RGPD). **Regla de oro:** Todo NFR debe incluir una métrica cuantificable y un procedimiento de verificación objetivo; de lo contrario, no es un requisito, es un deseo.
+- **Criterios de Calidad Individuales:** Necesario, libre de detalles de implementación tecnológica, no ambiguo, consistente, completo, singular, viable, trazable y verificable.
+
+#### Casos de Uso (CdU) vs Historias de Usuario
+- **Casos de Uso (Modelo Formal):**
+  - *Estructura:* Actor Principal (inicia el objetivo), Actores Secundarios (sistemas externos colaboradores), Precondiciones, Flujo Básico (*Happy Path*) y Flujos Alternativos (errores y variantes condicionales).
+  - *Relaciones UML de Casos de Uso:*
+    - **Generalización (`──▷`):** Un CdU hereda el comportamiento y los actores de otro CdU abstracto.
+    - **Inclusión (`<<include>>`):** El CdU base incorpora **obligatoriamente** el comportamiento de otro CdU para factorizar flujos compartidos (ej. *Realizar Pago* incluye *Autenticar Usuario*).
+    - **Extensión (`<<extend>>`):** Un CdU auxiliar añade comportamiento **opcional o condicional** al CdU base únicamente si se cumple una condición explícita en un *Punto de Extensión* (ej. *Contratar Seguro Adicional* extiende *Alquilar Vehículo*).
+- **Historias de Usuario (Ágiles):** Enfoque centrado en valor de usuario (`"Como [rol] quiero [acción] para [beneficio]"`), complementado con criterios de aceptación ejecutables (*Given-When-Then*).
+
+#### Modelado de Dominio: Taxonomía y Ciclo de Vida de Relaciones UML
+
+El Modelo de Dominio representa visualmente los conceptos del negocio. La distinción entre sus relaciones gobierna la gestión de memoria y el ciclo de vida de los objetos:
+
+| Tipo de Relación | Notación UML | Semántica | Ciclo de Vida de las Partes | Representación Típica en Código (C++ / Java / TS) |
+| :--- | :---: | :--- | :--- | :--- |
+| **Dependencia** | `- - - >` | *"Usa un"* efímero | Ninguno. No hay propiedad estructural. | Parámetro en método o variable local temporal dentro de una función. |
+| **Asociación** | `──>` | *"Conoce a"* | Independiente. Ambas entidades existen por separado en memoria. | Puntero, referencia o ID foráneo como atributo de instancia (`Cliente*`). |
+| **Agregación** | `◇──` | *"Tiene un"* (Todo-Parte débil) | **Independiente:** Si el todo se destruye, las partes **sobreviven**. | Referencia externa compartida (`std::shared_ptr`, array de punteros a objetos preexistentes). |
+| **Composición** | `◆──` | *"Formado por"* (Todo-Parte fuerte) | **Dependiente:** Si el todo se destruye, las partes **se destruyen con él**. | Instancia por valor directo dentro del contenedor o puntero exclusivo (`std::unique_ptr`) liberado en el destructor. |
+| **Generalización**| `──▷` | *"Es un"* (Herencia) | Subclase comparte al 100% la estructura e identidad de la base. | Herencia estática (`class Coche extends Vehiculo`). |
+| **Realización** | `- - ▷` | *"Implementa contrato"* | La clase concreta garantiza el contrato de la interfaz abstracta. | Implementación de interfaz (`implements IRepository`). |
+
+*Ejemplo canónico (Coche y Concesionario):*
+- El `Concesionario` **agrega (`◇──`)** `Coche`: Si el concesionario cierra, los coches siguen existiendo físicamente y pueden trasladarse a otro lugar.
+- El `Coche` está **compuesto (`◆──`)** por su `Motor` y su `Chasis`: Si el coche se destruye en el desguace, su motor y chasis mueren con él como unidad cohesiva.
+
+---
+
+### 2.2 Catálogo de Estilos Arquitectónicos y Diseño de APIs REST
+
+Un estilo arquitectónico define una familia de sistemas en términos de un patrón de organización estructural: componentes, conectores y restricciones de interacción.
+
+#### Los 7 Estilos Arquitectónicos Fundamentales (PDS Tema 4)
+
+1. **Arquitectura en Capas (Layered / N-Tier):**
+   - *Organización:* Presentación $\to$ Lógica de Negocio $\to$ Acceso a Datos.
+   - *Restricción:* Cada capa solo puede invocar a la capa inmediatamente inferior (capas estrictas) o a capas inferiores (capas flexibles).
+   - *Riesgo:* Fugas de abstracción si las entidades de base de datos cruzan hacia la UI.
+2. **Arquitectura Hexagonal (Ports & Adapters / Clean Architecture):**
+   - *Núcleo (Core):* Dominio puro y casos de uso con **cero imports** de librerías externas o frameworks.
+   - *Puertos:* Interfaces abstractas. Se dividen en **Puertos de Entrada** (Use Cases invocados desde fuera) y **Puertos de Salida** (contratos de repositorios o gateways requeridos por el dominio).
+   - *Adaptadores Primarios (Driving):* Inician la ejecución (controladores REST/FastAPI, interfaz CLI, consumidores de colas).
+   - *Adaptadores Secundarios (Driven):* Reaccionan a las peticiones del dominio (implementaciones PostgreSQL con JPA/SQLAlchemy, cliente Stripe, broker Kafka).
+   - *Regla de Oro:* Las dependencias en tiempo de compilación siempre apuntan **hacia el centro**.
+3. **Microkernel (Núcleo + Plugins):**
+   - *Estructura:* Un núcleo estable y minimalista que provee el ciclo de vida básico y se extiende dinámicamente mediante plug-ins independientes (ej. VS Code, Obsidian, kernels de SO, Eclipse).
+4. **Pipes and Filters (Tuberías y Filtros):**
+   - *Estructura:* Filtros autónomos que procesan y transforman un flujo unidireccional de datos recibidos a través de tuberías (pipes).
+   - *Trade-off:* Ningún filtro conoce al siguiente; el rendimiento global está acotado por el filtro más lento (cuello de botella del pipeline).
+5. **Cliente-Servidor:**
+   - Comunicación asimétrica síncrona o asíncrona mediante peticiones (*Request*) y respuestas (*Reply*).
+6. **Arquitecturas Asíncronas Orientadas a Eventos:**
+   - **Colas de Mensajes (Point-to-Point):** Modo *pull*, entrega garantizada y ordenada. Un solo consumidor procesa cada mensaje. Absorbe picos masivos de tráfico (*Load Leveling*).
+   - **Publicar/Suscribir (Pub/Sub):** Modo *push* desacoplado organizado por *topics*. El broker emite copias del evento a todos los suscriptores activos en tiempo real (ej. Kafka, Redis Streams).
+7. **Monolito vs Microservicios:**
+   - **Monolito Modular:** Un solo proceso ejecutable en memoria. Llamadas a métodos en RAM (nanosegundos), transacciones ACID locales sencillas, despliegue unificado.
+   - **Microservicios:** Conjunto de servicios con propósito único desplegados en procesos y máquinas independientes, comunicados mediante APIs de red (HTTP/gRPC/mensajería). Facilitan la autonomía de equipos y el escalado horizontal independiente, pero introducen latencia de red, serialización, consistencia eventual y necesidad de tracing distribuido.
+
+#### Diseño de APIs REST, Idempotencia y Modelo de Madurez de Richardson
+
+- **Niveles de Madurez de Richardson:**
+  - *Nivel 0 (The Swamp of POX):* Un solo endpoint y verbo (`POST /api`) actuando como RPC remoto.
+  - *Nivel 1 (Recursos):* URIs independientes para cada recurso (`/usuarios`, `/pedidos/102`).
+  - *Nivel 2 (Verbos HTTP Estándar y Códigos de Estado):* Uso estricto de la semántica de la RFC:
+    - **Idempotencia Formal:** Una operación es idempotente si ejecutarla $N$ veces consecutivas genera **el mismo estado final en el servidor** que ejecutarla una única vez.
+      - `GET`: **Seguro e Idempotente**. Solo lectura; nunca muta estado.
+      - `PUT`: **Idempotente**. Reemplaza completamente el recurso en una URI conocida. Si se repite, el recurso queda en el mismo estado.
+      - `DELETE`: **Idempotente**. Elimina el recurso. La primera llamada lo suprime (200/204); llamadas sucesivas no alteran el estado (devuelven 404 o 204, pero el recurso sigue borrado).
+      - `POST`: **NO Idempotente**. Crea un nuevo recurso subordinado. Ejecutarlo $N$ veces creará $N$ registros distintos con diferentes identificadores.
+      - `PATCH`: Modificación parcial; no necesariamente idempotente por especificación RFC.
+    - **Códigos de Estado Clave:**
+      - `200 OK` (éxito con contenido), `201 Created` (recurso creado con cabecera `Location`), `204 No Content` (éxito sin cuerpo).
+      - `400 Bad Request` (sintaxis corrupta), `401 Unauthorized` (falta autenticación), `403 Forbidden` (autenticado pero sin permisos suficientes), `404 Not Found`, `409 Conflict` (conflicto de concurrencia/estado), `422 Unprocessable Entity` (error de validación de esquema en Pydantic/JSON Schema).
+      - `500 Internal Server Error`, `502 Bad Gateway`, `503 Service Unavailable`.
+  - *Nivel 3 (HATEOAS — Hypermedia As The Engine Of Application State):* Las respuestas incluyen hipervínculos dinámicos (`links`) indicando las transiciones de estado válidas que el cliente puede ejecutar a continuación.
+
+---
 
 ### 2.3 Verificación, Validación y Testing Industrial (V&V)
-* **Defectología básica:** Un programador comete un **Error humano**, que introduce un **Defecto/Bug** en el código fuente, el cual provoca un **Fallo observable** en tiempo de ejecución.
-* **La Pirámide de Testing:**
-  1. **Tests Unitarios:** En la base. Cientos o miles; prueban funciones o clases de forma ultra rápida y totalmente aislada.
-  2. **Tests de Integración:** Prueban la interacción entre módulos reales (ej. repositorio conectándose contra una base de datos de pruebas).
-  3. **Tests End-to-End (E2E) / Sistema:** Prueban flujos completos de usuario en entornos reales; lentos y más frágiles de mantener.
-* **Testability y Dobles de Prueba (Test Doubles):**
-  * Para probar una clase sin llamar a la base de datos real o a una API externa, necesitas **Inyección de Dependencias**.
-  * **Stubs:** Devuelven respuestas prefijadas.
-  * **Mocks:** Verifican el comportamiento (comprueban que se llamó al método esperado con los parámetros correctos).
-  * **Fakes:** Implementaciones funcionales ligeras (ej. una base de datos simulada en memoria).
-* **Criterios de Cobertura:** Cobertura de líneas, de ramas (*branch coverage*) y análisis de valores límite en particiones de equivalencia.
 
-### 2.4 Persistencia y el Desfase Objeto-Relacional (Impedance Mismatch)
-* **El Problema del Impedance Mismatch:** Los objetos en memoria forman un grafo rico con herencia, polimorfismo y referencias directas. Las bases de datos relacionales son tablas planas bidimensionales basadas en tuplas y claves foráneas.
-* **ORMs (Mapeo Objeto-Relacional) y JPA/Hibernate:**
-  * Automatizan la traducción entre clases y tablas (`@Entity`, `@Table`, `@Id`).
-  * Mapeo de asociaciones: `@OneToOne`, `@OneToMany`, `@ManyToOne`, `@ManyToMany` gestionando la clave foránea (`@JoinColumn` y `mappedBy`).
-  * Estrategias de herencia relacional: *Single Table* (una tabla única con nulos), *Joined Table* (tabla por clase con claves ajenas) o *Table per Class*.
-* **El Ciclo de Vida de las Entidades en Persistencia:**
-  * **Transient:** Creada con `new`, el framework no la conoce ni existe en base de datos.
-  * **Persistent:** Gestionada por el contexto de persistencia / sesión activa; cualquier cambio en sus atributos generará un `UPDATE` automático al cerrar la transacción.
-  * **Detached:** La sesión se cerró; el objeto sigue en memoria pero los cambios ya no se sincronizan con la base de datos.
-  * **Removed:** Marcada para borrado físico (`DELETE`).
+- **Verificación vs Validación:**
+  - *Verificación:* "¿Estamos construyendo el producto **correctamente**?" (Alineación con la especificación técnica y las normas de diseño).
+  - *Validación:* "¿Estamos construyendo el producto **correcto**?" (Satisfacción real de las necesidades del cliente y usuarios finales).
+- **Cadena Formal de Defectología (PDS Tema 5):**
+  $$\text{Error Humano (Mental)} \xrightarrow{\text{introduce}} \text{Defecto / Bug (en código)} \xrightarrow{\text{ejecuta en runtime}} \text{Fallo Observable (violación de especificación)}$$
+
+#### Técnicas de Prueba y Cobertura
+- **Pruebas de Caja Negra (Funcionales):** Diseñadas exclusivamente a partir de la especificación sin inspeccionar el código fuente.
+  - *Partición de Equivalencia:* División del dominio de entrada en clases válidas e inválidas donde cualquier valor representa a todo el conjunto.
+  - *Análisis de Valores Límite:* Evaluar los extremos de cada partición (ej. para un rango $[1, 100]$, probar $0, 1, 2, 99, 100, 101$).
+- **Pruebas de Caja Blanca (Estructurales):** Diseñadas analizando el grafo de control del código fuente.
+  - *Cobertura de Sentencias/Líneas:* Porcentaje de líneas ejecutadas.
+  - *Cobertura de Ramas (Branch Coverage):* Garantiza que cada bifurcación `if/else` y `switch` se evalúe a verdadero y a falso al menos una vez.
+  - *MC/DC (Modified Condition Decision Coverage):* Criterio riguroso exigido en software crítico (aeronáutica DO-178C y medicina). Demuestra que cada condición booleana individual afecta de manera independiente al resultado final de una decisión compuesta.
+
+#### La Taxonomía Formal de los 5 Test Doubles (Gerard Meszaros)
+
+Para aislar el Sistema Bajo Prueba (SUT) sin invocar bases de datos reales, pasarelas de pago o APIs de terceros, se utiliza la Inyección de Dependencias para sustituir dependencias por **Dobles de Prueba**:
+
+```mermaid
+graph TD
+    TD["Test Doubles (Gerard Meszaros)"]
+    TD --> DUMMY["1. Dummy\n(Relleno inerte; nunca se invoca)"]
+    TD --> STUB["2. Stub\n(Respuestas enlatadas fijas)"]
+    TD --> SPY["3. Spy\n(Stub con auditoría de llamadas)"]
+    TD --> MOCK["4. Mock\n(Expectativas previas de interacción)"]
+    TD --> FAKE["5. Fake\n(Implementación real simplificada en RAM)"]
+```
+
+1. **Dummy (Maniquí):**
+   - Objeto que se pasa exclusivamente para satisfacer las restricciones del compilador en firmas de métodos que exigen parámetros no nulos. **Nunca se invoca ningún método de él.**
+2. **Stub (Respuesta Enlatada):**
+   - Proporciona respuestas fijas y preprogramadas a las llamadas realizadas durante la prueba. No contiene lógica ni verifica interacciones; simplemente alimenta al SUT con datos controlados (ej. `ClockStub` devolviendo siempre `"2026-10-25 10:00:00"`).
+3. **Spy (Espía):**
+   - Es un Stub que, además de devolver respuestas preprogramadas, **registra métricas internas de invocación** (número de veces llamado, argumentos exactos recibidos, orden de ejecución) para poder realizar aserciones al final del test (ej. verificar que `notificador.enviar()` se invocó exactamente una vez).
+4. **Mock (Simulador con Expectativas):**
+   - Objeto preprogramado con **expectativas estrictas de comportamiento**. Sabe de antemano qué llamadas debe recibir, en qué orden y con qué parámetros. Si una llamada inesperada ocurre o no se cumple el protocolo previsto, el test falla automáticamente durante la verificación del mock.
+5. **Fake (Simulador Funcional Ligero):**
+   - Posee una **implementación funcional real y completa**, pero no apta para producción por limitaciones de rendimiento o persistencia (ej. `InMemoryUserRepository` usando un `Map` en RAM en lugar de conectar con PostgreSQL). Permite ejecutar cientos de tests de casos de uso por segundo de forma totalmente determinista.
+
+---
+
+### 2.4 Persistencia, Ciclo de Vida JPA y SQL vs NoSQL
+
+#### El Desfase Objeto-Relacional (Impedance Mismatch)
+Surge de las diferencias ontológicas entre el paradigma OO y el relacional:
+1. *Granularidad:* Los objetos pueden tener clases compuestas ricas (`Direccion`, `Dinero`), mientras las tablas relacionales son planas y exigen tipos primitivos escalares.
+2. *Herencia:* El modelo relacional no soporta herencia de tipos de forma nativa.
+3. *Identidad:* En POO la identidad es igualdad de referencia en memoria (`o1 == o2`) o de valores (`equals()`); en SQL es la Clave Primaria (PK).
+4. *Navegación de Asociaciones:* En POO las referencias son unidireccionales o bidireccionales en memoria; en SQL las asociaciones se resuelven mediante claves ajenas (FK) y costosas operaciones `JOIN`.
+
+#### Ciclo de Vida de los Objetos en JPA / Hibernate
+Las entidades transitan por **4 estados finitos** bajo el control del `EntityManager`:
+
+```mermaid
+stateDiagram-v2
+    [*] --> Transient: new Entidad()
+    Transient --> Persistent: em.persist()
+    Persistent --> Removed: em.remove()
+    Persistent --> Detached: em.detach() / em.close()
+    Detached --> Persistent: em.merge()
+    Removed --> [*]: commit() / flush() (DELETE SQL)
+    Persistent --> [*]: commit() / flush() (INSERT/UPDATE SQL)
+```
+
+1. **Transient (Nuevo):**
+   - Instanciado con `new`. No tiene identificador de base de datos (`@Id`) ni está registrado en el contexto de persistencia.
+2. **Persistent / Managed (Gestionado):**
+   - Asociado al `EntityManager` y con ID asignado.
+   - **Dirty Checking Automático:** Cualquier modificación sobre los atributos de la entidad es detectada por el framework; al ejecutar `commit()` o `flush()`, se emitirá automáticamente la sentencia `UPDATE` correspondiente sin necesidad de invocar métodos de guardado manual.
+3. **Detached (Desconectado):**
+   - Posee ID de base de datos, pero el contexto de persistencia se ha cerrado (`em.close()`) o se ha desvinculado explícitamente (`em.detach()`). Las mutaciones en memoria ya no se sincronizan con la base de datos a menos que se invoque `em.merge()`.
+4. **Removed (Marcado para Eliminación):**
+   - Programado para supresión física. Al sincronizar con la base de datos, se ejecuta la sentencia `DELETE FROM ... WHERE id = ?`.
+
+#### Estrategias de Herencia en JPA (`@Inheritance`)
+- **`SINGLE_TABLE` (Tabla Única):**
+  - Todas las clases de la jerarquía se almacenan en una única tabla con una columna discriminadora (`DTYPE`).
+  - *Ventaja:* Consultas polimórficas ultra rápidas sin JOINs.
+  - *Desventaja:* Las columnas exclusivas de las subclases deben ser `nullable`, perdiendo restricciones de integridad.
+- **`JOINED` (Tabla de Unión / Específica):**
+  - Tabla base para atributos comunes y tablas hijas para cada subclase vinculadas por FK.
+  - *Ventaja:* Esquema relacional normalizado y campos no nulos respetados.
+  - *Desventaja:* Requiere operaciones `JOIN` continuas para recuperar instancias polimórficas.
+- **`TABLE_PER_CLASS` (Tabla por Clase):**
+  - Cada subclase concreta tiene su propia tabla independiente con todos los atributos duplicados.
+  - *Desventaja:* Consultas polimórficas requieren operaciones `UNION` computacionalmente caras.
+
+#### El Bug N+1 en ORM y su Solución
+Ocurre cuando se recupera una colección de $N$ registros con una consulta inicial, y luego el ORM ejecuta perezosamente (*Lazy Loading*) una consulta SQL secundaria independiente por cada uno de los $N$ registros para cargar sus colecciones relacionadas:
+$$\text{Total consultas} = 1 + N$$
+*Solución Canónica:* Emplear **Carga Ansiosa (*Eager Loading*)** mediante sentencias **`JOIN FETCH`** en JPQL o APIs de criteria (`SELECT u FROM User u JOIN FETCH u.pedidos`), recuperando todo el grafo en un único viaje de red a la base de datos.
+
+#### Bases de Datos Relacionales (SQL / ACID) vs NoSQL (BASE & CAP)
+
+| Criterio | Relacionales (SQL) | No Relacionales (NoSQL) |
+| :--- | :--- | :--- |
+| **Modelo de Datos** | Tablas bidimensionales normalizadas (*Schema-on-write* estricto). | Documentos, Clave-Valor, Columnas, Grafos, Vectores (*Schema-on-read* dinámico). |
+| **Garantías de Transacción** | **ACID** (Atomicidad, Consistencia, Aislamiento, Durabilidad) estricto. | **BASE** (Basically Available, Soft-state, Eventual consistency). |
+| **Relaciones & JOINs** | Nativas y altamente optimizadas con Claves Primarias y Ajenas. | Inexistentes o caras; se prioriza la **desnormalización** y el anidamiento. |
+| **Escalabilidad** | Principalmente **Vertical** (Scale-Up: más CPU/RAM). Sharding manual complejo. | Diseñadas para **Escalabilidad Horizontal** nativa (Scale-Out: clúster de cientos de nodos). |
+| **Teorema CAP** | Priorizan **Consistencia + Disponibilidad (CA)** local, o CP con replicación síncrona. | Optan mayoritariamente por **AP** (Alta Disponibilidad ante Partición) o CP parametrizable. |
+| **Familias Líderes** | PostgreSQL, MySQL, SQLite, Oracle. | MongoDB (Doc), Redis (K-V), Cassandra (Col), Neo4j (Grafo), Qdrant (Vectorial). |
+
+- **Las 5 Familias NoSQL en Arquitectura Moderna:**
+  1. *Documentales (MongoDB, CouchDB):* Almacenamiento semiestructurado en documentos JSON/BSON. Perfectas para e-commerce, catálogos, auditorías y APIs donde los recursos se consultan de golpe.
+  2. *Clave-Valor (Redis, DynamoDB):* Acceso en tiempo constante $O(1)$. Caché ultrarrápida en memoria RAM, almacenamiento de sesiones JWT y control de tasa (*Rate Limiting*).
+  3. *Familias de Columnas Anchas / Wide-Column (Apache Cassandra, ScyllaDB):* Agrupación de columnas dinámicas sobre disco particionado. Clave para series temporales, eventos de telemetría y Big Data con escrituras masivas concurrentes.
+  4. *Bases de Datos de Grafos (Neo4j, Amazon Neptune):* Modelado directo de nodos, aristas y propiedades. Permiten recorrer relaciones profundas (*traversals*) en $O(1)$ por salto sin operaciones JOIN. Indispensables en redes sociales, detección de fraude financiero y motores de recomendación.
+  5. *Bases de Datos Vectoriales (Qdrant, Milvus, Pinecone):* Almacenan embeddings densos y proporcionan índices HNSW para búsqueda de vecinos más cercanos (*Approximate Nearest Neighbors - ANN*) mediante distancia Coseno o Euclídea. Piedra angular de arquitecturas de Inteligencia Artificial y pipelines **RAG** (*Retrieval-Augmented Generation*).
 
 ---
 
