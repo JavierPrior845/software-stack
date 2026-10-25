@@ -19,6 +19,8 @@ export const DIAGRAM_IDS = [
   'process-memory-layout',
   'trie-horizontal',
   'graph-representation',
+  'recurrence-tree',
+  'asymptotic-bounds',
 ] as const;
 
 export type DiagramId = (typeof DIAGRAM_IDS)[number];
@@ -32,6 +34,8 @@ export const WIDGET_IDS = [
   'kv-cache',
   'logic-gates',
   'graph-traversal',
+  'knapsack-solver',
+  'sorting-visualizer',
 ] as const;
 
 export type WidgetId = (typeof WIDGET_IDS)[number];

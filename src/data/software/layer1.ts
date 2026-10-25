@@ -193,42 +193,89 @@ export const layer1: Layer = {
       concepts: [
         {
           slug: 'notacion-asintotica',
-          name: 'Notación asintótica',
-          tagline: 'Big-O describe cómo empeora el coste cuando el problema crece, no cuánto tarda hoy.',
+          name: 'Notación asintótica (O, Ω, Θ, o, ω)',
+          tagline: 'La familia completa: cotas holgadas (O, Ω), ajustadas (Θ) y estrictas por límites (o, ω).',
           summary:
-            'O es cota superior, Ω cota inferior y Θ cota ajustada. Sirven para comparar crecimientos, no tiempos absolutos: un O(N²) con constante minúscula puede ganar a un O(N log N) para N pequeño. La notación ignora caché, constantes y distribución de datos, y por eso nunca sustituye a medir.',
+            'Clasifica el crecimiento del coste algorítmico cuando n → ∞. O es cota superior (f ≤ g), Ω inferior (f ≥ g) y Θ ajustada (f = g). Little-o (o) denota una cota superior estrictamente menor (f < g), definida formalmente por lim(f/g) = 0: 3n² es O(n²) pero NO es o(n²); en cambio sí es o(n³). Su contraparte Little-ω denota cota inferior estricta (lim = ∞). Sirven para evaluar crecimientos matemáticos independientes del hardware.',
           keyPoints: [
-            'Mide con datos representativos: N pequeño invierte conclusiones.',
-            'O(N) con saltos de memoria puede perder contra O(N log N) contiguo.',
+            'Big-O (O) y Big-Ω (Ω): cotas asintóticas débiles (admiten igualdad de ritmo de crecimiento).',
+            'Big-Θ (Theta): orden exacto f(n) = Θ(g(n)) ↔ lim(f/g) = k ∈ (0, ∞).',
+            'Little-o (o): cota superior estricta lim(f/g) = 0. Ejemplo: 3n² + 5n ∈ o(n³), pero ∉ o(n²).',
+            'Little-ω (omega): cota inferior estricta lim(f/g) = ∞. Ejemplo: 3n² + 5n ∈ ω(n), pero ∉ ω(n²).',
+            'Propiedad traspuesta: f(n) ∈ o(g(n)) ⟺ g(n) ∈ ω(f(n)).',
           ],
-          tags: ['complejidad', 'fundamentos'],
+          tags: ['complejidad', 'fundamentos', 'matemáticas'],
+          diagram: 'asymptotic-bounds',
           widget: 'big-o-playground',
+          example: {
+            label: 'Criterio de Límites para Cotas Asintóticas',
+            code: `// Evaluar f(n) = 3n² + 5n + 10 frente a g(n) = n² y g(n) = n³
+// 1. Frente a n²:
+//    lim (3n² + 5n + 10) / n² = 3 (constante finita > 0)
+//    --> f(n) ∈ Θ(n²), f(n) ∈ O(n²), f(n) ∈ Ω(n²)
+//    --> f(n) ∉ o(n²) y f(n) ∉ ω(n²) (NO son estrictas)
+
+// 2. Frente a n³:
+//    lim (3n² + 5n + 10) / n³ = 0
+//    --> f(n) ∈ o(n³) [estrictamente menor] y f(n) ∈ O(n³)
+
+// 3. Frente a n:
+//    lim (3n² + 5n + 10) / n = ∞
+//    --> f(n) ∈ ω(n) [estrictamente mayor] y f(n) ∈ Ω(n)`,
+            note: 'El límite infinitesimal elimina la necesidad de buscar a mano constantes c y umbrales n₀.',
+          },
         },
         {
           slug: 'teorema-maestro',
-          name: 'Teorema maestro',
-          tagline: 'La receta para resolver T(n) = aT(n/b) + f(n) sin desplegar el árbol a mano.',
+          name: 'Teorema maestro y recurrencias',
+          tagline: 'Resolver T(n) = aT(n/b) + f(n): división logarítmica (n/b) vs explosión exponencial por sustracción (n-c).',
           summary:
-            'Para recurrencias de divide y vencerás, compara el coste de los subproblemas con el de combinarlos. Si domina la división, gana el término n^log_b(a); si domina la combinación, gana f(n); si están equilibrados, aparece un factor logarítmico. Es el atajo para no perderse en sustituciones.',
+            'Las recurrencias modelan algoritmos recursivos. Dividir el problema (n/b) produce árboles de profundidad logarítmica O(log n); restar (n-c) genera árboles de profundidad lineal O(n) con explosión exponencial O(2ⁿ) de hojas (el riesgo de intentar resolver la Mochila 0/1 con recursión pura). El Teorema Maestro resuelve T(n) = aT(n/b) + f(n) comparando las hojas n^log_b(a) contra la combinación f(n). Strassen usa 7 multiplicaciones en n/2 logrando O(n^2.807) frente al clásico O(n³).',
           keyPoints: [
-            'MergeSort: T(n) = 2T(n/2) + O(n) → O(n log n).',
-            'No aplica a recurrencias no uniformes: ahí toca el método del árbol o Akra-Bazzi.',
+            'División (n/d) genera altura logarítmica; sustracción (n-c) genera altura lineal y 2ⁿ hojas.',
+            'Caso 1 (Hojas dominan): f(n) < n^log_b(a) → Θ(n^log_b(a)).',
+            'Caso 2 (Equilibrio): f(n) = Θ(n^log_b(a)) → Θ(n^log_b(a) · log n) (MergeSort: 2T(n/2) + O(n)).',
+            'Caso 3 (Raíz domina): f(n) > n^log_b(a) y regularidad → Θ(f(n)).',
+            'Strassen: a=7, b=2, f(n)=O(n²) → O(n^log₂ 7) ≈ O(n^2.807).',
           ],
-          tags: ['complejidad', 'matemáticas'],
+          tags: ['complejidad', 'matemáticas', 'recurrencias'],
+          diagram: 'recurrence-tree',
+          complexity: 'T(n) = aT(n/b) + f(n)',
         },
         {
           slug: 'divide-y-venceras',
           name: 'Divide y vencerás',
-          tagline: 'Parte el problema en trozos que no se solapan, resuélvelos y une los resultados.',
+          tagline: 'Descomponer en subproblemas disjuntos, resolver recursivamente y combinar las soluciones.',
           summary:
-            'Requiere subproblemas disjuntos del mismo tipo. MergeSort es O(N log N) estable pero paga O(N) extra; QuickSort es in-place y más rápido en la práctica, pero degenera a O(N²) con un pivote malo. Entender el caso base y la fusión es lo que separa una implementación correcta de una que solo funciona en el ejemplo.',
+            'Exige subproblemas estrictamente disjuntos del mismo tipo. Si los subproblemas se solapan (como en la Mochila 0/1 o Fibonacci), divide y vencerás recalcula estados idénticos miles de veces y colapsa en O(2ⁿ). MergeSort garantiza O(N log N) con O(N) de memoria auxiliar; QuickSort particiona in-place sin coste de combinación y es el más rápido en CPU real gracias a su excelente localidad de caché.',
           keyPoints: [
-            'La fusión es donde vive la mayor parte del coste real.',
-            'QuickSort moderno usa pivote aleatorio o mediana de tres para evitar el peor caso.',
+            'Esquema canónico: Dividir en punto de corte m, resolver mitades disjuntas y Combinar.',
+            'Si los subproblemas se solapan, Divide y Vencerás puro fracasa: requiere Programación Dinámica.',
+            'QuickSort in-place supera a MergeSort en la práctica al no pagar asignaciones dinámicas en Heap.',
           ],
-          tags: ['algoritmos', 'ordenación'],
+          tags: ['algoritmos', 'ordenación', 'divide-y-venceras'],
           complexity: 'O(N log N) típico',
-          widget: 'big-o-playground',
+          widget: 'sorting-visualizer',
+          example: {
+            label: 'Esquema Canónico DyV: MergeSort y QuickSort en C++',
+            code: `// 1. MergeSort: Dividir trivial O(1), Combinar no trivial O(N)
+void mergeSort(std::vector<int>& A, int p, int q) {
+  if (p >= q) return; // Caso base Pequeño(p, q)
+  int m = p + (q - p) / 2;
+  mergeSort(A, p, m);     // Vencer subproblema izquierdo
+  mergeSort(A, m + 1, q); // Vencer subproblema derecho
+  merge(A, p, m, q);      // Combinar con 2 punteros y buffer auxiliar O(N)
+}
+
+// 2. QuickSort: Dividir/Partición no trivial O(N), Combinar gratis O(1)
+void quickSort(std::vector<int>& A, int p, int q) {
+  if (p >= q) return;
+  int s = particionLomuto(A, p, q); // Coloca pivote en A[s] in-place
+  quickSort(A, p, s - 1);           // Subproblema izquierdo in-place
+  quickSort(A, s + 1, q);           // Subproblema derecho in-place
+  // Combinar = O(1) (¡gratis! no requiere trabajo)`,
+            note: 'MergeSort garantiza estabilidad y O(N log N) pagando O(N) memoria; QuickSort es in-place y gana en CPU por localidad de caché.',
+          },
           tradeoffs: {
             whenToUse: ['Subproblemas independientes sin solapamiento', 'Paralelización natural en múltiples núcleos o máquinas'],
             whenToAvoid: ['Cuando los subproblemas se repiten una y otra vez (usa Programación Dinámica)'],
@@ -237,62 +284,132 @@ export const layer1: Layer = {
         },
         {
           slug: 'algoritmos-voraces',
-          name: 'Algoritmos voraces',
-          tagline: 'Decide lo mejor ahora y no mires atrás. Funciona solo si el problema lo permite.',
+          name: 'Algoritmos voraces (Greedy)',
+          tagline: 'Miopía estratégica: decisiones locales irrevocables. Óptimo en mochila fraccionaria, trampa en 0/1.',
           summary:
-            'Greedy construye la solución con decisiones localmente óptimas e irrevocables. Solo es correcto si se cumplen la propiedad de elección voraz y la subestructura óptima. Dijkstra, Kruskal y Prim lo son; la mochila 0/1 no, y ahí necesitas programación dinámica.',
+            'Greedy construye la solución paso a paso seleccionando en cada etapa el candidato localmente más prometedor sin volver atrás (sin backtracking). En la Mochila Fraccionaria, ordenar por densidad de valor b_i / p_i garantiza el óptimo global en O(n log n). En la Mochila 0/1, la indivisibilidad rompe la propiedad de Matroide: un objeto pequeño con ratio alto agota el espacio e impide meter un objeto grande con valor 95 veces superior.',
           keyPoints: [
-            'Si no puedes demostrar el intercambio (exchange argument), no es greedy: es una heurística.',
-            'Kruskal usa Union-Find para detectar ciclos en O(E log E).',
+            'Criterio de proporción b_i / p_i: óptimo probado en mochila fraccionaria por argumento de sustitución.',
+            'Fallo Matroide en 0/1: contraejemplo UMU M=100 con (1kg, 2€) y (100kg, 190€) da 2€ frente a 190€ óptimos.',
+            'Fallo en cambio de monedas: objetivo 8 con monedas {7, 3, 2} se bloquea con 7; óptimo es 3+3+2 (3 monedas).',
+            'Dijkstra, Prim y Kruskal son voraces canónicos que sí convergen a la solución global óptima.',
           ],
-          tags: ['algoritmos', 'optimización'],
+          tags: ['algoritmos', 'optimización', 'greedy'],
+          complexity: 'O(n log n) por ordenación inicial',
+          widget: 'knapsack-solver',
+          example: {
+            label: 'Criterio Voraz de Densidad (Mochila Fraccionaria)',
+            code: `// Ordenar objetos por densidad b_i / p_i descendente
+std::sort(items.begin(), items.end(), [](const Item& a, const Item& b) {
+  return (double)a.b / a.p > (double)b.b / b.p;
+});
+double profit = 0, remCap = M;
+for (const auto& it : items) {
+  if (remCap <= 0) break;
+  if (it.p <= remCap) { // Toma 100%
+    profit += it.b; remCap -= it.p;
+  } else { // Toma fracción residual x_i in (0, 1)
+    profit += it.b * (remCap / it.p); remCap = 0;
+  }
+}`,
+            note: 'En la variante fraccionaria garantiza el óptimo global; en 0/1 es solo una cota superior relajada.',
+          },
           tradeoffs: {
-            whenToUse: ['Problemas con propiedad matroide o subestructura voraz demostrada (Dijkstra, MST, Huffman)'],
-            whenToAvoid: ['Decisiones donde elegir el mejor paso inmediato bloquea un óptimo global mayor (Mochila 0/1)'],
-            cost: 'Suele reducirse a ordenar primero O(N log N) y recorrer en una sola pasada O(N).',
+            whenToUse: ['Mochila fraccionaria, Árboles de Expansión Mínimo (Kruskal, Prim) y caminos mínimos positivos (Dijkstra)'],
+            whenToAvoid: ['Problemas combinatorios con variables discretas indivisibles donde falta la propiedad de matroide'],
+            cost: 'O(n log n) tiempo por ordenar y O(n) memoria para los candidatos.',
           },
         },
         {
           slug: 'programacion-dinamica',
-          name: 'Programación dinámica',
-          tagline: 'Cuando los subproblemas se repiten, memoriza en vez de recalcular.',
+          name: 'Programación dinámica (DP)',
+          tagline: 'Principio de optimalidad de Bellman: memorizar en matriz bottom-up para domar la explosión combinatoria.',
           summary:
-            'DP aplica cuando hay subestructura óptima y subproblemas superpuestos. Top-down con memoización es más fácil de escribir; bottom-up con tabulación evita la pila de recursión y permite optimizar memoria. Sin subproblemas superpuestos, DP solo añade complejidad: eso es divide y vencerás.',
+            'DP resuelve problemas con subestructura óptima y solapamiento masivo de subproblemas. Para la Mochila 0/1, define la matriz V[i, j] como el beneficio máximo con los primeros i objetos y capacidad j: V[i, j] = max(V[i-1, j], b_i + V[i-1, j-p_i]). Es pseudo-polinomial: su coste O(n · M) depende del valor numérico de M, no de sus bits log₂(M). Si M fuera 10⁹, la matriz colapsaría la memoria RAM.',
           keyPoints: [
-            'Identifica el estado antes que la recurrencia: un estado mal elegido arruina la complejidad.',
-            'Muchos problemas de DP se reducen a optimizar el espacio de una fila del tablero.',
+            'Principio de Bellman: la solución óptima global se compone de decisiones óptimas en sus etapas.',
+            'Ecuación canónica: V[i, j] = si p_i > j: V[i-1, j] | si p_i ≤ j: max(V[i-1, j], b_i + V[i-1, j-p_i]).',
+            'Algoritmo de recomposición: retrocede desde V[n, M] para reconstruir el vector binario X de objetos incluidos.',
+            'Complejidad pseudo-polinomial O(n · M): factible para M moderada; inviable si M es astronómica.',
           ],
-          tags: ['algoritmos', 'optimización'],
+          tags: ['algoritmos', 'optimización', 'dp'],
+          complexity: 'O(n · M) tiempo y memoria (optimizable a O(M) espacio)',
+          widget: 'knapsack-solver',
+          example: {
+            label: 'Ecuación de Bellman Bottom-Up en C++',
+            code: `// V[i][j]: beneficio óptimo con primeros i objetos y capacidad j
+std::vector<std::vector<int>> V(n + 1, std::vector<int>(M + 1, 0));
+for (int i = 1; i <= n; ++i) {
+  for (int j = 1; j <= M; ++j) {
+    if (p[i - 1] > j) {
+      V[i][j] = V[i - 1][j]; // Objeto no cabe: hereda
+    } else {
+      V[i][j] = std::max(V[i - 1][j], b[i - 1] + V[i - 1][j - p[i - 1]]);
+    }
+  }
+}
+// Valor óptimo en V[n][M]`,
+            note: 'Permite recomponer la solución óptima comparando V[i][j] con V[i-1][j] en O(n).',
+          },
           tradeoffs: {
-            whenToUse: ['Optimización combinatoria con subproblemas solapados (Levenshtein, Mochila 0/1, Bellman-Ford)'],
-            whenToAvoid: ['Espacios de estado continuos o de alta dimensión (explosión exponencial de la tabla: curse of dimensionality)'],
-            cost: 'Cambias tiempo exponencial O(2ᴺ) por tiempo y espacio polinómico O(N·W).',
+            whenToUse: ['Mochila 0/1 con M moderada, caminos Floyd-Warshall, alineamiento de secuencias (Levenshtein)'],
+            whenToAvoid: ['Capacidades M gigantescas (M > 10⁸) donde la tabla no cabe físicamente en RAM (usa Backtracking con cota)'],
+            cost: 'O(n · M) tiempo y espacio en tabla completa; optimizable a O(M) de memoria si no se requiere el camino.',
           },
         },
         {
           slug: 'backtracking-branch-bound',
           name: 'Backtracking y Branch & Bound',
-          tagline: 'Explora el árbol de decisiones entero, pero corta de raíz las ramas que ya no pueden ganar.',
+          tagline: 'Árbol de decisiones binario: poda por factibilidad y cota superior optimista (bestimado ≤ VOA).',
           summary:
-            'Backtracking recorre sistemáticamente todas las configuraciones posibles dando marcha atrás en cuanto una restricción se viola (SAT, N-Reinas, Sudoku). Branch & Bound añade una cota optimista de coste: si la mejor solución posible de una rama ya es peor que una solución conocida, poda el subárbol entero sin explorarlo.',
+            'Explora sistemáticamente el espacio de estados. En la Mochila 0/1, cada nivel bifurca en x_i = 1 y x_i = 0. Se implementa con 5 funciones canónicas: Generar, Criterio (peso ≤ M), Solución (hoja), MasHermanos y Retroceder. El poder reside en la poda por cota superior: en cada nodo se calcula bestimado relajando la capacidad restante con la Mochila Voraz Fraccionaria; si bestimado ≤ VOA (valor óptimo actual), se poda el subárbol completo.',
           keyPoints: [
-            'La eficacia depende del orden en que pruebas candidatos y de la dureza de la poda.',
-            'Es la base de los solvers industriales (MILP, SAT solvers) cuando un problema NP no admite atajos.',
+            'Las 5 funciones de UMU: Generar(), Criterio(), Solución(), MasHermanos(), Retroceder().',
+            'Poda por Cota Superior: bestimado = beneficio_actual + voraz_fraccionaria(capacidad_restante).',
+            'Condición de corte: si bestimado ≤ VOA, imposibilidad matemática de superar el récord → Poda total.',
+            'Aceleración: ordenar previamente por ratio b_i / p_i e ir primero a x_i = 1 para inflar VOA rápido.',
+            'Branch & Bound: en vez de DFS, usa Best-First Search con cola de prioridad según la cota optimista.',
           ],
-          tags: ['algoritmos', 'búsqueda'],
-          complexity: 'Exponencial peor caso · drásticamente menor con buena poda',
+          tags: ['algoritmos', 'búsqueda', 'backtracking'],
+          complexity: 'O(2ⁿ) peor caso · podas masivas en práctica',
+          widget: 'knapsack-solver',
+          example: {
+            label: 'Poda por Cota Superior (Bound) en Backtracking',
+            code: `void mochilaBT(int i, int peso, int ben) {
+  if (peso > M) return; // 1. Poda por criterio (inviable)
+  if (i == n) { // 2. Hoja alcanzada: actualiza récord
+    if (ben > voa) voa = ben;
+    return;
+  }
+  // 3. Poda por cota superior: relajación voraz fraccionaria
+  double bestimado = ben + cotaVorazFraccionaria(i + 1, M - peso);
+  if (bestimado <= voa) return; // ¡PODA DEL SUBÁRBOL COMPLETO!
+
+  mochilaBT(i + 1, peso + p[i], ben + b[i]); // Rama 1: incluir
+  mochilaBT(i + 1, peso, ben);              // Rama 0: no incluir
+}`,
+            note: 'Ordenar previamente por b_i / p_i eleva el VOA en los primeros pasos y maximiza las podas.',
+          },
+          tradeoffs: {
+            whenToUse: ['Mochila 0/1 cuando n ≤ 40 pero M es gigantesca (protege la memoria RAM)', 'Problemas NP exactos como SAT, N-Reinas y TSP'],
+            whenToAvoid: ['Problemas polinomiales o cuando n > 60 sin podas muy estrictas (explosión combinatoria 2⁶⁰)'],
+            cost: 'Espacio mínimo O(n) en la pila de llamadas; tiempo exponencial mitigado por podas agresivas.',
+          },
         },
         {
           slug: 'p-vs-np',
-          name: 'P, NP y NP-Completo',
-          tagline: 'Saber que un problema es NP-Completo te ahorra tres semanas buscando el algoritmo imposible.',
+          name: 'P, NP, NP-Completo y Pseudo-Polinomial',
+          tagline: 'Por qué la Mochila 0/1 es NP-Completa y O(n·M) no demuestra P = NP: la trampa de los bits.',
           summary:
-            'P son los problemas resolubles en tiempo polinómico; NP, aquellos cuya solución se verifica en tiempo polinómico. Los NP-Completos son los más difíciles de NP: un algoritmo polinómico para uno resolvería todos. Reconocerlos es una habilidad de ingeniería: te dice cuándo pasar a heurísticas, aproximaciones o búsqueda guiada.',
+            'P agrupa problemas resolubles en tiempo polinomial O(Nᵏ) respecto al tamaño en bits de la entrada. NP agrupa problemas cuya solución puede ser verificada en tiempo polinomial. La Mochila 0/1 es NP-Completa (decisión) y NP-Hard (optimización). Su algoritmo de DP en O(n · M) no prueba P = NP porque M se codifica en log₂(M) bits: respecto a la longitud real de entrada L, el tiempo es O(n · 2ᴸ) (exponencial). Es un algoritmo pseudo-polinomial.',
           keyPoints: [
-            'TSP, SAT y coloración de grafos son NP-Completos.',
-            'En la práctica: relaja restricciones, aproxima con garantía o usa un solver.',
+            'Clase P: resoluble en tiempo polinómico de la entrada en bits (Mochila fraccionaria: O(n log n)).',
+            'Clase NP: verificable en tiempo polinómico con un certificado (un vector binario X).',
+            'NP-Completo: los problemas más duros de NP (Mochila 0/1, TSP, SAT, Coloración de grafos).',
+            'Pseudo-polinomial: O(n · M) es polinomial en el valor de M, pero exponencial en su número de bits.',
+            'Impacto en ingeniería: ante problemas NP, no busques el algoritmo exacto mágico; usa DP con memoria acotada, Branch & Bound o metaheurísticas (GRASP, Genéticos).',
           ],
-          tags: ['complejidad', 'teoría'],
+          tags: ['complejidad', 'teoría', 'np-completo'],
           widget: 'big-o-playground',
         },
       ],
