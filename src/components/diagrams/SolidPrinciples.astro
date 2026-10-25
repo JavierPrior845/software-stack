@@ -1,0 +1,560 @@
+---
+// src/components/diagrams/SolidPrinciples.astro
+---
+
+<div class="solid-container my-6 rounded-2xl border border-border/80 bg-gradient-to-b from-card/90 via-card/50 to-background/90 p-5 shadow-2xl backdrop-blur-xl">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-5 border-b border-border/60">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-bold text-lg shadow-inner">
+        S
+      </div>
+      <div>
+        <h3 class="font-bold text-lg text-foreground flex items-center gap-2">
+          Principios SOLID & Mandatos de Diseño
+          <span class="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 font-mono">
+            TDS / UMU
+          </span>
+        </h3>
+        <p class="text-xs text-muted-foreground mt-0.5">
+          Guías canónicas de Robert C. Martin y Bertrand Meyer para desacoplamiento, extensibilidad y mantenibilidad
+        </p>
+      </div>
+    </div>
+    
+    <!-- Principle selector buttons -->
+    <div class="flex flex-wrap items-center gap-1.5 p-1 bg-secondary/30 rounded-xl border border-border/50 text-xs font-mono" id="solid-tabs">
+      <button class="solid-tab px-3 py-1.5 rounded-lg text-foreground font-semibold bg-primary/20 border border-primary/40 transition-all hover:bg-primary/30" data-principle="srp">
+        <span class="text-amber-400">S</span>RP
+      </button>
+      <button class="solid-tab px-3 py-1.5 rounded-lg text-muted-foreground font-medium transition-all hover:text-foreground hover:bg-secondary/40" data-principle="ocp">
+        <span class="text-emerald-400">O</span>CP
+      </button>
+      <button class="solid-tab px-3 py-1.5 rounded-lg text-muted-foreground font-medium transition-all hover:text-foreground hover:bg-secondary/40" data-principle="lsp">
+        <span class="text-cyan-400">L</span>SP
+      </button>
+      <button class="solid-tab px-3 py-1.5 rounded-lg text-muted-foreground font-medium transition-all hover:text-foreground hover:bg-secondary/40" data-principle="isp">
+        <span class="text-purple-400">I</span>SP
+      </button>
+      <button class="solid-tab px-3 py-1.5 rounded-lg text-muted-foreground font-medium transition-all hover:text-foreground hover:bg-secondary/40" data-principle="dip">
+        <span class="text-rose-400">D</span>IP
+      </button>
+      <button class="solid-tab px-3 py-1.5 rounded-lg text-muted-foreground font-medium transition-all hover:text-foreground hover:bg-secondary/40" data-principle="laws">
+        <span class="text-blue-400">⚖️</span> Mandatos
+      </button>
+    </div>
+  </div>
+
+  <!-- Content Panels -->
+  <div class="mt-5 space-y-4">
+    <!-- SRP Panel -->
+    <div id="solid-panel-srp" class="solid-panel space-y-4">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div class="lg:col-span-5 space-y-3">
+          <div class="p-4 rounded-xl border border-amber-500/20 bg-amber-500/5">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-bold text-sm text-amber-300">Single Responsibility Principle (SRP)</span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">Cohesión Máxima</span>
+            </div>
+            <blockquote class="text-xs italic text-foreground/90 border-l-2 border-amber-500/40 pl-2.5 my-2">
+              "Una clase debe tener una, y solo una, razón para cambiar (un solo actor o stakeholder)."
+            </blockquote>
+            <p class="text-xs text-muted-foreground leading-relaxed mt-2">
+              No confundir con "hacer una sola cosa" (eso es para funciones limpias). En SRP de clases, la responsabilidad se liga a los <strong class="text-foreground">actores</strong> de negocio: el departamento de contabilidad (calcular nómina) no debe forzar cambios en la clase que gestiona reportes de RRHH ni la persistencia de base de datos.
+            </p>
+          </div>
+
+          <div class="p-3.5 rounded-xl border border-border/60 bg-secondary/15 space-y-2 text-xs">
+            <span class="font-semibold text-foreground flex items-center gap-1.5">
+              <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Síntomas de Violación (Code Smells):
+            </span>
+            <ul class="list-disc list-inside space-y-1 text-muted-foreground text-[11px]">
+              <li><strong class="text-foreground">God Class / Monster Class:</strong> clases de 1000+ líneas con imports cruzados de UI, dominio y SQL.</li>
+              <li><strong class="text-foreground">Conflictos en Merge de Git:</strong> dos desarrolladores de features diferentes tocan constantemente el mismo archivo.</li>
+              <li><strong class="text-foreground">Fragilidad colateral:</strong> cambiar el cálculo de IVA rompe la exportación de PDFs de facturas.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+          <!-- Violación -->
+          <div class="p-3.5 rounded-xl border border-red-500/30 bg-red-950/20 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between pb-2 mb-2 border-b border-red-500/20 text-red-400 font-semibold">
+                <span class="flex items-center gap-1.5">❌ Violación SRP (God Class)</span>
+                <span class="text-[10px] font-mono">3 Actores Mezclados</span>
+              </div>
+              <pre class="font-mono text-[11px] text-red-200/90 overflow-x-auto p-2 bg-black/40 rounded-lg"><code>class Empleado &#123;
+  // 1. Actor RRHH
+  String nombre, cargo;
+  void registrarHoras() &#123; ... &#125;
+
+  // 2. Actor Contabilidad (Finanzas)
+  double calcularSalarioNeto() &#123; ... &#125;
+
+  // 3. Actor DBA / DevOps
+  void guardarEnBaseDatos() &#123;
+    // INSERT INTO empleados...
+  &#125;
+&#125;</code></pre>
+            </div>
+            <p class="text-[11px] text-red-300/80 mt-2">
+              Un cambio de esquema en SQL obliga a recompilar y testear la lógica financiera de nóminas.
+            </p>
+          </div>
+
+          <!-- Solución -->
+          <div class="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between pb-2 mb-2 border-b border-emerald-500/20 text-emerald-400 font-semibold">
+                <span class="flex items-center gap-1.5">✅ Solución Canónica SRP</span>
+                <span class="text-[10px] font-mono">Actores Separados</span>
+              </div>
+              <pre class="font-mono text-[11px] text-emerald-200/90 overflow-x-auto p-2 bg-black/40 rounded-lg"><code>// 1. Núcleo de Dominio puro
+class Empleado &#123;
+  String id, nombre;
+  RegistroJornada jornada;
+&#125;
+
+// 2. Servicio Financiero
+class CalculadoraNomina &#123;
+  double calcular(Empleado e) &#123; ... &#125;
+&#125;
+
+// 3. Repositorio de Persistencia
+interface EmpleadoRepository &#123;
+  void save(Empleado e);
+&#125;</code></pre>
+            </div>
+            <p class="text-[11px] text-emerald-300/80 mt-2">
+              Cada componente cambia exclusivamente por requerimientos de su propio stakeholder.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OCP Panel -->
+    <div id="solid-panel-ocp" class="solid-panel space-y-4 hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div class="lg:col-span-5 space-y-3">
+          <div class="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-bold text-sm text-emerald-300">Open/Closed Principle (OCP)</span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">Bertrand Meyer</span>
+            </div>
+            <blockquote class="text-xs italic text-foreground/90 border-l-2 border-emerald-500/40 pl-2.5 my-2">
+              "Las entidades de software deben estar abiertas a la extensión, pero cerradas a la modificación."
+            </blockquote>
+            <p class="text-xs text-muted-foreground leading-relaxed mt-2">
+              Añadir un nuevo tipo de pago, descuento o exportador de datos no debe implicar modificar código existente probado y desplegado. La clave reside en la <strong class="text-foreground">inversión de dependencias</strong> mediante interfaces abstractas y patrones como <em class="text-emerald-300">Strategy</em> o <em class="text-emerald-300">Decorator</em>.
+            </p>
+          </div>
+
+          <div class="p-3.5 rounded-xl border border-border/60 bg-secondary/15 space-y-2 text-xs">
+            <span class="font-semibold text-foreground flex items-center gap-1.5">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Técnica UMU: Polimorfismo vs Enums
+            </span>
+            <p class="text-muted-foreground text-[11px] leading-relaxed">
+              Cada vez que veas un bloque <code>switch (tipo)</code> o una cascada de <code>if-else</code> comprobando subclases o cadenas de tipos, se está violando OCP flagrantemente: cada nueva variante obligará a buscar y editar todos los switches del sistema.
+            </p>
+          </div>
+        </div>
+
+        <div class="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+          <!-- Violación -->
+          <div class="p-3.5 rounded-xl border border-red-500/30 bg-red-950/20 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between pb-2 mb-2 border-b border-red-500/20 text-red-400 font-semibold">
+                <span class="flex items-center gap-1.5">❌ Modificación (Switch Infierno)</span>
+                <span class="text-[10px] font-mono">Violación OCP</span>
+              </div>
+              <pre class="font-mono text-[11px] text-red-200/90 overflow-x-auto p-2 bg-black/40 rounded-lg"><code>class ProcesadorPagos &#123;
+  void procesar(Pago p, String tipo) &#123;
+    if (tipo.equals("TARJETA")) &#123;
+      cobrarStripe(p);
+    &#125; else if (tipo.equals("PAYPAL")) &#123;
+      cobrarPaypal(p);
+    &#125; else if (tipo.equals("BIZUM")) &#123;
+      // Modificamos esta clase cada
+      // vez que llega un nuevo método!
+      cobrarBizum(p);
+    &#125;
+  &#125;
+&#125;</code></pre>
+            </div>
+            <p class="text-[11px] text-red-300/80 mt-2">
+              Añadir "ApplePay" exige modificar y re-desplegar `ProcesadorPagos` con riesgo de regresión.
+            </p>
+          </div>
+
+          <!-- Solución -->
+          <div class="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between pb-2 mb-2 border-b border-emerald-500/20 text-emerald-400 font-semibold">
+                <span class="flex items-center gap-1.5">✅ Extensión Polimórfica</span>
+                <span class="text-[10px] font-mono">Patrón Strategy</span>
+              </div>
+              <pre class="font-mono text-[11px] text-emerald-200/90 overflow-x-auto p-2 bg-black/40 rounded-lg"><code>interface MetodoPago &#123;
+  void ejecutarCobro(double monto);
+&#125;
+
+class BizumPago implements MetodoPago &#123;
+  void ejecutarCobro(double m) &#123; ... &#125;
+&#125;
+
+class ProcesadorPagos &#123;
+  // Cerrado a modificación:
+  void procesar(MetodoPago metodo, double m) &#123;
+    metodo.ejecutarCobro(m);
+  &#125;
+&#125;</code></pre>
+            </div>
+            <p class="text-[11px] text-emerald-300/80 mt-2">
+              Se añaden nuevos métodos de pago simplemente creando nuevas clases implementadoras sin tocar `ProcesadorPagos`.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LSP Panel -->
+    <div id="solid-panel-lsp" class="solid-panel space-y-4 hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div class="lg:col-span-5 space-y-3">
+          <div class="p-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-bold text-sm text-cyan-300">Liskov Substitution Principle (LSP)</span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300">Barbara Liskov</span>
+            </div>
+            <blockquote class="text-xs italic text-foreground/90 border-l-2 border-cyan-500/40 pl-2.5 my-2">
+              "Si $S$ es un subtipo de $T$, entonces los objetos de tipo $T$ pueden ser reemplazados por objetos de tipo $S$ sin alterar ninguna de las propiedades deseables del programa."
+            </blockquote>
+            <p class="text-xs text-muted-foreground leading-relaxed mt-2">
+              La herencia en POO no es modelar taxonomías del mundo real (un Cuadrado matemáticamente es un Rectángulo, pero en POO con mutabilidad <strong class="text-foreground">no lo es</strong>). El subtipado se basa en el <strong class="text-cyan-300">Diseño por Contrato (DbC)</strong>:
+            </p>
+            <div class="text-[11px] font-mono bg-black/30 p-2 rounded-lg text-cyan-200/90 space-y-1">
+              <div>• Precondiciones: <span class="text-white">subtipo no puede fortalecerlas</span> (no exigir más).</div>
+              <div>• Postcondiciones: <span class="text-white">subtipo no puede debilitarlas</span> (no prometer menos).</div>
+              <div>• Invariantes: <span class="text-white">deben preservarse en todo momento</span>.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+          <!-- Violación -->
+          <div class="p-3.5 rounded-xl border border-red-500/30 bg-red-950/20 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between pb-2 mb-2 border-b border-red-500/20 text-red-400 font-semibold">
+                <span class="flex items-center gap-1.5">❌ Cuadrado hereda de Rectángulo</span>
+                <span class="text-[10px] font-mono">Violación de Invariante</span>
+              </div>
+              <pre class="font-mono text-[11px] text-red-200/90 overflow-x-auto p-2 bg-black/40 rounded-lg"><code>class Rectangulo &#123;
+  int w, h;
+  void setWidth(int w) &#123; this.w = w; &#125;
+  void setHeight(int h) &#123; this.h = h; &#125;
+  int getArea() &#123; return w * h; &#125;
+&#125;
+
+class Cuadrado extends Rectangulo &#123;
+  // Rompe el contrato de Rectángulo!
+  void setWidth(int w) &#123; this.w = this.h = w; &#125;
+  void setHeight(int h) &#123; this.w = this.h = h; &#125;
+&#125;
+// Cliente espera: r.setWidth(5); r.setHeight(4);
+// Si pasa Cuadrado, área da 16, no 20!</code></pre>
+            </div>
+            <p class="text-[11px] text-red-300/80 mt-2">
+              El cliente confía en la independencia de base y altura. La subclase traiciona esa postcondición.
+            </p>
+          </div>
+
+          <!-- Solución -->
+          <div class="p-3.5 rounded-xl border border-cyan-500/30 bg-cyan-950/20 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between pb-2 mb-2 border-b border-cyan-500/20 text-cyan-400 font-semibold">
+                <span class="flex items-center gap-1.5">✅ Abstracción Común Inmutable</span>
+                <span class="text-[10px] font-mono">Cumplimiento LSP</span>
+              </div>
+              <pre class="font-mono text-[11px] text-cyan-200/90 overflow-x-auto p-2 bg-black/40 rounded-lg"><code>interface FormaGeometrica &#123;
+  int getArea();
+&#125;
+
+class Rectangulo implements FormaGeometrica &#123;
+  private final int w, h;
+  public Rectangulo(int w, int h) &#123; ... &#125;
+  public int getArea() &#123; return w * h; &#125;
+&#125;
+
+class Cuadrado implements FormaGeometrica &#123;
+  private final int lado;
+  public Cuadrado(int lado) &#123; ... &#125;
+  public int getArea() &#123; return lado * lado; &#125;
+&#125;</code></pre>
+            </div>
+            <p class="text-[11px] text-cyan-300/80 mt-2">
+              Se elimina la falsa herencia de mutadores. Cualquier cliente que espere `FormaGeometrica` obtendrá el área correcta.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ISP Panel -->
+    <div id="solid-panel-isp" class="solid-panel space-y-4 hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div class="lg:col-span-5 space-y-3">
+          <div class="p-4 rounded-xl border border-purple-500/20 bg-purple-500/5">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-bold text-sm text-purple-300">Interface Segregation Principle (ISP)</span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300">Interfaces Magras</span>
+            </div>
+            <blockquote class="text-xs italic text-foreground/90 border-l-2 border-purple-500/40 pl-2.5 my-2">
+              "Los clientes no deben ser obligados a depender de interfaces o métodos que no utilizan."
+            </blockquote>
+            <p class="text-xs text-muted-foreground leading-relaxed mt-2">
+              Evita las "Fat Interfaces". Cuando una interfaz acumula decenas de operaciones no cohesionadas, cualquier implementación se ve forzada a dejar métodos vacíos o lanzar <code>UnsupportedOperationException</code>. Divide interfaces por rol de cliente (Role Interfaces).
+            </p>
+          </div>
+        </div>
+
+        <div class="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+          <!-- Violación -->
+          <div class="p-3.5 rounded-xl border border-red-500/30 bg-red-950/20 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between pb-2 mb-2 border-b border-red-500/20 text-red-400 font-semibold">
+                <span class="flex items-center gap-1.5">❌ Fat Interface (Contaminación)</span>
+                <span class="text-[10px] font-mono">Violación ISP</span>
+              </div>
+              <pre class="font-mono text-[11px] text-red-200/90 overflow-x-auto p-2 bg-black/40 rounded-lg"><code>interface DispositivoMultifuncion &#123;
+  void imprimir(Documento d);
+  void escanear(Documento d);
+  void enviarFax(Documento d);
+&#125;
+
+class ImpresoraBasica implements DispositivoMultifuncion &#123;
+  void imprimir(Documento d) &#123; ... &#125;
+  // Métodos forzados inútiles:
+  void escanear(Documento d) &#123;
+    throw new UnsupportedOperationException();
+  &#125;
+  void enviarFax(Documento d) &#123; ... &#125;
+&#125;</code></pre>
+            </div>
+            <p class="text-[11px] text-red-300/80 mt-2">
+              Si la firma de `enviarFax` cambia, `ImpresoraBasica` debe ser recompilada inútilmente.
+            </p>
+          </div>
+
+          <!-- Solución -->
+          <div class="p-3.5 rounded-xl border border-purple-500/30 bg-purple-950/20 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between pb-2 mb-2 border-b border-purple-500/20 text-purple-400 font-semibold">
+                <span class="flex items-center gap-1.5">✅ Role Interfaces Segregadas</span>
+                <span class="text-[10px] font-mono">Alta Cohesión</span>
+              </div>
+              <pre class="font-mono text-[11px] text-purple-200/90 overflow-x-auto p-2 bg-black/40 rounded-lg"><code>interface Imprimible &#123;
+  void imprimir(Documento d);
+&#125;
+interface Escaneable &#123;
+  void escanear(Documento d);
+&#125;
+
+// Clase sólo implementa lo que realmente soporta:
+class ImpresoraBasica implements Imprimible &#123;
+  void imprimir(Documento d) &#123; ... &#125;
+&#125;
+
+class FotocopiadoraAvanzada implements Imprimible, Escaneable &#123;
+  void imprimir(Documento d) &#123; ... &#125;
+  void escanear(Documento d) &#123; ... &#125;
+&#125;</code></pre>
+            </div>
+            <p class="text-[11px] text-purple-300/80 mt-2">
+              Composición de contratos específicos sin polución de dependencias no deseadas.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIP Panel -->
+    <div id="solid-panel-dip" class="solid-panel space-y-4 hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div class="lg:col-span-5 space-y-3">
+          <div class="p-4 rounded-xl border border-rose-500/20 bg-rose-500/5">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-bold text-sm text-rose-300">Dependency Inversion Principle (DIP)</span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-300">Inversión de Control</span>
+            </div>
+            <blockquote class="text-xs italic text-foreground/90 border-l-2 border-rose-500/40 pl-2.5 my-2">
+              "1. Los módulos de alto nivel no deben depender de módulos de bajo nivel. Ambos deben depender de abstracciones.<br/>
+              2. Las abstracciones no deben depender de los detalles. Los detalles deben depender de las abstracciones."
+            </blockquote>
+            <p class="text-xs text-muted-foreground leading-relaxed mt-2">
+              El flujo de control tradicional llama de Arriba $\rightarrow$ Abajo. La Inversión de Dependencias invierte la dirección de la dependencia en tiempo de compilación: el dominio declara la interfaz (Puerto) y la infraestructura concreta la implementa (Adaptador).
+            </p>
+          </div>
+        </div>
+
+        <div class="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+          <!-- Violación -->
+          <div class="p-3.5 rounded-xl border border-red-500/30 bg-red-950/20 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between pb-2 mb-2 border-b border-red-500/20 text-red-400 font-semibold">
+                <span class="flex items-center gap-1.5">❌ Acoplamiento a Detalle Concreto</span>
+                <span class="text-[10px] font-mono">Violación DIP</span>
+              </div>
+              <pre class="font-mono text-[11px] text-red-200/90 overflow-x-auto p-2 bg-black/40 rounded-lg"><code>// Alto nivel acoplado directamente al bajo nivel
+class FacturacionService &#123;
+  // Dependencia fija a MySQL:
+  private MySqlDatabase database = new MySqlDatabase();
+
+  void procesar(Factura f) &#123;
+    // Imposible hacer test unitario aislado
+    // sin levantar un servidor MySQL real!
+    database.execute("INSERT...");
+  &#125;
+&#125;</code></pre>
+            </div>
+            <p class="text-[11px] text-red-300/80 mt-2">
+              `FacturacionService` (negocio) no puede reutilizarse ni probarse sin `MySqlDatabase`.
+            </p>
+          </div>
+
+          <!-- Solución -->
+          <div class="p-3.5 rounded-xl border border-rose-500/30 bg-rose-950/20 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between pb-2 mb-2 border-b border-rose-500/20 text-rose-400 font-semibold">
+                <span class="flex items-center gap-1.5">✅ Inyección de Dependencias (IoC)</span>
+                <span class="text-[10px] font-mono">Cumplimiento DIP</span>
+              </div>
+              <pre class="font-mono text-[11px] text-rose-200/90 overflow-x-auto p-2 bg-black/40 rounded-lg"><code>// 1. Abstracción propiedad del dominio
+interface FacturaRepository &#123;
+  void guardar(Factura f);
+&#125;
+
+// 2. Alto nivel depende sólo de la interfaz
+class FacturacionService &#123;
+  private final FacturaRepository repo;
+
+  // Inyección por constructor
+  public FacturacionService(FacturaRepository r) &#123;
+    this.repo = r;
+  &#125;
+&#125;</code></pre>
+            </div>
+            <p class="text-[11px] text-rose-300/80 mt-2">
+              Podemos inyectar `PostgreSqlRepo`, `MongoRepo` o `MockFacturaRepo` en tests instantáneamente.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Laws Panel -->
+    <div id="solid-panel-laws" class="solid-panel space-y-4 hidden">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <!-- Ley de Demeter -->
+        <div class="p-4 rounded-xl border border-blue-500/30 bg-blue-950/20 flex flex-col justify-between space-y-2">
+          <div>
+            <div class="flex items-center justify-between pb-2 border-b border-blue-500/30">
+              <span class="font-bold text-sm text-blue-300">Ley de Deméter (LoD)</span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300">No hables con extraños</span>
+            </div>
+            <p class="text-xs text-muted-foreground mt-2 leading-relaxed">
+              Un método <code class="text-foreground">m</code> de un objeto <code class="text-foreground">O</code> sólo debe invocar métodos de:
+            </p>
+            <ul class="list-disc list-inside text-[11px] text-blue-200/80 mt-1 space-y-1">
+              <li>El propio objeto <code class="text-foreground">O</code> (this).</li>
+              <li>Parámetros pasados al método <code class="text-foreground">m</code>.</li>
+              <li>Objetos creados o instanciados dentro de <code class="text-foreground">m</code>.</li>
+              <li>Atributos directos de <code class="text-foreground">O</code>.</li>
+            </ul>
+          </div>
+          <div class="p-2.5 bg-black/40 rounded-lg border border-red-500/30 text-[11px] font-mono text-red-300">
+            ❌ <code>a.getB().getC().getD().hacerAlgo()</code>
+            <div class="text-[10px] text-emerald-400 mt-1">✅ <code>a.solicitarAccionDirecta()</code> ("Tell, Don't Ask")</div>
+          </div>
+        </div>
+
+        <!-- Composición sobre Herencia -->
+        <div class="p-4 rounded-xl border border-purple-500/30 bg-purple-950/20 flex flex-col justify-between space-y-2">
+          <div>
+            <div class="flex items-center justify-between pb-2 border-b border-purple-500/30">
+              <span class="font-bold text-sm text-purple-300">Composición > Herencia</span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300">Favor Composition</span>
+            </div>
+            <p class="text-xs text-muted-foreground mt-2 leading-relaxed">
+              La herencia de clases vincula estáticamente en tiempo de compilación y rompe la encapsulación ("caja blanca": cambios en la superclase rompen la subclase).
+            </p>
+            <p class="text-xs text-muted-foreground mt-1 leading-relaxed">
+              La <strong class="text-purple-300">composición de objetos</strong> ("caja negra") permite cambiar el comportamiento dinámicamente en tiempo de ejecución inyectando diferentes estrategias.
+            </p>
+          </div>
+          <div class="p-2.5 bg-black/40 rounded-lg border border-purple-500/20 text-[11px] font-mono text-purple-200">
+            Relación <em>"Tiene-un"</em> (Composición) frente al rígido <em>"Es-un"</em> (Herencia)
+          </div>
+        </div>
+
+        <!-- Principio de Acceso Uniforme -->
+        <div class="p-4 rounded-xl border border-emerald-500/30 bg-emerald-950/20 flex flex-col justify-between space-y-2">
+          <div>
+            <div class="flex items-center justify-between pb-2 border-b border-emerald-500/30">
+              <span class="font-bold text-sm text-emerald-300">Acceso Uniforme</span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">Bertrand Meyer</span>
+            </div>
+            <p class="text-xs text-muted-foreground mt-2 leading-relaxed">
+              Todos los servicios ofrecidos por un módulo deben estar disponibles a través de una sintaxis uniforme, sin revelar si están implementados mediante almacenamiento físico (campo) o cálculo en tiempo real (función/getter).
+            </p>
+            <p class="text-xs text-muted-foreground mt-1 leading-relaxed">
+              Permite cambiar un atributo simple por un cálculo derivado de base de datos sin romper los clientes que lo consumen.
+            </p>
+          </div>
+          <div class="p-2.5 bg-black/40 rounded-lg border border-emerald-500/20 text-[11px] font-mono text-emerald-300">
+            Propiedades C# / Getters JS / Kotlin <code>val balance</code>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function setupSolidTabs() {
+    const tabs = document.querySelectorAll('.solid-tab');
+    const panels = document.querySelectorAll('.solid-panel');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const principle = tab.getAttribute('data-principle');
+        if (!principle) return;
+
+        // Reset tabs
+        tabs.forEach(t => {
+          t.classList.remove('bg-primary/20', 'border-primary/40', 'text-foreground');
+          t.classList.add('text-muted-foreground');
+        });
+
+        // Activate clicked tab
+        tab.classList.add('bg-primary/20', 'border-primary/40', 'text-foreground');
+        tab.classList.remove('text-muted-foreground');
+
+        // Toggle panels
+        panels.forEach(p => {
+          if (p.id === `solid-panel-${principle}`) {
+            p.classList.remove('hidden');
+          } else {
+            p.classList.add('hidden');
+          }
+        });
+      });
+    });
+  }
+
+  // Setup on initial load & Astro page swap
+  setupSolidTabs();
+  document.addEventListener('astro:page-load', setupSolidTabs);
+</script>

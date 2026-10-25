@@ -20,6 +20,9 @@ import TrieHorizontal from './diagrams/TrieHorizontal.astro';
 import GraphRepresentation from './diagrams/GraphRepresentation.astro';
 import RecurrenceTree from './diagrams/RecurrenceTree.astro';
 import AsymptoticBounds from './diagrams/AsymptoticBounds.astro';
+import GraspDiagram from './diagrams/GraspDiagram.astro';
+import SolidPrinciples from './diagrams/SolidPrinciples.astro';
+import GofPatternsDiagram from './diagrams/GofPatternsDiagram.astro';
 
 interface Props {
   id: DiagramId;
@@ -48,6 +51,9 @@ const registry = {
   'graph-representation': GraphRepresentation,
   'recurrence-tree': RecurrenceTree,
   'asymptotic-bounds': AsymptoticBounds,
+  'grasp-diagram': GraspDiagram,
+  'solid-principles': SolidPrinciples,
+  'gof-patterns': GofPatternsDiagram,
 } satisfies Record<DiagramId, unknown>;
 
 const Diagram = registry[id];

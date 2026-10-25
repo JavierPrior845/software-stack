@@ -1,0 +1,294 @@
+---
+// GraspDiagram.astro: Visual guide and architecture matrix for the 9 GRASP patterns (TDS - UMU)
+---
+
+<div class="grasp-diagram rounded-xl border border-white/10 bg-black/30 p-4 sm:p-5 space-y-5" data-grasp-diagram>
+  <!-- Header -->
+  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
+    <div>
+      <div class="flex items-center gap-2">
+        <span class="inline-block h-2.5 w-2.5 rounded-full bg-indigo-400"></span>
+        <h4 class="font-mono text-sm font-semibold text-slate-100">
+          Patrones GRASP: La Brújula de Asignación de Responsabilidades
+        </h4>
+      </div>
+      <p class="mt-0.5 text-xs text-dim">
+        Taxonomía oficial de Craig Larman y TDS (UMU): Fundamentos, Asignación y Protección
+      </p>
+    </div>
+
+    <!-- Category Switcher -->
+    <div class="inline-flex flex-wrap gap-1 rounded-lg border border-white/10 bg-black/50 p-1" role="tablist">
+      <button
+        type="button"
+        class="grasp-btn active rounded px-2.5 py-1 font-mono text-xs font-semibold text-slate-200 hover:text-white transition-colors"
+        data-group="assignment"
+      >
+        1. Asignación Central (Experto, Creador, Controlador)
+      </button>
+      <button
+        type="button"
+        class="grasp-btn rounded px-2.5 py-1 font-mono text-xs font-semibold text-indigo-300 hover:text-white transition-colors"
+        data-group="pillars"
+      >
+        2. Pilares (Cohesión, Acoplamiento, Fabricación Pura)
+      </button>
+      <button
+        type="button"
+        class="grasp-btn rounded px-2.5 py-1 font-mono text-xs font-semibold text-emerald-300 hover:text-white transition-colors"
+        data-group="protection"
+      >
+        3. Protección (Polimorfismo, Indirección, Variación)
+      </button>
+    </div>
+  </div>
+
+  <!-- GROUP 1: CENTRAL ASSIGNMENT (Experto, Creador, Controlador) -->
+  <div class="grasp-panel space-y-4" data-panel="assignment">
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <!-- 1. EXPERTO EN INFORMACIÓN -->
+      <div class="rounded-xl border border-indigo-500/30 bg-indigo-950/15 p-4 space-y-3">
+        <div class="flex items-center justify-between border-b border-indigo-500/20 pb-2">
+          <span class="rounded bg-indigo-500/20 px-2 py-0.5 font-mono text-[10px] font-bold text-indigo-300 uppercase">
+            Regla de Oro
+          </span>
+          <span class="font-mono text-xs text-dim">GRASP #1</span>
+        </div>
+        <h5 class="font-mono text-xs font-bold text-indigo-200 uppercase tracking-wider">
+          Experto en Información
+        </h5>
+        <p class="text-xs text-slate-300 leading-relaxed font-sans">
+          Asigna la responsabilidad a la clase que posee la información necesaria para cumplirla.
+        </p>
+
+        <!-- Taxonomía Conocer vs Hacer -->
+        <div class="rounded-lg border border-white/5 bg-black/40 p-2.5 font-mono text-[11px] space-y-1.5">
+          <div class="text-indigo-300 font-bold">Taxonomía de Responsabilidad:</div>
+          <div class="text-slate-300 text-[10px]">
+            • <strong>Conocer:</strong> datos privados, objetos conectados, datos derivados calculados.
+          </div>
+          <div class="text-slate-300 text-[10px]">
+            • <strong>Hacer:</strong> cálculos propios, crear instancias, iniciar acciones en otros.
+          </div>
+        </div>
+
+        <div class="text-[11px] text-amber-300/90 font-mono bg-amber-950/20 p-2 rounded border border-amber-500/20">
+          ⚠️ <strong>Antipatrón evitado:</strong> Clases "anémicas" que son solo bolsas de datos pasivas mientras otra clase externa hace todos sus cálculos.
+        </div>
+      </div>
+
+      <!-- 2. CREADOR -->
+      <div class="rounded-xl border border-cyan-500/30 bg-cyan-950/15 p-4 space-y-3">
+        <div class="flex items-center justify-between border-b border-cyan-500/20 pb-2">
+          <span class="rounded bg-cyan-500/20 px-2 py-0.5 font-mono text-[10px] font-bold text-cyan-300 uppercase">
+            5 Reglas UMU
+          </span>
+          <span class="font-mono text-xs text-dim">GRASP #2</span>
+        </div>
+        <h5 class="font-mono text-xs font-bold text-cyan-200 uppercase tracking-wider">
+          Patrón Creador
+        </h5>
+        <p class="text-xs text-slate-300 leading-relaxed font-sans">
+          La clase <span class="font-mono text-cyan-300">B</span> debe crear instancias de <span class="font-mono text-cyan-300">A</span> si cumple alguna de las 5 reglas técnicas:
+        </p>
+
+        <div class="rounded-lg border border-white/5 bg-black/40 p-2.5 font-mono text-[10px] space-y-1 text-slate-300">
+          <div>1. <span class="text-cyan-300 font-bold">Agregación:</span> B agrega objetos de A.</div>
+          <div>2. <span class="text-cyan-300 font-bold">Composición:</span> B contiene objetos de A.</div>
+          <div>3. <span class="text-cyan-300 font-bold">Registro:</span> B registra instancias de A.</div>
+          <div>4. <span class="text-cyan-300 font-bold">Uso Específico:</span> B usa íntimamente a A.</div>
+          <div>5. <span class="text-cyan-300 font-bold">Datos Iniciales:</span> B tiene los datos de init de A.</div>
+        </div>
+
+        <div class="text-[11px] text-cyan-300 font-mono bg-cyan-950/20 p-2 rounded border border-cyan-500/20">
+          ✓ Ejemplo: <code>Venta</code> crea <code>LineaVenta</code> (composición + datos iniciales).
+        </div>
+      </div>
+
+      <!-- 3. CONTROLADOR -->
+      <div class="rounded-xl border border-purple-500/30 bg-purple-950/15 p-4 space-y-3">
+        <div class="flex items-center justify-between border-b border-purple-500/20 pb-2">
+          <span class="rounded bg-purple-500/20 px-2 py-0.5 font-mono text-[10px] font-bold text-purple-300 uppercase">
+            Frontera UI / Dominio
+          </span>
+          <span class="font-mono text-xs text-dim">GRASP #3</span>
+        </div>
+        <h5 class="font-mono text-xs font-bold text-purple-200 uppercase tracking-wider">
+          Patrón Controlador
+        </h5>
+        <p class="text-xs text-slate-300 leading-relaxed font-sans">
+          El primer objeto tras la capa de interfaz/transporte que coordina la operación del sistema.
+        </p>
+
+        <div class="rounded-lg border border-white/5 bg-black/40 p-2.5 font-mono text-[11px] space-y-1">
+          <div class="text-purple-300 font-bold">Mandato de Diseño:</div>
+          <p class="text-[10px] text-slate-300 font-sans leading-relaxed">
+            Las clases de dominio <strong>NUNCA</strong> deben acceder a la interfaz de usuario (pantallas, ventanas, APIs). El Controlador hace de puente intermediario.
+          </p>
+        </div>
+
+        <div class="text-[11px] text-purple-300 font-mono bg-purple-950/20 p-2 rounded border border-purple-500/20">
+          Dos variantes: Controlador de Fachada (todo el sistema) vs Controlador de Caso de Uso.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GROUP 2: PILLARS (Cohesion, Acoplamiento, Fabricación Pura) -->
+  <div class="grasp-panel hidden space-y-4" data-panel="pillars">
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <!-- ALTA COHESIÓN -->
+      <div class="rounded-xl border border-emerald-500/30 bg-emerald-950/15 p-4 space-y-2.5">
+        <div class="flex items-center justify-between border-b border-emerald-500/20 pb-2">
+          <span class="rounded bg-emerald-500/20 px-2 py-0.5 font-mono text-[10px] font-bold text-emerald-300 uppercase">
+            Criterio Evaluativo
+          </span>
+          <span class="font-mono text-xs text-dim">GRASP #4</span>
+        </div>
+        <h5 class="font-mono text-xs font-bold text-emerald-200 uppercase tracking-wider">
+          Alta Cohesión
+        </h5>
+        <p class="text-xs text-slate-300 leading-relaxed font-sans">
+          Las responsabilidades de una clase deben estar estrechamente ligadas. Una clase cohesiva hace pocas cosas, las hace bien, y sus métodos operan sobre sus propios atributos.
+        </p>
+        <div class="rounded bg-black/40 p-2 font-mono text-[10px] text-emerald-300">
+          Beneficio: Facilidad de testing, comprensión inmediata y reutilización.
+        </div>
+      </div>
+
+      <!-- BAJO ACOPLAMIENTO -->
+      <div class="rounded-xl border border-blue-500/30 bg-blue-950/15 p-4 space-y-2.5">
+        <div class="flex items-center justify-between border-b border-blue-500/20 pb-2">
+          <span class="rounded bg-blue-500/20 px-2 py-0.5 font-mono text-[10px] font-bold text-blue-300 uppercase">
+            Las 4 Fuentes UMU
+          </span>
+          <span class="font-mono text-xs text-dim">GRASP #5</span>
+        </div>
+        <h5 class="font-mono text-xs font-bold text-blue-200 uppercase tracking-wider">
+          Bajo Acoplamiento
+        </h5>
+        <p class="text-xs text-slate-300 leading-relaxed font-sans">
+          Minimizar dependencias entre clases. <strong>Existe acoplamiento real entre A y B si:</strong>
+        </p>
+        <div class="rounded bg-black/40 p-2 font-mono text-[10px] space-y-1 text-slate-300">
+          <div>1. A tiene un atributo de tipo B.</div>
+          <div>2. A tiene un método con parámetro/retorno/var local B.</div>
+          <div>3. A es subclase directa o indirecta de B.</div>
+          <div>4. A implementa la interfaz B.</div>
+        </div>
+      </div>
+
+      <!-- FABRICACIÓN PURA -->
+      <div class="rounded-xl border border-amber-500/30 bg-amber-950/15 p-4 space-y-2.5">
+        <div class="flex items-center justify-between border-b border-amber-500/20 pb-2">
+          <span class="rounded bg-amber-500/20 px-2 py-0.5 font-mono text-[10px] font-bold text-amber-300 uppercase">
+            Clase Artificial
+          </span>
+          <span class="font-mono text-xs text-dim">GRASP #6</span>
+        </div>
+        <h5 class="font-mono text-xs font-bold text-amber-200 uppercase tracking-wider">
+          Fabricación Pura
+        </h5>
+        <p class="text-xs text-slate-300 leading-relaxed font-sans">
+          Cuando asignar una responsabilidad a un concepto del dominio rompe la Alta Cohesión o el Bajo Acoplamiento, creas una clase artificial fuera del dominio real.
+        </p>
+        <div class="rounded bg-black/40 p-2 font-mono text-[10px] text-amber-300 space-y-1">
+          <div>✦ <code>Servicios:</code> PagoService, AuthService.</div>
+          <div>✦ <code>Repositorios / DAOs:</code> FacturaRepository.</div>
+          <div>✦ <code>Mappers / DTOs:</code> UserEntityMapper.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GROUP 3: PROTECTION (Polimorfismo, Indirección, Variación Protegida) -->
+  <div class="grasp-panel hidden space-y-4" data-panel="protection">
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <!-- POLIMORFISMO -->
+      <div class="rounded-xl border border-rose-500/30 bg-rose-950/15 p-4 space-y-2.5">
+        <div class="flex items-center justify-between border-b border-rose-500/20 pb-2">
+          <span class="rounded bg-rose-500/20 px-2 py-0.5 font-mono text-[10px] font-bold text-rose-300 uppercase">
+            Eliminar Switch
+          </span>
+          <span class="font-mono text-xs text-dim">GRASP #7</span>
+        </div>
+        <h5 class="font-mono text-xs font-bold text-rose-200 uppercase tracking-wider">
+          Polimorfismo
+        </h5>
+        <p class="text-xs text-slate-300 leading-relaxed font-sans">
+          Cuando el comportamiento varía según el tipo, asigna la responsabilidad usando operaciones polimórficas (interfaces) en lugar de condicionales <code>if-else</code> o <code>switch</code> sobre tipos.
+        </p>
+        <div class="rounded bg-black/40 p-2 font-mono text-[10px] text-rose-300">
+          Resolución dinámica en tiempo de ejecución.
+        </div>
+      </div>
+
+      <!-- INDIRECCIÓN -->
+      <div class="rounded-xl border border-sky-500/30 bg-sky-950/15 p-4 space-y-2.5">
+        <div class="flex items-center justify-between border-b border-sky-500/20 pb-2">
+          <span class="rounded bg-sky-500/20 px-2 py-0.5 font-mono text-[10px] font-bold text-sky-300 uppercase">
+            Intermediario
+          </span>
+          <span class="font-mono text-xs text-dim">GRASP #8</span>
+        </div>
+        <h5 class="font-mono text-xs font-bold text-sky-200 uppercase tracking-wider">
+          Indirección
+        </h5>
+        <p class="text-xs text-slate-300 leading-relaxed font-sans">
+          Introduce un objeto intermediario entre dos componentes para evitar el acoplamiento directo entre ellos.
+        </p>
+        <div class="rounded bg-black/40 p-2 font-mono text-[10px] text-sky-300">
+          Base de patrones como Adapter, Facade, Mediator y Proxy.
+        </div>
+      </div>
+
+      <!-- VARIACIÓN PROTEGIDA -->
+      <div class="rounded-xl border border-teal-500/30 bg-teal-950/15 p-4 space-y-2.5">
+        <div class="flex items-center justify-between border-b border-teal-500/20 pb-2">
+          <span class="rounded bg-teal-500/20 px-2 py-0.5 font-mono text-[10px] font-bold text-teal-300 uppercase">
+            Escudo ante Cambios
+          </span>
+          <span class="font-mono text-xs text-dim">GRASP #9</span>
+        </div>
+        <h5 class="font-mono text-xs font-bold text-teal-200 uppercase tracking-wider">
+          Variación Protegida
+        </h5>
+        <p class="text-xs text-slate-300 leading-relaxed font-sans">
+          Identifica los puntos de variación o inestabilidad probable en el sistema y encapsúlalos tras una interfaz estable. Es el principio raíz de OCP y DIP en SOLID.
+        </p>
+        <div class="rounded bg-black/40 p-2 font-mono text-[10px] text-teal-300">
+          Ley de Demeter: "No hables con extraños" evita encadenar getB().getC().
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function setupGraspDiagram(root: HTMLElement) {
+    const buttons = root.querySelectorAll<HTMLButtonElement>('.grasp-btn');
+    const panels = root.querySelectorAll<HTMLElement>('.grasp-panel');
+
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        buttons.forEach((b) => {
+          b.classList.remove('active', 'text-slate-200');
+          b.classList.add('text-slate-400');
+        });
+        btn.classList.add('active', 'text-slate-200');
+        btn.classList.remove('text-slate-400');
+
+        const group = btn.dataset.group;
+        panels.forEach((p) => {
+          if (p.dataset.panel === group) {
+            p.classList.remove('hidden');
+          } else {
+            p.classList.add('hidden');
+          }
+        });
+      });
+    });
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-grasp-diagram]').forEach(setupGraspDiagram);
+</script>
