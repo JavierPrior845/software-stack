@@ -23,6 +23,7 @@ import AsymptoticBounds from './diagrams/AsymptoticBounds.astro';
 import GraspDiagram from './diagrams/GraspDiagram.astro';
 import SolidPrinciples from './diagrams/SolidPrinciples.astro';
 import GofPatternsDiagram from './diagrams/GofPatternsDiagram.astro';
+import JpaLifecycleDiagram from './diagrams/JpaLifecycleDiagram.astro';
 
 interface Props {
   id: DiagramId;
@@ -54,6 +55,7 @@ const registry = {
   'grasp-diagram': GraspDiagram,
   'solid-principles': SolidPrinciples,
   'gof-patterns': GofPatternsDiagram,
+  'jpa-lifecycle': JpaLifecycleDiagram,
 } satisfies Record<DiagramId, unknown>;
 
 const Diagram = registry[id];
