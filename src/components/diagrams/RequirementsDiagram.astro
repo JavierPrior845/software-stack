@@ -1,0 +1,271 @@
+---
+// RequirementsDiagram.astro
+// Interactive visualizer for Requirements Engineering (PDS UMU Tema 2)
+// Covers: Formal Use Case Template, User Stories with BDD (Given-When-Then),
+// Comparative Matrix, and UML Use Case Relationships (include, extend, generalization).
+---
+
+<div class="space-y-4 text-xs font-mono select-none" id="requirements-diagram-root">
+  <!-- Nav Tabs -->
+  <div class="flex flex-wrap gap-2 border-b border-line/60 pb-3">
+    <button
+      id="req-tab-cdu"
+      class="px-3 py-1.5 rounded-lg border border-line bg-surface-2 text-ink font-semibold transition-all hover:bg-surface-3 flex items-center gap-1.5 text-xs active-req"
+      data-view="cdu"
+    >
+      <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+      1. Plantilla Caso de Uso (CdU)
+    </button>
+    <button
+      id="req-tab-hu"
+      class="px-3 py-1.5 rounded-lg border border-line bg-surface-1 text-dim font-medium transition-all hover:bg-surface-2 hover:text-ink flex items-center gap-1.5 text-xs"
+      data-view="hu"
+    >
+      <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+      2. Historia de Usuario & BDD
+    </button>
+    <button
+      id="req-tab-diff"
+      class="px-3 py-1.5 rounded-lg border border-line bg-surface-1 text-dim font-medium transition-all hover:bg-surface-2 hover:text-ink flex items-center gap-1.5 text-xs"
+      data-view="diff"
+    >
+      <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+      3. CdU vs HU & Relaciones UML
+    </button>
+  </div>
+
+  <!-- PANEL 1: Plantilla Caso de Uso -->
+  <div id="req-view-cdu" class="space-y-3">
+    <div class="p-3.5 rounded-xl border border-blue-500/30 bg-blue-500/5 text-ink leading-relaxed">
+      <div class="flex items-center justify-between font-semibold text-blue-300 text-sm mb-1.5">
+        <span>📋 Caso de Uso Canónico (Plantilla Formal UMU)</span>
+        <span class="text-[11px] px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">CU-042</span>
+      </div>
+      <p class="text-dim text-[11px] mb-3">
+        Especifica la interacción observable de caja negra entre un actor y el sistema para entregar un resultado observable de valor.
+      </p>
+
+      <!-- Metadatos del CdU -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px] mb-3">
+        <div class="p-2 rounded-lg bg-surface-2 border border-line/60">
+          <span class="text-dim block">Nombre:</span>
+          <span class="font-semibold text-ink">Comprar Producto con Pasarela Bancaria</span>
+        </div>
+        <div class="p-2 rounded-lg bg-surface-2 border border-line/60">
+          <span class="text-dim block">Actor Principal / Secundarios:</span>
+          <span class="font-semibold text-ink">Cliente Registrado</span> <span class="text-dim">(Secundario: Pasarela de Pago)</span>
+        </div>
+        <div class="p-2 rounded-lg bg-surface-2 border border-line/60">
+          <span class="text-dim block">Precondición:</span>
+          <span class="text-ink">Cliente autenticado y carrito de compra con stock &gt; 0</span>
+        </div>
+        <div class="p-2 rounded-lg bg-surface-2 border border-line/60">
+          <span class="text-dim block">Postcondición:</span>
+          <span class="text-ink">Stock decrementado, cobro registrado y factura emitida</span>
+        </div>
+      </div>
+
+      <!-- Flujo Básico vs Flujos Alternativos -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 text-[11px]">
+        <div class="p-3 rounded-lg bg-surface-2 border border-emerald-500/30">
+          <div class="font-semibold text-emerald-300 mb-2 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            Flujo Básico (Happy Path)
+          </div>
+          <ol class="list-decimal list-inside space-y-1.5 text-ink/90 leading-normal">
+            <li>El cliente pulsa en «Tramitar Pedido».</li>
+            <li>El sistema valida la disponibilidad física de stock en almacén.</li>
+            <li>El sistema calcula impuestos y gastos de envío.</li>
+            <li>El cliente introduce tarjeta bancaria y confirma importe.</li>
+            <li>El sistema contacta con la pasarela bancaria y cobra el total.</li>
+            <li>El sistema genera orden de envío y notifica por email.</li>
+          </ol>
+        </div>
+
+        <div class="p-3 rounded-lg bg-surface-2 border border-amber-500/30">
+          <div class="font-semibold text-amber-300 mb-2 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+            Flujos Alternativos y Excepciones
+          </div>
+          <div class="space-y-2 text-ink/90 leading-normal">
+            <div class="p-1.5 rounded bg-amber-500/10 border border-amber-500/20">
+              <span class="text-amber-300 font-semibold">2a. Rotura de Stock:</span>
+              <p class="text-dim text-[10px]">El sistema notifica las unidades faltantes y cancela la transacción.</p>
+            </div>
+            <div class="p-1.5 rounded bg-amber-500/10 border border-amber-500/20">
+              <span class="text-amber-300 font-semibold">5a. Pago Rechazado / Fondos Insuficientes:</span>
+              <p class="text-dim text-[10px]">El sistema ofrece reintentar con otra tarjeta sin perder el carrito.</p>
+            </div>
+            <div class="p-1.5 rounded bg-amber-500/10 border border-amber-500/20">
+              <span class="text-amber-300 font-semibold">5b. Timeout de Pasarela:</span>
+              <p class="text-dim text-[10px]">El sistema encola la solicitud con un token de idempotencia para verificación diferida.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 2: Historia de Usuario & BDD -->
+  <div id="req-view-hu" class="hidden space-y-3">
+    <div class="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/5 text-ink leading-relaxed">
+      <div class="flex items-center justify-between font-semibold text-emerald-300 text-sm mb-1.5">
+        <span>⚡ Historia de Usuario con BDD (Behavior-Driven Development)</span>
+        <span class="text-[11px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">HU-108</span>
+      </div>
+      <p class="text-dim text-[11px] mb-3">
+        Enfoque ágil centrado en el valor de negocio para el usuario final, formalizado mediante criterios ejecutables Given-When-Then.
+      </p>
+
+      <!-- Plantilla HU -->
+      <div class="p-3 rounded-lg bg-surface-2 border border-line/60 mb-3 text-xs">
+        <div class="text-ink font-semibold space-y-1">
+          <div><span class="text-emerald-400">Como</span> cliente registrado en la tienda online</div>
+          <div><span class="text-emerald-400">Quiero</span> poder aplicar un código de descuento en el checkout</div>
+          <div><span class="text-emerald-400">Para</span> pagar menos por mi pedido y aprovechar promociones de temporada</div>
+        </div>
+      </div>
+
+      <!-- Criterios BDD -->
+      <div class="space-y-2">
+        <div class="text-dim text-[11px] font-semibold uppercase tracking-wider">Criterios de Aceptación (Gherkin / Cucumber):</div>
+        
+        <div class="p-2.5 rounded-lg bg-surface-2 border border-emerald-500/20 font-mono text-[11px] space-y-1">
+          <div class="text-emerald-300 font-semibold">Escenario 1: Cupón de descuento válido</div>
+          <div class="text-dim"><span class="text-purple-400 font-semibold">Given</span> el carrito tiene artículos por valor de 100€</div>
+          <div class="text-dim"><span class="text-blue-400 font-semibold">When</span> introduzco el código promocional "VERANO20" activo</div>
+          <div class="text-ink"><span class="text-emerald-400 font-semibold">Then</span> el importe total se recalcula a 80€</div>
+          <div class="text-ink"><span class="text-emerald-400 font-semibold">And</span> se muestra un desglose con "-20€ descuento"</div>
+        </div>
+
+        <div class="p-2.5 rounded-lg bg-surface-2 border border-amber-500/20 font-mono text-[11px] space-y-1">
+          <div class="text-amber-300 font-semibold">Escenario 2: Cupón caducado</div>
+          <div class="text-dim"><span class="text-purple-400 font-semibold">Given</span> el cupón "NAVIDAD2025" expiró el 01/01/2026</div>
+          <div class="text-dim"><span class="text-blue-400 font-semibold">When</span> el usuario introduce "NAVIDAD2025" y pulsa aplicar</div>
+          <div class="text-ink"><span class="text-amber-400 font-semibold">Then</span> el total permanece en 100€ sin modificar</div>
+          <div class="text-ink"><span class="text-amber-400 font-semibold">And</span> se muestra una alerta "El cupón ha caducado"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 3: Comparativa CdU vs HU y Relaciones UML -->
+  <div id="req-view-diff" class="hidden space-y-3">
+    <!-- Tabla Comparativa -->
+    <div class="overflow-x-auto rounded-xl border border-line bg-surface-1">
+      <table class="w-full text-left text-[11px] border-collapse">
+        <thead>
+          <tr class="bg-surface-2 border-b border-line text-ink font-semibold">
+            <th class="p-2.5">Criterio</th>
+            <th class="p-2.5 text-blue-300">Caso de Uso (CdU)</th>
+            <th class="p-2.5 text-emerald-300">Historia de Usuario (HU)</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-line/40 text-dim">
+          <tr class="hover:bg-surface-2/40">
+            <td class="p-2.5 font-medium text-ink">Enfoque principal</td>
+            <td class="p-2.5">Orientado al sistema y sus secuencias de interacción completas.</td>
+            <td class="p-2.5">Orientado al usuario y al valor directo de negocio.</td>
+          </tr>
+          <tr class="hover:bg-surface-2/40">
+            <td class="p-2.5 font-medium text-ink">Nivel de detalle</td>
+            <td class="p-2.5">Muy detallado (pasos numerados, pre/postcondiciones, excepciones).</td>
+            <td class="p-2.5">Intencionalmente breve; invita a la conversación (Criterios BDD).</td>
+          </tr>
+          <tr class="hover:bg-surface-2/40">
+            <td class="p-2.5 font-medium text-ink">Ciclo de vida</td>
+            <td class="p-2.5">Documento formal y duradero de especificación técnica del sistema.</td>
+            <td class="p-2.5">Efímera; se implementa, valida y archiva en un sprint ágil.</td>
+          </tr>
+          <tr class="hover:bg-surface-2/40">
+            <td class="p-2.5 font-medium text-ink">Estimación y división</td>
+            <td class="p-2.5">Grande/complejo; engloba múltiples historias de usuario.</td>
+            <td class="p-2.5">Atómica y dimensionada en Story Points para caber en 1 sprint.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Relaciones UML en Casos de Uso -->
+    <div class="p-3.5 rounded-xl border border-purple-500/30 bg-purple-500/5 text-ink leading-relaxed">
+      <div class="font-semibold text-purple-300 text-sm mb-2">
+        🔗 Relaciones UML entre Casos de Uso (PDS UMU)
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-[11px]">
+        <div class="p-2.5 rounded-lg bg-surface-2 border border-blue-500/30">
+          <div class="font-semibold text-blue-300 mb-1 flex items-center gap-1">
+            <span>&lt;&lt;include&gt;&gt;</span>
+            <span class="text-[9px] px-1 rounded bg-blue-500/20 text-blue-300">Obligatorio</span>
+          </div>
+          <p class="text-dim text-[10px] leading-relaxed">
+            El caso de uso base <strong>siempre</strong> ejecuta el incluido. Se usa para factorizar y reutilizar comportamiento común (ej. <em>Tramitar Compra</em> incluye <em>Autenticar Usuario</em>).
+          </p>
+        </div>
+
+        <div class="p-2.5 rounded-lg bg-surface-2 border border-emerald-500/30">
+          <div class="font-semibold text-emerald-300 mb-1 flex items-center gap-1">
+            <span>&lt;&lt;extend&gt;&gt;</span>
+            <span class="text-[9px] px-1 rounded bg-emerald-500/20 text-emerald-300">Opcional</span>
+          </div>
+          <p class="text-dim text-[10px] leading-relaxed">
+            El caso de uso que extiende añade funcionalidad al base <strong>solo si</strong> se cumple una condición explícita anclada a un <em>Extension Point</em> (ej. <em>Aplicar Cupón</em> extiende <em>Calcular Total</em>).
+          </p>
+        </div>
+
+        <div class="p-2.5 rounded-lg bg-surface-2 border border-purple-500/30">
+          <div class="font-semibold text-purple-300 mb-1 flex items-center gap-1">
+            <span>Generalización</span>
+            <span class="text-[9px] px-1 rounded bg-purple-500/20 text-purple-300">Herencia</span>
+          </div>
+          <p class="text-dim text-[10px] leading-relaxed">
+            Un caso de uso o actor especializado hereda el comportamiento y las relaciones del padre, añadiendo o redefiniendo reglas (ej. <em>Pagar con Bizum</em> generaliza <em>Pagar</em>).
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function setupRequirementsTabs() {
+    const root = document.getElementById('requirements-diagram-root');
+    if (!root) return;
+
+    const tabs = {
+      cdu: { btn: root.querySelector('#req-tab-cdu'), view: root.querySelector('#req-view-cdu') },
+      hu: { btn: root.querySelector('#req-tab-hu'), view: root.querySelector('#req-view-hu') },
+      diff: { btn: root.querySelector('#req-tab-diff'), view: root.querySelector('#req-view-diff') },
+    };
+
+    function activate(name: 'cdu' | 'hu' | 'diff') {
+      Object.entries(tabs).forEach(([key, item]) => {
+        if (!item.btn || !item.view) return;
+        const isActive = key === name;
+        if (isActive) {
+          item.view.classList.remove('hidden');
+          item.btn.classList.add('active-req', 'bg-surface-2', 'text-ink', 'font-semibold');
+          item.btn.classList.remove('bg-surface-1', 'text-dim', 'font-medium');
+        } else {
+          item.view.classList.add('hidden');
+          item.btn.classList.remove('active-req', 'bg-surface-2', 'text-ink', 'font-semibold');
+          item.btn.classList.add('bg-surface-1', 'text-dim', 'font-medium');
+        }
+      });
+    }
+
+    Object.entries(tabs).forEach(([key, item]) => {
+      if (!item.btn) return;
+      item.btn.addEventListener('click', () => activate(key as 'cdu' | 'hu' | 'diff'));
+    });
+  }
+
+  setupRequirementsTabs();
+  document.addEventListener('astro:page-load', setupRequirementsTabs);
+</script>
+
+<style>
+  .active-req {
+    border-color: rgba(59, 130, 246, 0.6) !important;
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
+  }
+</style>

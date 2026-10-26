@@ -1,0 +1,260 @@
+---
+// DomainModelingDiagram.astro
+// Interactive visualizer for Software Domain Modeling (PDS UMU Tema 3)
+// Covers: Conceptual Classes (Symbol, Intension, Extension), Golden Rule (No FKs),
+// UML Relationship Types (Aggregation vs Composition lifecycle), and Canonical Car Example in C++.
+---
+
+<div class="space-y-4 text-xs font-mono select-none" id="domain-diagram-root">
+  <!-- Nav Tabs -->
+  <div class="flex flex-wrap gap-2 border-b border-line/60 pb-3">
+    <button
+      id="dom-tab-clases"
+      class="px-3 py-1.5 rounded-lg border border-line bg-surface-2 text-ink font-semibold transition-all hover:bg-surface-3 flex items-center gap-1.5 text-xs active-domain"
+      data-view="clases"
+    >
+      <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+      1. Clases Conceptuales & Regla de Oro
+    </button>
+    <button
+      id="dom-tab-relaciones"
+      class="px-3 py-1.5 rounded-lg border border-line bg-surface-1 text-dim font-medium transition-all hover:bg-surface-2 hover:text-ink flex items-center gap-1.5 text-xs"
+      data-view="relaciones"
+    >
+      <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+      2. 6 Relaciones UML & Ciclo de Vida
+    </button>
+    <button
+      id="dom-tab-code"
+      class="px-3 py-1.5 rounded-lg border border-line bg-surface-1 text-dim font-medium transition-all hover:bg-surface-2 hover:text-ink flex items-center gap-1.5 text-xs"
+      data-view="code"
+    >
+      <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+      3. Código Canónico C++ (Coche)
+    </button>
+  </div>
+
+  <!-- PANEL 1: Clases Conceptuales & Regla de Oro -->
+  <div id="dom-view-clases" class="space-y-3">
+    <div class="p-3.5 rounded-xl border border-blue-500/30 bg-blue-500/5 text-ink leading-relaxed">
+      <div class="flex items-center justify-between font-semibold text-blue-300 text-sm mb-1.5">
+        <span>📦 La Clase Conceptual en el Modelo de Dominio (PDS UMU)</span>
+        <span class="text-[11px] px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">Tema 3</span>
+      </div>
+      <p class="text-dim text-[11px] mb-3">
+        El modelo de dominio es una <strong>representación visual de las clases conceptuales u objetos del mundo real</strong> en un ámbito de interés, no de artefactos de software.
+      </p>
+
+      <!-- Anatomía de una Clase Conceptual -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-[11px] mb-3">
+        <div class="p-2.5 rounded-lg bg-surface-2 border border-line/60">
+          <div class="font-semibold text-blue-300 mb-1">1. Símbolo</div>
+          <p class="text-dim text-[10px]">
+            La representación visual y el nombre significativo que identifica al concepto (ej. <code class="text-ink">Vuelo</code>, <code class="text-ink">CuentaBancaria</code>).
+          </p>
+        </div>
+        <div class="p-2.5 rounded-lg bg-surface-2 border border-line/60">
+          <div class="font-semibold text-emerald-300 mb-1">2. Intensión</div>
+          <p class="text-dim text-[10px]">
+            La definición formal, responsabilidades y propiedades intrínsecas que caracterizan a los objetos que pertenecen a la clase.
+          </p>
+        </div>
+        <div class="p-2.5 rounded-lg bg-surface-2 border border-line/60">
+          <div class="font-semibold text-purple-300 mb-1">3. Extensión</div>
+          <p class="text-dim text-[10px]">
+            El conjunto real de todas las instancias u objetos concretos existentes en el universo del dominio a los que aplica la clase.
+          </p>
+        </div>
+      </div>
+
+      <!-- Regla de Oro de PDS -->
+      <div class="p-3 rounded-lg bg-surface-2 border border-amber-500/40 text-[11px]">
+        <div class="font-semibold text-amber-300 mb-1 flex items-center gap-1.5">
+          <span>⚠️ Regla de Oro del Modelado de Dominio (UMU):</span>
+        </div>
+        <p class="text-ink/90 leading-relaxed">
+          <strong>Nunca se deben modelar claves ajenas (FKs) ni punteros técnicos como atributos</strong> en una clase conceptual (ej. colocar <code class="text-red-400">id_cliente</code> o <code class="text-red-400">cliente_ptr</code> dentro de <code class="text-ink">Pedido</code> es un error de modelado).
+        </p>
+        <p class="text-dim text-[10px] mt-1.5">
+          Las relaciones entre conceptos deben expresarse <strong>exclusivamente como Asociaciones UML</strong> con nombre de rol y multiplicidades (ej. <code class="text-emerald-400">Cliente [1] ── realiza ──&gt; [*] Pedido</code>). Los IDs y claves foráneas son detalles de persistencia relacional que pertenecen a la capa de base de datos.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 2: 6 Relaciones UML & Ciclo de Vida -->
+  <div id="dom-view-relaciones" class="hidden space-y-3">
+    <div class="overflow-x-auto rounded-xl border border-line bg-surface-1">
+      <table class="w-full text-left text-[11px] border-collapse">
+        <thead>
+          <tr class="bg-surface-2 border-b border-line text-ink font-semibold">
+            <th class="p-2.5">Relación</th>
+            <th class="p-2.5">Símbolo UML</th>
+            <th class="p-2.5">Semántica</th>
+            <th class="p-2.5">Ciclo de Vida de las Partes</th>
+            <th class="p-2.5">Código Típico (C++ / Java)</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-line/40 text-dim">
+          <tr class="hover:bg-surface-2/40">
+            <td class="p-2.5 font-medium text-ink">Dependencia</td>
+            <td class="p-2.5 font-mono text-blue-300">- - - &gt;</td>
+            <td class="p-2.5">"Usa un" temporalmente</td>
+            <td class="p-2.5 text-ink">Sin posesión. No hay enlace de vida.</td>
+            <td class="p-2.5 text-[10px] font-mono">Parámetro en método o variable local</td>
+          </tr>
+          <tr class="hover:bg-surface-2/40">
+            <td class="p-2.5 font-medium text-ink">Asociación</td>
+            <td class="p-2.5 font-mono text-cyan-300">──&gt; o ──</td>
+            <td class="p-2.5">"Conoce a" / Colabora con</td>
+            <td class="p-2.5 text-ink">Independiente (ambos viven por separado).</td>
+            <td class="p-2.5 text-[10px] font-mono">Puntero/referencia como atributo de instancia</td>
+          </tr>
+          <tr class="hover:bg-surface-2/40 bg-surface-2/20">
+            <td class="p-2.5 font-medium text-emerald-300">Agregación (Débil)</td>
+            <td class="p-2.5 font-mono text-emerald-400">◇── (rombo blanco)</td>
+            <td class="p-2.5">"Tiene un" (Todo-Parte débil)</td>
+            <td class="p-2.5 text-emerald-300 font-semibold">Independiente: si el Todo muere, la Parte SOBREVIVE.</td>
+            <td class="p-2.5 text-[10px] font-mono">shared_ptr&lt;T&gt; o referencia compartida externa</td>
+          </tr>
+          <tr class="hover:bg-surface-2/40 bg-surface-2/30">
+            <td class="p-2.5 font-medium text-amber-300">Composición (Fuerte)</td>
+            <td class="p-2.5 font-mono text-amber-400">◆── (rombo negro)</td>
+            <td class="p-2.5">"Formado por" (Todo-Parte fuerte)</td>
+            <td class="p-2.5 text-amber-300 font-semibold">Dependiente: si el Todo muere, la Parte MUERE con él.</td>
+            <td class="p-2.5 text-[10px] font-mono">Instancia por valor directo o unique_ptr&lt;T&gt; exclusivo</td>
+          </tr>
+          <tr class="hover:bg-surface-2/40">
+            <td class="p-2.5 font-medium text-ink">Generalización</td>
+            <td class="p-2.5 font-mono text-purple-300">──▷ (triángulo blanco)</td>
+            <td class="p-2.5">"Es un" (Herencia / Subtipo)</td>
+            <td class="p-2.5 text-ink">Identidad y estructura compartida al 100%.</td>
+            <td class="p-2.5 text-[10px] font-mono">class Perro : public Animal</td>
+          </tr>
+          <tr class="hover:bg-surface-2/40">
+            <td class="p-2.5 font-medium text-ink">Realización</td>
+            <td class="p-2.5 font-mono text-pink-300">- - ▷ (triángulo blanco discont.)</td>
+            <td class="p-2.5">"Implementa contrato"</td>
+            <td class="p-2.5 text-ink">Garantiza el comportamiento de la interfaz abstracta.</td>
+            <td class="p-2.5 text-[10px] font-mono">class PostgresRepo : public IRepo</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Comparativa Visual Agregación vs Composición -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
+      <div class="p-3 rounded-lg bg-surface-2 border border-emerald-500/30">
+        <div class="font-semibold text-emerald-300 mb-1.5 flex items-center gap-1.5">
+          <span class="text-base">◇</span> Agregación: Concesionario ── Coche
+        </div>
+        <p class="text-dim text-[10px] leading-relaxed">
+          Si el <code class="text-ink">Concesionario</code> cierra o se declara en quiebra, los <code class="text-ink">Coches</code> en stock no desaparecen ni se destruyen: se reubican en otro concesionario o se subastan. La parte tiene existencia autónoma.
+        </p>
+      </div>
+
+      <div class="p-3 rounded-lg bg-surface-2 border border-amber-500/30">
+        <div class="font-semibold text-amber-300 mb-1.5 flex items-center gap-1.5">
+          <span class="text-base">◆</span> Composición: Coche ── Motor
+        </div>
+        <p class="text-dim text-[10px] leading-relaxed">
+          Si un <code class="text-ink">Coche</code> entra en la prensa de chatarra y se destruye por completo, su <code class="text-ink">Motor</code> prensado se destruye simultáneamente. El todo tiene propiedad exclusiva sobre el ciclo de vida de la parte.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 3: Código Canónico C++ (Coche) -->
+  <div id="dom-view-code" class="hidden space-y-3">
+    <div class="p-3.5 rounded-xl border border-purple-500/30 bg-purple-500/5 text-ink leading-relaxed">
+      <div class="flex items-center justify-between font-semibold text-purple-300 text-sm mb-1.5">
+        <span>🚗 Ejemplo Unificado del Coche (PDS UMU en C++20)</span>
+        <span class="text-[11px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">Gestión de Memoria</span>
+      </div>
+      <p class="text-dim text-[11px] mb-3">
+        Demuestra cómo cada relación UML del modelo conceptual se traslada inequívocamente a constructores, destructores y paso de parámetros en código real:
+      </p>
+
+      <div class="rounded-lg bg-surface-3 border border-line/80 p-3 font-mono text-[11px] text-ink overflow-x-auto leading-relaxed">
+        <pre class="text-dim"><span class="text-purple-400">// 1. REALIZACIÓN (- - ▷): Interfaz pura con contrato virtual</span>
+<span class="text-blue-400">class</span> <span class="text-emerald-300">IVehiculo</span> &#123;
+<span class="text-blue-400">public</span>:
+    <span class="text-blue-400">virtual</span> <span class="text-blue-400">void</span> mover() = 0;
+    <span class="text-blue-400">virtual</span> ~IVehiculo() = <span class="text-blue-400">default</span>;
+&#125;;
+
+<span class="text-purple-400">// 2. COMPOSICIÓN (◆──): Motor atado al ciclo de vida del Coche</span>
+<span class="text-blue-400">class</span> <span class="text-emerald-300">Motor</span> &#123; <span class="text-blue-400">public</span>: <span class="text-blue-400">void</span> encender() &#123;&#125; &#125;;
+
+<span class="text-purple-400">// 3. AGREGACIÓN (◇──): Conductor existe independientemente del Coche</span>
+<span class="text-blue-400">class</span> <span class="text-emerald-300">Conductor</span> &#123; <span class="text-blue-400">public</span>: std::string nombre; &#125;;
+
+<span class="text-purple-400">// SERVICIO EXTERNO (Para Dependencia)</span>
+<span class="text-blue-400">class</span> <span class="text-emerald-300">GPSNavigationService</span> &#123; <span class="text-blue-400">public</span>: <span class="text-blue-400">void</span> fijarRuta(<span class="text-blue-400">const</span> std::string&amp; dest) &#123;&#125; &#125;;
+
+<span class="text-purple-400">// CLASE CONTENEDORA</span>
+<span class="text-blue-400">class</span> <span class="text-emerald-300">Coche</span> : <span class="text-blue-400">public</span> <span class="text-emerald-300">IVehiculo</span> &#123; <span class="text-purple-400">// Realización</span>
+<span class="text-blue-400">private</span>:
+    <span class="text-emerald-300">Motor</span> motor;                    <span class="text-amber-400">// COMPOSICIÓN: por valor directo (muere con el Coche)</span>
+    <span class="text-emerald-300">Conductor</span>* conductorAsignado;   <span class="text-emerald-400">// AGREGACIÓN: puntero compartido (si Coche muere, Conductor sobrevive)</span>
+
+<span class="text-blue-400">public</span>:
+    Coche() : conductorAsignado(<span class="text-blue-400">nullptr</span>) &#123;&#125;
+    
+    <span class="text-blue-400">void</span> asignarConductor(<span class="text-emerald-300">Conductor</span>* c) &#123; conductorAsignado = c; &#125;
+
+    <span class="text-purple-400">// DEPENDENCIA (- - -&gt;): El GPS solo se usa temporalmente dentro del método, no es atributo</span>
+    <span class="text-blue-400">void</span> navegarHacia(<span class="text-emerald-300">GPSNavigationService</span>&amp; gps, <span class="text-blue-400">const</span> std::string&amp; destino) &#123;
+        gps.fijarRuta(destino); <span class="text-dim">// "Usa un" servicio externo puntualmente</span>
+    &#125;
+
+    <span class="text-blue-400">void</span> mover() <span class="text-blue-400">override</span> &#123; motor.encender(); &#125;
+&#125;;</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function setupDomainTabs() {
+    const root = document.getElementById('domain-diagram-root');
+    if (!root) return;
+
+    const tabs = {
+      clases: { btn: root.querySelector('#dom-tab-clases'), view: root.querySelector('#dom-view-clases') },
+      relaciones: { btn: root.querySelector('#dom-tab-relaciones'), view: root.querySelector('#dom-view-relaciones') },
+      code: { btn: root.querySelector('#dom-tab-code'), view: root.querySelector('#dom-view-code') },
+    };
+
+    function activate(name: 'clases' | 'relaciones' | 'code') {
+      Object.entries(tabs).forEach(([key, item]) => {
+        if (!item.btn || !item.view) return;
+        const isActive = key === name;
+        if (isActive) {
+          item.view.classList.remove('hidden');
+          item.btn.classList.add('active-domain', 'bg-surface-2', 'text-ink', 'font-semibold');
+          item.btn.classList.remove('bg-surface-1', 'text-dim', 'font-medium');
+        } else {
+          item.view.classList.add('hidden');
+          item.btn.classList.remove('active-domain', 'bg-surface-2', 'text-ink', 'font-semibold');
+          item.btn.classList.add('bg-surface-1', 'text-dim', 'font-medium');
+        }
+      });
+    }
+
+    Object.entries(tabs).forEach(([key, item]) => {
+      if (!item.btn) return;
+      item.btn.addEventListener('click', () => activate(key as 'clases' | 'relaciones' | 'code'));
+    });
+  }
+
+  setupDomainTabs();
+  document.addEventListener('astro:page-load', setupDomainTabs);
+</script>
+
+<style>
+  .active-domain {
+    border-color: rgba(59, 130, 246, 0.6) !important;
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
+  }
+</style>

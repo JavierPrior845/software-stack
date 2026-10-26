@@ -59,9 +59,9 @@ export const bridges: Bridge[] = [
   {
     id: 'frontera-de-sistema',
     theme: 'Puertos, adaptadores y contratos',
-    software: 'arquitectura-hexagonal',
+    software: 'arquitectura-software',
     ai: 'mcp',
-    note: 'Hexagonal aísla el dominio detrás de puertos y adaptadores. MCP aísla el modelo de las herramientas con un protocolo estándar. En ambos casos el objetivo es poder sustituir la infraestructura sin tocar el núcleo.',
+    note: 'La arquitectura hexagonal y los estilos arquitectónicos aíslan el dominio detrás de puertos y adaptadores. MCP aísla el modelo de las herramientas con un protocolo estándar. En ambos casos el objetivo es poder sustituir la infraestructura sin tocar el núcleo.',
   },
   {
     id: 'frontera-de-privilegios',

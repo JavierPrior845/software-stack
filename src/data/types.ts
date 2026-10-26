@@ -25,6 +25,9 @@ export const DIAGRAM_IDS = [
   'solid-principles',
   'gof-patterns',
   'jpa-lifecycle',
+  'requirements-engineering',
+  'domain-modeling',
+  'arch-styles',
 ] as const;
 
 export type DiagramId = (typeof DIAGRAM_IDS)[number];

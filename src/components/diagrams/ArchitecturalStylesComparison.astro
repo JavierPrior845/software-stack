@@ -1,0 +1,422 @@
+---
+// src/components/diagrams/ArchitecturalStylesComparison.astro
+
+const styles = [
+  {
+    id: 'layered',
+    name: 'Capas (Layered / N-Tier)',
+    badge: 'Jerárquico',
+    color: 'border-blue-500/40 text-blue-300 bg-blue-950/20',
+    desc: 'Estructura jerárquica donde cada capa ofrece una abstracción a la superior y posee una responsabilidad única (ej. Presentación -> Negocio -> Acceso a Datos).',
+    components: 'Capas lógicas (UI, Dominio, Repositorio) y módulos internos.',
+    connectors: 'Llamada a procedimientos/métodos síncronos en memoria o RPC.',
+    pros: 'Reutilización, estandarización de dependencias y aislamiento de lógica técnica.',
+    cons: 'Acoplamiento en cascada ante cambios y posible duplicidad de trabajo o pasarelas ociosas (Sinkhole anti-pattern).',
+    examples: 'Sistemas operativos clásicos, arquitecturas MVC tradicionales.',
+  },
+  {
+    id: 'hexagonal',
+    name: 'Hexagonal (Ports & Adapters)',
+    badge: 'Desacoplado',
+    color: 'border-emerald-500/40 text-emerald-300 bg-emerald-950/20',
+    desc: 'Aísla el núcleo de negocio de tecnologías externas. El dominio declara Puertos (interfaces); la infraestructura implementa Adaptadores Driving (entrada) y Driven (salida).',
+    components: 'Núcleo de Dominio puro, Casos de Uso, Puertos de Entrada/Salida, Adaptadores.',
+    connectors: 'Invocación polimórfica mediante Inversión de Dependencias (DIP).',
+    pros: '100% testeable sin base de datos ni HTTP; tecnologías externas reemplazables como enchufes.',
+    cons: 'Sobrecarga de indirección, múltiples mapeos DTO/Entidad y mayor número de clases.',
+    examples: 'Microservicios con lógica de negocio compleja, sistemas financieros o DDD.',
+  },
+  {
+    id: 'microkernel',
+    name: 'Microkernel (Plugin-based)',
+    badge: 'Extensible',
+    color: 'border-purple-500/40 text-purple-300 bg-purple-950/20',
+    desc: 'Núcleo central minimalista y estable que provee el ciclo de vida básico y se extiende dinámicamente mediante plug-ins independientes.',
+    components: 'Microkernel (core estable) y Plug-ins (extensiones funcionales independientes).',
+    connectors: 'APIs internas de plug-ins, eventos o memoria compartida.',
+    pros: 'Alta modularidad, extensibilidad dinámica en runtime y aislamiento de fallos en extensiones.',
+    cons: 'El núcleo debe ser ultra estable; complejidad alta en coordinación y versionado de plugins.',
+    examples: 'Visual Studio Code, Obsidian, Eclipse, Navegadores Web, Kernels de SO.',
+  },
+  {
+    id: 'queues',
+    name: 'Eventos: Colas de Mensajes',
+    badge: 'Asíncrono Pull',
+    color: 'border-amber-500/40 text-amber-300 bg-amber-950/20',
+    desc: 'Arquitectura orientada a mensajes punto a punto con entrega ordenada en modo pull. Un único consumidor procesa cada mensaje.',
+    components: 'Productores, Consumidores y Colas de mensajes en el broker.',
+    connectors: 'Protocolos de mensajería asíncrona (AMQP, Redis queues, AWS SQS).',
+    pros: 'Desacoplamiento temporal y espacial total; absorción de picos de carga (load leveling) y alta fiabilidad.',
+    cons: 'Complejidad operativa del broker; consistencia eventual y necesidad de consumidores idempotentes.',
+    examples: 'Background jobs pesados, procesamiento de pedidos, conversión de vídeos, envío de emails.',
+  },
+  {
+    id: 'pubsub',
+    name: 'Eventos: Publicar/Suscribir',
+    badge: 'Asíncrono Push',
+    color: 'border-orange-500/40 text-orange-300 bg-orange-950/20',
+    desc: 'Desacopla la comunicación emitiendo eventos en modo push sobre topics. Múltiples suscriptores independientes reciben copias del evento.',
+    components: 'Publicadores, Broker de eventos/topics y múltiples Suscriptores.',
+    connectors: 'Brokers de eventos en tiempo real (Apache Kafka, AWS SNS, RabbitMQ topics).',
+    pros: 'Escalabilidad horizontal extrema; comunicación reactiva 1 a N en tiempo real.',
+    cons: 'Dificultad para trazar el flujo global de ejecución; orden garantizado solo por partición.',
+    examples: 'Telemetría IoT, arquitecturas orientadas a eventos (EDA), analítica en streaming.',
+  },
+  {
+    id: 'pipes',
+    name: 'Pipes and Filters',
+    badge: 'Flujo de Datos',
+    color: 'border-cyan-500/40 text-cyan-300 bg-cyan-950/20',
+    desc: 'Procesamiento en flujo unidireccional donde una serie de filtros autónomos transforman datos recibidos a través de tuberías (pipes).',
+    components: 'Filtros (nodos de cómputo y transformación sin estado global).',
+    connectors: 'Tuberías / Pipes (canales unidireccionales que conectan salida con entrada).',
+    pros: 'Composición funcional limpia, alta reutilización y paralelismo natural entre filtros.',
+    cons: 'El rendimiento global queda acotado por el filtro más lento (cuello de botella); interactividad difícil.',
+    examples: 'Compiladores (Léxico -> Sintáctico -> Semántico -> Generación), pipelines ETL y pipelines Unix bash (`cat | grep | sort`).',
+  },
+  {
+    id: 'client-server',
+    name: 'Cliente - Servidor',
+    badge: 'Request-Reply',
+    color: 'border-indigo-500/40 text-indigo-300 bg-indigo-950/20',
+    desc: 'Comunicación asimétrica donde múltiples clientes localizan al servidor central y solicitan recursos; el servidor procesa y responde.',
+    components: 'Clientes ligeros/pesados y Servidor central (gestor de recursos).',
+    connectors: 'Peticiones (Request) y Respuestas (Reply) sobre TCP/HTTP.',
+    pros: 'Centralización de datos y seguridad; mantenimiento y evolución sencilla del servidor.',
+    cons: 'Punto único de fallo potencial en el servidor; cuello de botella ante sobrecarga masiva.',
+    examples: 'Web tradicional, APIs REST estándar, servidores de bases de datos.',
+  },
+  {
+    id: 'microservices',
+    name: 'Microservicios vs Monolito',
+    badge: 'Distribuido',
+    color: 'border-rose-500/40 text-rose-300 bg-rose-950/20',
+    desc: 'Organización como conjunto de servicios autónomos desplegados en procesos independientes con base de datos propia, accesibles por APIs de red.',
+    components: 'Servicios independientes con bounded context frente al ejecutable único del monolito.',
+    connectors: 'APIs de red ligeras (REST, gRPC) y mensajería asíncrona.',
+    pros: 'Autonomía de despliegue por equipo; escalado horizontal selectivo y tolerancia a fallos aislados.',
+    cons: 'Sobrecarga de latencia de red, serialización, fallos parciales, consistencia eventual y coste DevOps.',
+    examples: 'Netflix, Uber, Amazon; sistemas con cientos de desarrolladores en dominios desacoplados.',
+  },
+];
+---
+
+<div class="arch-styles-container my-6 rounded-2xl border border-border/80 bg-gradient-to-b from-card/95 via-card/70 to-background/95 p-5 sm:p-6 shadow-2xl backdrop-blur-xl">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-5 border-b border-border/60">
+    <div class="flex items-center gap-3">
+      <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-600 text-white font-extrabold text-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+        🏛️
+      </div>
+      <div>
+        <h3 class="font-bold text-lg sm:text-xl text-foreground flex items-center gap-2">
+          Comparativa Canónica de Estilos Arquitectónicos
+          <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30 font-mono font-medium">
+            PDS Tema 4
+          </span>
+        </h3>
+        <p class="text-xs text-muted-foreground mt-0.5">
+          Estructura de componentes, conectores, compensaciones de calidad y casos de uso
+        </p>
+      </div>
+    </div>
+
+    <!-- Mode Buttons (Tabla Global vs Ficha Detallada vs Hexagonal & REST) -->
+    <div class="flex flex-wrap items-center gap-1.5 p-1.5 bg-secondary/40 rounded-xl border border-border/70 text-xs font-mono shadow-inner" id="arch-view-mode">
+      <button 
+        type="button" 
+        class="arch-mode-btn active-arch px-3.5 py-2 rounded-lg font-bold text-white bg-blue-600 shadow-md shadow-blue-500/30 border border-blue-400 transition-all cursor-pointer" 
+        data-mode="table">
+        📊 Matriz Global (8 Estilos)
+      </button>
+      <button 
+        type="button" 
+        class="arch-mode-btn px-3.5 py-2 rounded-lg font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 border border-transparent transition-all cursor-pointer" 
+        data-mode="cards">
+        🃏 Fichas por Estilo
+      </button>
+      <button 
+        type="button" 
+        class="arch-mode-btn px-3.5 py-2 rounded-lg font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 border border-transparent transition-all cursor-pointer" 
+        data-mode="hexrest">
+        ⚡ Hexagonal & APIs REST
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Views Area -->
+  <div class="mt-6">
+
+    <!-- VIEW 1: TABLA MATRIZ GLOBAL (Oficial PDS UMU) -->
+    <div id="arch-view-table" class="arch-view space-y-4">
+      <div class="overflow-x-auto rounded-xl border border-border/80">
+        <table class="w-full text-left text-xs font-mono">
+          <thead class="bg-secondary/50 text-foreground border-b border-border/60">
+            <tr>
+              <th class="p-3">Estilo</th>
+              <th class="p-3">Componentes</th>
+              <th class="p-3">Conectores</th>
+              <th class="p-3 text-emerald-300">Ventajas Principales</th>
+              <th class="p-3 text-rose-300">Desventajas / Riesgos</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-border/40 bg-card/40 text-[11px]">
+            {
+              styles.map((s) => (
+                <tr class="hover:bg-secondary/20 transition-colors">
+                  <td class="p-3 font-bold text-foreground">
+                    <div class="font-sans font-bold text-xs">{s.name}</div>
+                    <span class="text-[9px] px-1.5 py-0.2 rounded border font-mono mt-1 inline-block opacity-80">
+                      {s.badge}
+                    </span>
+                  </td>
+                  <td class="p-3 text-muted-foreground">{s.components}</td>
+                  <td class="p-3 text-cyan-300 font-mono text-[10px]">{s.connectors}</td>
+                  <td class="p-3 text-emerald-300/90 leading-relaxed">{s.pros}</td>
+                  <td class="p-3 text-rose-300/90 leading-relaxed">{s.cons}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VIEW 2: FICHAS INDIVIDUALES POR ESTILO CON SELECTOR -->
+    <div id="arch-view-cards" class="arch-view space-y-4 hidden">
+      <!-- Selector de Estilos Horizontal -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-border/40">
+        <span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-2 shrink-0">Estilo:</span>
+        {
+          styles.map((s, idx) => (
+            <button
+              class={`arch-style-chip ${idx === 0 ? 'active-chip bg-blue-500/20 text-blue-300 border-blue-500/50 font-bold' : 'text-muted-foreground border-transparent font-medium hover:text-foreground hover:bg-secondary/40'} px-3 py-1.5 rounded-lg text-xs transition-all border shrink-0 cursor-pointer`}
+              data-style={s.id}
+            >
+              {s.name}
+            </button>
+          ))
+        }
+      </div>
+
+      <!-- Contenedores de Ficha Detallada -->
+      {
+        styles.map((s, idx) => (
+          <div id={`card-${s.id}`} class={`arch-detail-card space-y-4 ${idx === 0 ? '' : 'hidden'}`}>
+            <div class={`p-4 rounded-xl border ${s.color}`}>
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <span class="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">{s.badge}</span>
+                  <h4 class="text-lg font-bold text-foreground">{s.name}</h4>
+                </div>
+                <span class="text-xs px-2.5 py-1 rounded-md bg-black/40 border border-border/60 font-mono text-muted-foreground">
+                  Ejemplos: {s.examples}
+                </span>
+              </div>
+              <p class="text-xs text-foreground/90 mt-2 leading-relaxed font-sans">{s.desc}</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
+              <div class="p-3.5 rounded-xl border border-border/70 bg-card/60 space-y-2">
+                <span class="text-cyan-300 font-bold flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                  Componentes & Conectores:
+                </span>
+                <div class="text-[11px] text-muted-foreground space-y-1">
+                  <div>• <strong>Componentes:</strong> {s.components}</div>
+                  <div>• <strong>Conectores:</strong> {s.connectors}</div>
+                </div>
+              </div>
+
+              <div class="p-3.5 rounded-xl border border-border/70 bg-card/60 space-y-2">
+                <span class="text-amber-300 font-bold flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                  Trade-offs de Calidad:
+                </span>
+                <div class="text-[11px] space-y-1">
+                  <div class="text-emerald-300">• <strong>Ventajas:</strong> {s.pros}</div>
+                  <div class="text-rose-300 mt-1">• <strong>Inconvenientes:</strong> {s.cons}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+
+    <!-- VIEW 3: HEXAGONAL & APIS REST (PDS UMU) -->
+    <div id="arch-view-hexrest" class="arch-view space-y-4 hidden">
+      <!-- Arquitectura Hexagonal Detallada -->
+      <div class="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5 text-xs font-mono space-y-3">
+        <div class="flex items-center justify-between text-emerald-300 font-bold text-sm">
+          <span>🔷 Arquitectura Hexagonal (Puertos y Adaptadores / Clean Architecture)</span>
+          <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/40">DIP Estricto</span>
+        </div>
+        <p class="text-muted-foreground leading-relaxed text-[11px]">
+          El objetivo es aislar por completo el <strong>núcleo de dominio puro</strong> de frameworks, bases de datos, controladores HTTP o librerías de terceros.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-[11px]">
+          <div class="p-3 rounded-lg bg-secondary/40 border border-border/80">
+            <span class="text-emerald-400 font-bold block mb-1">1. Núcleo de Dominio</span>
+            <p class="text-muted-foreground text-[10px]">
+              Entidades, Value Objects y Servicios de dominio. <strong>Cero imports</strong> de SQLAlchemy, Hibernate, Express o FastAPI.
+            </p>
+          </div>
+          <div class="p-3 rounded-lg bg-secondary/40 border border-border/80">
+            <span class="text-cyan-400 font-bold block mb-1">2. Puertos (Interfaces)</span>
+            <p class="text-muted-foreground text-[10px]">
+              <strong class="text-foreground">Puertos de Entrada</strong> (Casos de Uso) invocados por el exterior. <strong class="text-foreground">Puertos de Salida</strong> (Repositorios/APIs) requeridos por el dominio.
+            </p>
+          </div>
+          <div class="p-3 rounded-lg bg-secondary/40 border border-border/80">
+            <span class="text-purple-400 font-bold block mb-1">3. Adaptadores</span>
+            <p class="text-muted-foreground text-[10px]">
+              <strong class="text-foreground">Primarios (Driving)</strong>: Controladores HTTP, CLI, eventos. <strong class="text-foreground">Secundarios (Driven)</strong>: Postgres, DynamoDB, Stripe client.
+            </p>
+          </div>
+        </div>
+
+        <div class="p-2.5 rounded bg-secondary/60 border border-emerald-500/20 text-[10px] text-muted-foreground">
+          <strong class="text-emerald-300">Regla de Dependencia:</strong> Todas las dependencias apuntan <em>hacia adentro</em>. La infraestructura conoce las interfaces del dominio; el dominio jamás conoce la infraestructura concreta.
+        </div>
+      </div>
+
+      <!-- APIs REST, Idempotencia y Richardson -->
+      <div class="p-4 rounded-xl border border-blue-500/30 bg-blue-500/5 text-xs font-mono space-y-3">
+        <div class="flex items-center justify-between text-blue-300 font-bold text-sm">
+          <span>🌐 APIs REST, Idempotencia y Niveles de Madurez de Richardson</span>
+          <span class="text-[10px] px-2 py-0.5 rounded bg-blue-500/20 border border-blue-500/40">RFC 7231</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
+          <!-- Idempotencia de Verbos HTTP -->
+          <div class="p-3 rounded-lg bg-secondary/40 border border-border/80 space-y-2">
+            <span class="text-blue-300 font-bold block">Idempotencia HTTP: f(f(x)) = f(x)</span>
+            <div class="space-y-1.5 text-[10px]">
+              <div class="flex justify-between p-1.5 rounded bg-emerald-500/10 border border-emerald-500/20">
+                <span class="font-bold text-emerald-400">GET</span>
+                <span class="text-muted-foreground">Seguro e Idempotente (solo lectura)</span>
+              </div>
+              <div class="flex justify-between p-1.5 rounded bg-emerald-500/10 border border-emerald-500/20">
+                <span class="font-bold text-emerald-400">PUT</span>
+                <span class="text-muted-foreground">Idempotente (reemplazo completo)</span>
+              </div>
+              <div class="flex justify-between p-1.5 rounded bg-emerald-500/10 border border-emerald-500/20">
+                <span class="font-bold text-emerald-400">DELETE</span>
+                <span class="text-muted-foreground">Idempotente (borra recurso en URI)</span>
+              </div>
+              <div class="flex justify-between p-1.5 rounded bg-rose-500/10 border border-rose-500/20">
+                <span class="font-bold text-rose-400">POST</span>
+                <span class="text-rose-300">NO Idempotente (crea nuevo recurso)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modelo de Madurez de Richardson -->
+          <div class="p-3 rounded-lg bg-secondary/40 border border-border/80 space-y-2">
+            <span class="text-purple-300 font-bold block">Modelo de Madurez de Richardson</span>
+            <div class="space-y-1 text-[10px] text-muted-foreground">
+              <div><strong class="text-foreground">Nivel 0:</strong> The Swamp of POX (un solo endpoint POST /api para todo).</div>
+              <div><strong class="text-foreground">Nivel 1:</strong> Recursos individuales (/pedidos, /usuarios/42).</div>
+              <div><strong class="text-foreground">Nivel 2:</strong> Verbos HTTP estándar (GET, POST, PUT, DELETE) y códigos de estado (200, 201, 404, 409).</div>
+              <div><strong class="text-purple-300">Nivel 3 (HATEOAS):</strong> Respuestas con hipermedios (links con transiciones de estado válidas).</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function initArchStyles() {
+    // 1. Selector de Modo (Tabla vs Fichas)
+    const modeButtons = document.querySelectorAll<HTMLButtonElement>('.arch-mode-btn');
+    const views = document.querySelectorAll<HTMLElement>('.arch-view');
+
+    modeButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const mode = btn.getAttribute('data-mode');
+        if (!mode) return;
+
+        modeButtons.forEach(b => {
+          b.classList.remove(
+            'active-arch',
+            'font-bold',
+            'text-white',
+            'bg-blue-600',
+            'border-blue-400',
+            'shadow-md',
+            'shadow-blue-500/30'
+          );
+          b.classList.add('text-muted-foreground', 'border-transparent', 'font-medium');
+        });
+
+        btn.classList.add(
+          'active-arch',
+          'font-bold',
+          'text-white',
+          'bg-blue-600',
+          'border-blue-400',
+          'shadow-md',
+          'shadow-blue-500/30'
+        );
+        btn.classList.remove('text-muted-foreground', 'border-transparent', 'font-medium');
+
+        views.forEach(v => {
+          if (v.id === `arch-view-${mode}`) {
+            v.classList.remove('hidden');
+          } else {
+            v.classList.add('hidden');
+          }
+        });
+      });
+    });
+
+    // 2. Selector de Chip en Fichas
+    const chips = document.querySelectorAll<HTMLButtonElement>('.arch-style-chip');
+    const cards = document.querySelectorAll<HTMLElement>('.arch-detail-card');
+
+    chips.forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        e.preventDefault();
+        const styleId = chip.getAttribute('data-style');
+        if (!styleId) return;
+
+        chips.forEach(c => {
+          c.classList.remove(
+            'active-chip',
+            'bg-blue-500/20',
+            'text-blue-300',
+            'border-blue-500/50',
+            'font-bold'
+          );
+          c.classList.add('text-muted-foreground', 'border-transparent', 'font-medium');
+        });
+
+        chip.classList.add(
+          'active-chip',
+          'bg-blue-500/20',
+          'text-blue-300',
+          'border-blue-500/50',
+          'font-bold'
+        );
+        chip.classList.remove('text-muted-foreground', 'border-transparent', 'font-medium');
+
+        cards.forEach(card => {
+          if (card.id === `card-${styleId}`) {
+            card.classList.remove('hidden');
+          } else {
+            card.classList.add('hidden');
+          }
+        });
+      });
+    });
+  }
+
+  initArchStyles();
+  document.addEventListener('astro:page-load', initArchStyles);
+</script>

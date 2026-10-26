@@ -24,6 +24,9 @@ import GraspDiagram from './diagrams/GraspDiagram.astro';
 import SolidPrinciples from './diagrams/SolidPrinciples.astro';
 import GofPatternsDiagram from './diagrams/GofPatternsDiagram.astro';
 import JpaLifecycleDiagram from './diagrams/JpaLifecycleDiagram.astro';
+import RequirementsDiagram from './diagrams/RequirementsDiagram.astro';
+import DomainModelingDiagram from './diagrams/DomainModelingDiagram.astro';
+import ArchitecturalStylesComparison from './diagrams/ArchitecturalStylesComparison.astro';
 
 interface Props {
   id: DiagramId;
@@ -56,6 +59,9 @@ const registry = {
   'solid-principles': SolidPrinciples,
   'gof-patterns': GofPatternsDiagram,
   'jpa-lifecycle': JpaLifecycleDiagram,
+  'requirements-engineering': RequirementsDiagram,
+  'domain-modeling': DomainModelingDiagram,
+  'arch-styles': ArchitecturalStylesComparison,
 } satisfies Record<DiagramId, unknown>;
 
 const Diagram = registry[id];
