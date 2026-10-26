@@ -142,24 +142,118 @@
       </table>
     </div>
 
-    <!-- Comparativa Visual Agregación vs Composición -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
-      <div class="p-3 rounded-lg bg-surface-2 border border-emerald-500/30">
-        <div class="font-semibold text-emerald-300 mb-1.5 flex items-center gap-1.5">
-          <span class="text-base">◇</span> Agregación: Concesionario ── Coche
+    <!-- DIAGRAMA VISUAL SVG: Diagrama de Clases UML y Simulador de Ciclo de Vida -->
+    <div class="p-4 rounded-xl border border-emerald-500/30 bg-surface-2/60 space-y-3" id="dom-lifecycle-sim">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-line/60 pb-2">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+          <span class="font-bold text-ink text-xs font-mono">
+            Diagrama de Clases UML Canónico: Agregación (◇) vs Composición (◆)
+          </span>
         </div>
-        <p class="text-dim text-[10px] leading-relaxed">
-          Si el <code class="text-ink">Concesionario</code> cierra o se declara en quiebra, los <code class="text-ink">Coches</code> en stock no desaparecen ni se destruyen: se reubican en otro concesionario o se subastan. La parte tiene existencia autónoma.
-        </p>
+        <span class="text-[10px] px-2 py-0.5 rounded font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+          Semántica del Ciclo de Vida
+        </span>
       </div>
 
-      <div class="p-3 rounded-lg bg-surface-2 border border-amber-500/30">
-        <div class="font-semibold text-amber-300 mb-1.5 flex items-center gap-1.5">
-          <span class="text-base">◆</span> Composición: Coche ── Motor
+      <!-- Canvas SVG UML -->
+      <div class="w-full overflow-x-auto py-2 flex justify-center bg-black/40 rounded-xl border border-line/60">
+        <svg viewBox="0 0 760 190" class="w-full max-w-[760px] h-auto select-none font-mono" style="min-width: 620px;">
+          <!-- CLASE CONDUCCIÓN (Izquierda - Agregación) -->
+          <g id="uml-conductor" class="transition-all duration-300" transform="translate(20, 20)">
+            <rect width="180" height="90" rx="8" fill="#064e3b" stroke="#10b981" stroke-width="1.8" class="uml-box" />
+            <rect width="180" height="26" rx="8" fill="#047857" />
+            <text x="90" y="17" fill="#d1fae5" font-size="11" font-weight="bold" text-anchor="middle">Conductor</text>
+            <text x="12" y="46" fill="#a7f3d0" font-size="9.5">+ nombre: string</text>
+            <text x="12" y="64" fill="#a7f3d0" font-size="9.5">+ conducir(): void</text>
+            <rect x="10" y="70" width="160" height="15" rx="3" fill="#022c22" />
+            <text id="badge-conductor" x="90" y="81" fill="#34d399" font-size="8.5" font-weight="bold" text-anchor="middle">ESTADO: VIVO EN HEAP</text>
+          </g>
+
+          <!-- LÍNEA AGREGACIÓN: Conductor ---◇ Coche -->
+          <g transform="translate(200, 65)">
+            <line x1="0" y1="0" x2="80" y2="0" stroke="#10b981" stroke-width="2" />
+            <!-- Rombo hueco (Agregación) en el extremo de Coche (x=80) -->
+            <polygon points="80,0 72,-6 64,0 72,6" fill="#0f172a" stroke="#10b981" stroke-width="1.8" />
+            <text x="10" y="-8" fill="#a7f3d0" font-size="9">1..*</text>
+            <text x="45" y="-8" fill="#a7f3d0" font-size="9">0..1</text>
+            <text x="38" y="15" fill="#6ee7b7" font-size="8" text-anchor="middle">Agregación ◇</text>
+          </g>
+
+          <!-- CLASE CENTRAL: COCHE (El Todo) -->
+          <g id="uml-coche" class="transition-all duration-300" transform="translate(280, 15)">
+            <rect width="200" height="100" rx="10" fill="#1e1b4b" stroke="#818cf8" stroke-width="2.2" class="uml-box" />
+            <rect width="200" height="28" rx="10" fill="#312e81" />
+            <text x="100" y="18" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">Coche : IVehiculo</text>
+            <text x="12" y="48" fill="#e0e7ff" font-size="9.5">- motor: Motor (por valor)</text>
+            <text x="12" y="64" fill="#e0e7ff" font-size="9.5">- conductor: Conductor*</text>
+            <text x="12" y="80" fill="#818cf8" font-size="9">+ mover(): void</text>
+            <rect x="12" y="84" width="176" height="14" rx="3" fill="#0f172a" />
+            <text id="badge-coche" x="100" y="94" fill="#c7d2fe" font-size="8.5" font-weight="bold" text-anchor="middle">ESTADO: OBJETO ACTIVO</text>
+          </g>
+
+          <!-- LÍNEA COMPOSICIÓN: Coche ◆--- Motor -->
+          <g transform="translate(480, 65)">
+            <line x1="0" y1="0" x2="80" y2="0" stroke="#f59e0b" stroke-width="2" />
+            <!-- Rombo relleno (Composición) en el extremo de Coche (x=0) -->
+            <polygon points="0,0 8,-6 16,0 8,6" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.8" />
+            <text x="25" y="-8" fill="#fcd34d" font-size="9">1</text>
+            <text x="65" y="-8" fill="#fcd34d" font-size="9">1</text>
+            <text x="45" y="15" fill="#f59e0b" font-size="8" text-anchor="middle">Composición ◆</text>
+          </g>
+
+          <!-- CLASE MOTOR (Derecha - Composición) -->
+          <g id="uml-motor" class="transition-all duration-300" transform="translate(560, 20)">
+            <rect width="180" height="90" rx="8" fill="#451a03" stroke="#f59e0b" stroke-width="1.8" class="uml-box" />
+            <rect width="180" height="26" rx="8" fill="#78350f" />
+            <text x="90" y="17" fill="#fef3c7" font-size="11" font-weight="bold" text-anchor="middle">Motor</text>
+            <text x="12" y="46" fill="#fde68a" font-size="9.5">+ encender(): void</text>
+            <text x="12" y="64" fill="#fde68a" font-size="9.5">+ potenciaCv: int</text>
+            <rect x="10" y="70" width="160" height="15" rx="3" fill="#1c1917" />
+            <text id="badge-motor" x="90" y="81" fill="#f59e0b" font-size="8.5" font-weight="bold" text-anchor="middle">ESTADO: VIVO CON EL COCHE</text>
+          </g>
+
+          <!-- Relación Dependencia abajo: GPS -->
+          <g transform="translate(380, 115)">
+            <line x1="0" y1="0" x2="0" y2="35" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4 3" />
+            <polygon points="0,35 -4,28 4,28" fill="#38bdf8" />
+            <text x="15" y="22" fill="#7dd3fc" font-size="8">- - -&gt; Dependencia ("usa un")</text>
+          </g>
+          <g transform="translate(300, 150)">
+            <rect width="160" height="26" rx="6" fill="#082f49" stroke="#0284c7" stroke-width="1" />
+            <text x="80" y="17" fill="#bae6fd" font-size="9.5" text-anchor="middle">GPSNavigationService</text>
+          </g>
+        </svg>
+      </div>
+
+      <!-- Panel del Simulador Interactivo -->
+      <div class="flex flex-wrap items-center justify-between gap-3 p-2.5 rounded-lg bg-surface-1 border border-line/70 text-xs font-mono">
+        <div class="flex items-center gap-2">
+          <span class="text-dim text-[11px]">Simulación RAII:</span>
+          <button
+            type="button"
+            id="btn-dom-demolish"
+            class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold transition-all shadow-sm cursor-pointer"
+          >
+            💥 Demoler Coche (delete coche_ptr)
+          </button>
+          <button
+            type="button"
+            id="btn-dom-restore"
+            class="px-3 py-1.5 rounded-lg bg-secondary/60 hover:bg-secondary text-dim hover:text-ink transition-all cursor-pointer"
+          >
+            ↺ Restaurar
+          </button>
         </div>
-        <p class="text-dim text-[10px] leading-relaxed">
-          Si un <code class="text-ink">Coche</code> entra en la prensa de chatarra y se destruye por completo, su <code class="text-ink">Motor</code> prensado se destruye simultáneamente. El todo tiene propiedad exclusiva sobre el ciclo de vida de la parte.
-        </p>
+
+        <div class="text-[11px] text-right font-mono" id="sim-log-title">
+          <span class="text-emerald-400">Todo y partes en ejecución normal</span>
+        </div>
+      </div>
+
+      <!-- Explicación Didáctica en Tiempo Real -->
+      <div class="p-3 rounded-lg bg-surface-1 border border-line/60 text-[11px] leading-relaxed text-dim" id="sim-explanation">
+        <strong class="text-ink">Semántica en Memoria:</strong> El <code class="text-ink">Coche</code> tiene al <code class="text-amber-300">Motor</code> por <strong>Composición (◆)</strong> (destrucción ligada e inseparable). En cambio, tiene al <code class="text-emerald-300">Conductor</code> por <strong>Agregación (◇)</strong> (puntero no propietario: si el coche se destruye, el conductor permanece vivo en el Heap).
       </div>
     </div>
   </div>
@@ -250,6 +344,106 @@
 
   setupDomainTabs();
   document.addEventListener('astro:page-load', setupDomainTabs);
+
+  // Simulador de Ciclo de Vida: Agregación vs Composición
+  function initLifecycleSimulator() {
+    const root = document.getElementById('dom-lifecycle-sim');
+    if (!root) return;
+
+    const btnDemolish = root.querySelector<HTMLButtonElement>('#btn-dom-demolish');
+    const btnRestore = root.querySelector<HTMLButtonElement>('#btn-dom-restore');
+
+    const umlCoche = root.querySelector<SVGGElement>('#uml-coche');
+    const umlMotor = root.querySelector<SVGGElement>('#uml-motor');
+    const umlConductor = root.querySelector<SVGGElement>('#uml-conductor');
+
+    const badgeCoche = root.querySelector<SVGTextElement>('#badge-coche');
+    const badgeMotor = root.querySelector<SVGTextElement>('#badge-motor');
+    const badgeConductor = root.querySelector<SVGTextElement>('#badge-conductor');
+
+    const logTitle = root.querySelector<HTMLElement>('#sim-log-title');
+    const explanation = root.querySelector<HTMLElement>('#sim-explanation');
+
+    btnDemolish?.addEventListener('click', () => {
+      // 1. Coche destruido
+      if (umlCoche) {
+        umlCoche.style.opacity = '0.35';
+        umlCoche.style.filter = 'grayscale(80%)';
+      }
+      if (badgeCoche) {
+        badgeCoche.textContent = '💥 DESTRUIDO (~Coche())';
+        badgeCoche.setAttribute('fill', '#f43f5e');
+      }
+
+      // 2. Motor destruido en cascada (Composición ◆)
+      if (umlMotor) {
+        umlMotor.style.opacity = '0.35';
+        umlMotor.style.filter = 'grayscale(80%)';
+      }
+      if (badgeMotor) {
+        badgeMotor.textContent = '💥 DESTRUIDO (Cascada ◆)';
+        badgeMotor.setAttribute('fill', '#f43f5e');
+      }
+
+      // 3. Conductor SOBREVIVE (Agregación ◇)
+      if (umlConductor) {
+        umlConductor.style.opacity = '1';
+        umlConductor.style.filter = 'drop-shadow(0 0 8px rgba(16, 185, 129, 0.4))';
+      }
+      if (badgeConductor) {
+        badgeConductor.textContent = '✓ SOBREVIVE EN HEAP (◇)';
+        badgeConductor.setAttribute('fill', '#34d399');
+      }
+
+      if (logTitle) {
+        logTitle.innerHTML = '<span class="text-rose-400 font-bold">💥 delete coche; ejecutado</span>';
+      }
+
+      if (explanation) {
+        explanation.innerHTML = '<strong class="text-rose-400">Demostración RAII / C++:</strong> Al invocar <code class="text-ink">delete coche;</code>, su destructor invoca automáticamente el destructor de <code class="text-amber-300">Motor motor;</code> (Composición ◆: mueren juntos). Sin embargo, <code class="text-emerald-300">Conductor*</code> era una Agregación débil (◇): el Coche no era propietario del puntero, por lo que el objeto Conductor sigue existiendo ileso en el Heap.';
+      }
+    });
+
+    btnRestore?.addEventListener('click', () => {
+      if (umlCoche) {
+        umlCoche.style.opacity = '1';
+        umlCoche.style.filter = 'none';
+      }
+      if (badgeCoche) {
+        badgeCoche.textContent = 'ESTADO: OBJETO ACTIVO';
+        badgeCoche.setAttribute('fill', '#c7d2fe');
+      }
+
+      if (umlMotor) {
+        umlMotor.style.opacity = '1';
+        umlMotor.style.filter = 'none';
+      }
+      if (badgeMotor) {
+        badgeMotor.textContent = 'ESTADO: VIVO CON EL COCHE';
+        badgeMotor.setAttribute('fill', '#f59e0b');
+      }
+
+      if (umlConductor) {
+        umlConductor.style.opacity = '1';
+        umlConductor.style.filter = 'none';
+      }
+      if (badgeConductor) {
+        badgeConductor.textContent = 'ESTADO: VIVO EN HEAP';
+        badgeConductor.setAttribute('fill', '#34d399');
+      }
+
+      if (logTitle) {
+        logTitle.innerHTML = '<span class="text-emerald-400">Todo y partes en ejecución normal</span>';
+      }
+
+      if (explanation) {
+        explanation.innerHTML = '<strong class="text-ink">Semántica en Memoria:</strong> El <code class="text-ink">Coche</code> tiene al <code class="text-amber-300">Motor</code> por <strong>Composición (◆)</strong> (destrucción ligada e inseparable). En cambio, tiene al <code class="text-emerald-300">Conductor</code> por <strong>Agregación (◇)</strong> (puntero no propietario: si el coche se destruye, el conductor permanece vivo en el Heap).';
+      }
+    });
+  }
+
+  initLifecycleSimulator();
+  document.addEventListener('astro:page-load', initLifecycleSimulator);
 </script>
 
 <style>

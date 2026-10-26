@@ -132,6 +132,81 @@
         </div>
       </div>
     </div>
+
+    <!-- DIAGRAMA VISUAL SVG: Frontera de Control UI -> Controlador -> Dominio -->
+    <div class="p-4 rounded-xl border border-purple-500/30 bg-black/40 space-y-2.5">
+      <div class="flex items-center justify-between text-xs font-mono">
+        <span class="font-bold text-purple-300 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+          Frontera Arquitectónica del Patrón Controlador (Larman / TDS)
+        </span>
+        <span class="text-[10px] text-muted-foreground">Flujo Canónico de Eventos de Sistema</span>
+      </div>
+
+      <div class="w-full overflow-x-auto py-2 flex justify-center">
+        <svg viewBox="0 0 780 160" class="w-full max-w-[780px] h-auto select-none font-mono" style="min-width: 620px;">
+          <defs>
+            <marker id="grasp-arrow-p" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#c084fc" />
+            </marker>
+            <marker id="grasp-arrow-c" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#38bdf8" />
+            </marker>
+          </defs>
+
+          <!-- 1. Capa de Presentación / UI -->
+          <g transform="translate(15, 25)">
+            <rect width="180" height="110" rx="10" fill="#1e1b4b" stroke="#6366f1" stroke-width="1.5" />
+            <rect x="0" y="0" width="180" height="26" rx="10" fill="#312e81" />
+            <text x="90" y="17" fill="#c7d2fe" font-size="11" font-weight="bold" text-anchor="middle">1. Capa UI / HTTP</text>
+            <text x="15" y="48" fill="#e0e7ff" font-size="10">Pantalla / API Rest</text>
+            <text x="15" y="66" fill="#818cf8" font-size="9">btnPagar.onClick()</text>
+            <text x="15" y="82" fill="#818cf8" font-size="9">POST /api/ventas</text>
+            <rect x="15" y="94" width="150" height="18" rx="4" fill="#0f172a" />
+            <text x="90" y="106" fill="#a5b4fc" font-size="8.5" text-anchor="middle">Captura evento de usuario</text>
+          </g>
+
+          <!-- Flecha UI -> Controlador -->
+          <path d="M 195 80 L 270 80" stroke="#c084fc" stroke-width="2" marker-end="url(#grasp-arrow-p)" />
+          <text x="232" y="70" fill="#d8b4fe" font-size="9" text-anchor="middle">Evento Sistema</text>
+          <text x="232" y="98" fill="#94a3b8" font-size="8" text-anchor="middle">crearVenta()</text>
+
+          <!-- 2. Capa de Aplicación: Controlador GRASP -->
+          <g transform="translate(280, 20)">
+            <rect width="210" height="120" rx="12" fill="#3b0764" stroke="#a855f7" stroke-width="2" />
+            <rect x="0" y="0" width="210" height="28" rx="12" fill="#581c87" />
+            <text x="105" y="18" fill="#f3e8ff" font-size="11" font-weight="bold" text-anchor="middle">2. GRASP Controlador</text>
+            <text x="15" y="50" fill="#e9d5ff" font-size="10" font-weight="bold">RegistroVentaHandler</text>
+            <text x="15" y="68" fill="#d8b4fe" font-size="8.5">✓ No contiene lógica de cálculo</text>
+            <text x="15" y="82" fill="#d8b4fe" font-size="8.5">✓ Coordina el caso de uso</text>
+            <text x="15" y="96" fill="#d8b4fe" font-size="8.5">✓ Aísla el dominio de la UI</text>
+            <rect x="15" y="104" width="180" height="12" rx="3" fill="#1e1b4b" />
+            <text x="105" y="113" fill="#c084fc" font-size="8" text-anchor="middle">Frontera de Desacoplamiento</text>
+          </g>
+
+          <!-- Flecha Controlador -> Dominio -->
+          <path d="M 490 80 L 565 80" stroke="#38bdf8" stroke-width="2" marker-end="url(#grasp-arrow-c)" />
+          <text x="528" y="70" fill="#7dd3fc" font-size="9" text-anchor="middle">Delega Negocio</text>
+          <text x="528" y="98" fill="#94a3b8" font-size="8" text-anchor="middle">calcularTotal()</text>
+
+          <!-- 3. Capa de Dominio Puro -->
+          <g transform="translate(575, 25)">
+            <rect width="185" height="110" rx="10" fill="#0c4a6e" stroke="#0284c7" stroke-width="1.5" />
+            <rect x="0" y="0" width="185" height="26" rx="10" fill="#0369a1" />
+            <text x="92" y="17" fill="#e0f2fe" font-size="11" font-weight="bold" text-anchor="middle">3. Capa de Dominio</text>
+            <text x="15" y="48" fill="#bae6fd" font-size="10" font-weight="bold">Venta & LineaVenta</text>
+            <text x="15" y="66" fill="#7dd3fc" font-size="9">✓ Experto en Información</text>
+            <text x="15" y="82" fill="#7dd3fc" font-size="9">✓ Cálculos monetarios</text>
+            <rect x="15" y="92" width="155" height="20" rx="4" fill="#082f49" stroke="#38bdf8" stroke-width="0.8" />
+            <text x="92" y="105" fill="#38bdf8" font-size="8" text-anchor="middle">Cero dependencias hacia la UI</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="text-[11px] text-muted-foreground p-2 rounded-lg bg-black/40 border border-white/5 font-mono">
+        <strong class="text-purple-300">Regla Estricta PDS/TDS:</strong> Si una clase de dominio (como <code class="text-foreground">Venta</code>) tiene referencias directas a objetos de la UI (como botones, ventanas de JavaFX o frameworks React/Vue), el diseño está contaminado. El <strong>Controlador</strong> es el escudo arquitectónico que absorbe los cambios de transporte.
+      </div>
+    </div>
   </div>
 
   <!-- GROUP 2: PILLARS (Cohesion, Acoplamiento, Fabricación Pura) -->
@@ -197,6 +272,87 @@
           <div>✦ <code>Repositorios / DAOs:</code> FacturaRepository.</div>
           <div>✦ <code>Mappers / DTOs:</code> UserEntityMapper.</div>
         </div>
+      </div>
+    </div>
+
+    <!-- COMPARATIVA VISUAL SVG: Grafo de Acoplamiento y Cohesión -->
+    <div class="p-4 rounded-xl border border-blue-500/30 bg-black/40 space-y-3">
+      <div class="flex items-center justify-between text-xs font-mono">
+        <span class="font-bold text-blue-300 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+          Topología de Grafos: Alto Acoplamiento vs Bajo Acoplamiento (GRASP)
+        </span>
+        <span class="text-[10px] text-muted-foreground">Métrica Evaluativa de Diseño</span>
+      </div>
+
+      <div class="w-full overflow-x-auto py-2 flex justify-center">
+        <svg viewBox="0 0 780 200" class="w-full max-w-[780px] h-auto select-none font-mono" style="min-width: 620px;">
+          <!-- Mitad Izquierda: Alto Acoplamiento -->
+          <g transform="translate(10, 10)">
+            <rect width="365" height="180" rx="10" fill="#450a0a" fill-opacity="0.25" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="4 3" />
+            <text x="182" y="24" fill="#f87171" font-size="11" font-weight="bold" text-anchor="middle">❌ ALTO ACOPLAMIENTO (Malla Spaghetti)</text>
+
+            <!-- Aristas enredadas -->
+            <line x1="80" y1="65" x2="190" y2="60" stroke="#f87171" stroke-width="1.5" stroke-opacity="0.6" />
+            <line x1="80" y1="65" x2="120" y2="140" stroke="#f87171" stroke-width="1.5" stroke-opacity="0.6" />
+            <line x1="80" y1="65" x2="270" y2="120" stroke="#f87171" stroke-width="1.5" stroke-opacity="0.6" />
+            <line x1="190" y1="60" x2="290" y2="65" stroke="#f87171" stroke-width="1.5" stroke-opacity="0.6" />
+            <line x1="190" y1="60" x2="270" y2="120" stroke="#f87171" stroke-width="1.5" stroke-opacity="0.6" />
+            <line x1="190" y1="60" x2="120" y2="140" stroke="#f87171" stroke-width="1.5" stroke-opacity="0.6" />
+            <line x1="290" y1="65" x2="270" y2="120" stroke="#f87171" stroke-width="1.5" stroke-opacity="0.6" />
+            <line x1="120" y1="140" x2="270" y2="120" stroke="#f87171" stroke-width="1.5" stroke-opacity="0.6" />
+
+            <!-- Nodos -->
+            <circle cx="80" cy="65" r="22" fill="#7f1d1d" stroke="#f87171" stroke-width="2" />
+            <text x="80" y="69" fill="#fecaca" font-size="10" font-weight="bold" text-anchor="middle">Clase A</text>
+
+            <circle cx="190" cy="60" r="22" fill="#7f1d1d" stroke="#f87171" stroke-width="2" />
+            <text x="190" y="64" fill="#fecaca" font-size="10" font-weight="bold" text-anchor="middle">Clase B</text>
+
+            <circle cx="290" cy="65" r="22" fill="#7f1d1d" stroke="#f87171" stroke-width="2" />
+            <text x="290" y="69" fill="#fecaca" font-size="10" font-weight="bold" text-anchor="middle">Clase C</text>
+
+            <circle cx="120" cy="140" r="22" fill="#7f1d1d" stroke="#f87171" stroke-width="2" />
+            <text x="120" y="144" fill="#fecaca" font-size="10" font-weight="bold" text-anchor="middle">Clase D</text>
+
+            <circle cx="270" cy="120" r="22" fill="#7f1d1d" stroke="#f87171" stroke-width="2" />
+            <text x="270" y="124" fill="#fecaca" font-size="10" font-weight="bold" text-anchor="middle">Clase E</text>
+
+            <text x="182" y="172" fill="#fca5a5" font-size="8.5" text-anchor="middle">O(N²) conexiones · Cambio en una rompe a todas</text>
+          </g>
+
+          <!-- Mitad Derecha: Bajo Acoplamiento & Alta Cohesión -->
+          <g transform="translate(405, 10)">
+            <rect width="365" height="180" rx="10" fill="#064e3b" fill-opacity="0.25" stroke="#10b981" stroke-width="1.2" />
+            <text x="182" y="24" fill="#34d399" font-size="11" font-weight="bold" text-anchor="middle">✓ BAJO ACOPLAMIENTO (GRASP + Fabricación)</text>
+
+            <!-- Aristas limpias hacia intermediario -->
+            <line x1="80" y1="65" x2="182" y2="95" stroke="#34d399" stroke-width="1.8" />
+            <line x1="285" y1="65" x2="182" y2="95" stroke="#34d399" stroke-width="1.8" />
+            <line x1="95" y1="135" x2="182" y2="95" stroke="#34d399" stroke-width="1.8" />
+            <line x1="270" y1="135" x2="182" y2="95" stroke="#34d399" stroke-width="1.8" />
+
+            <!-- Nodos Periféricos Cohesivos -->
+            <circle cx="80" cy="65" r="20" fill="#064e3b" stroke="#34d399" stroke-width="1.5" />
+            <text x="80" y="69" fill="#a7f3d0" font-size="9.5" font-weight="bold" text-anchor="middle">Venta</text>
+
+            <circle cx="285" cy="65" r="20" fill="#064e3b" stroke="#34d399" stroke-width="1.5" />
+            <text x="285" y="69" fill="#a7f3d0" font-size="9.5" font-weight="bold" text-anchor="middle">Cliente</text>
+
+            <circle cx="95" cy="135" r="20" fill="#064e3b" stroke="#34d399" stroke-width="1.5" />
+            <text x="95" y="139" fill="#a7f3d0" font-size="9.5" font-weight="bold" text-anchor="middle">Articulo</text>
+
+            <circle cx="270" cy="135" r="20" fill="#064e3b" stroke="#34d399" stroke-width="1.5" />
+            <text x="270" y="139" fill="#a7f3d0" font-size="9.5" font-weight="bold" text-anchor="middle">Factura</text>
+
+            <!-- Nodo Central: Fabricación Pura / Interfaz -->
+            <rect x="122" y="80" width="120" height="32" rx="8" fill="#047857" stroke="#6ee7b7" stroke-width="2" />
+            <text x="182" y="96" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">PagoService (FP)</text>
+            <text x="182" y="106" fill="#d1fae5" font-size="8" text-anchor="middle">o IPasarelaPago</text>
+
+            <text x="182" y="172" fill="#6ee7b7" font-size="8.5" text-anchor="middle">Dependencias radiales O(N) · Clases testeables y reusables</text>
+          </g>
+        </svg>
       </div>
     </div>
   </div>
