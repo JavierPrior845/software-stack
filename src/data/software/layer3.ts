@@ -24,6 +24,7 @@ export const layer3: Layer = {
             'La PDU cambia de nombre en cada capa: datos, segmento, paquete, trama.',
           ],
           tags: ['redes', 'protocolos'],
+          diagram: 'encapsulation',
         },
         {
           slug: 'encapsulacion',
@@ -69,6 +70,7 @@ export const layer3: Layer = {
             'NAT/PAT mapea (IP privada, puerto) → (IP pública, puerto efímero).',
           ],
           tags: ['redes', 'ip'],
+          widget: 'subnet-calculator',
         },
         {
           slug: 'dns',
@@ -148,6 +150,7 @@ export const layer3: Layer = {
             'En redes con pérdida aleatoria (Wi-Fi), BBR suele batir a CUBIC.',
           ],
           tags: ['redes', 'tcp', 'rendimiento'],
+          diagram: 'tcp-handshake',
         },
         {
           slug: 'udp-quic',
@@ -258,6 +261,7 @@ export const layer3: Layer = {
             'ECC ofrece seguridad comparable a RSA con claves mucho más pequeñas.',
           ],
           tags: ['seguridad', 'criptografía'],
+          diagram: 'tls-handshake',
           tradeoffs: {
             whenToUse: ['AES-GCM / ChaCha20-Poly1305: cifrar tráfico o discos', 'Ed25519 / ECDSA: firmas digitales e intercambio ECDHE'],
             whenToAvoid: ['Intentar cifrar payloads grandes directamente con RSA'],

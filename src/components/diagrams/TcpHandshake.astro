@@ -1,74 +1,356 @@
 ---
-const steps = [
-  {
-    dir: 'right' as const,
-    flag: 'SYN',
-    seq: 'seq = x',
-    detail: 'El cliente solicita abrir conexión y sincroniza su número de secuencia inicial',
-  },
-  {
-    dir: 'left' as const,
-    flag: 'SYN-ACK',
-    seq: 'seq = y · ack = x + 1',
-    detail: 'El servidor confirma x+1, propone su secuencia y anuncia su ventana de recepción (rwnd)',
-  },
-  {
-    dir: 'right' as const,
-    flag: 'ACK',
-    seq: 'seq = x + 1 · ack = y + 1',
-    detail: 'El cliente confirma y+1. Conexión ESTABLISHED; el primer payload puede viajar aquí',
-  },
-];
+// TcpHandshake.astro
+// Interactive SVG-driven TCP 3-Way Handshake & Sliding Window Buffer Visualizer
+// Provides a genuine vector sequence diagram with state transitions and an interactive byte-buffer sliding window.
 ---
 
-<div class="space-y-3">
-  <div class="grid grid-cols-2 gap-4 text-center">
-    <div class="rounded-md border border-white/10 bg-black/20 px-3 py-1.5 font-mono text-[10px] text-muted">
-      cliente (puerto efímero 54120)
+<div class="tcp-explorer select-none my-4 space-y-4 font-mono text-xs" id="tcp-explorer-root">
+  <!-- Header / Controls -->
+  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line/60 pb-3">
+    <div class="flex items-center gap-2">
+      <div class="w-7 h-7 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-400 flex items-center justify-center font-bold text-sm shadow-sm">
+        🤝
+      </div>
+      <div>
+        <h4 class="font-bold text-sm text-ink flex items-center gap-2">
+          TCP: 3-Way Handshake & Ventana Deslizante
+          <span class="text-[10px] px-2 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/30">
+            Fiabilidad & Flow Control
+          </span>
+        </h4>
+        <p class="text-[11px] text-dim font-sans">
+          Secuencia temporal de sincronización, estados del socket y gestión de buffer (rwnd/cwnd)
+        </p>
+      </div>
     </div>
-    <div class="rounded-md border border-white/10 bg-black/20 px-3 py-1.5 font-mono text-[10px] text-muted">
-      servidor (puerto escucha 443)
+
+    <!-- Mode Selector -->
+    <div class="flex items-center gap-1.5 p-1 bg-surface-2 rounded-xl border border-line/70">
+      <button
+        type="button"
+        id="btn-tcp-handshake"
+        class="tcp-tab-btn active-tab px-3 py-1.5 rounded-lg font-bold text-white bg-purple-600 border border-purple-400 shadow-md shadow-purple-500/25 transition-all text-xs cursor-pointer flex items-center gap-1.5"
+        data-target="view-handshake"
+      >
+        <span>⚡ 3-Way Handshake (SVG)</span>
+      </button>
+      <button
+        type="button"
+        id="btn-tcp-window"
+        class="tcp-tab-btn px-3 py-1.5 rounded-lg font-medium text-dim hover:text-ink hover:bg-surface-3 border border-transparent transition-all text-xs cursor-pointer flex items-center gap-1.5"
+        data-target="view-window"
+      >
+        <span>🪟 Ventana Deslizante (Buffer)</span>
+      </button>
     </div>
   </div>
 
-  <ol class="space-y-2.5">
-    {
-      steps.map((step, index) => (
-        <li class="rounded-md border border-white/8 bg-white/[0.015] px-3 py-2.5">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div class="flex items-center gap-2">
-              <span
-                class:list={[
-                  'font-mono text-sm',
-                  step.dir === 'right' ? 'accent' : 'text-emerald-300',
-                ]}
-              >
-                {step.dir === 'right' ? '──▶' : '◀──'}
-              </span>
-              <span class="font-mono text-xs font-semibold text-ink">
-                {index + 1}. [{step.flag}]
-              </span>
-            </div>
-            <span class="font-mono text-[10px] text-muted">{step.seq}</span>
-          </div>
-          <p class="mt-1 pl-7 text-[10px] leading-relaxed text-dim">{step.detail}</p>
-        </li>
-      ))
-    }
-  </ol>
+  <!-- VIEW 1: SVG SEQUENCE DIAGRAM (3-WAY HANDSHAKE) -->
+  <div id="view-handshake" class="space-y-4">
+    <!-- Interactive Step Player -->
+    <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-surface-1 border border-line/70">
+      <div class="flex items-center gap-2">
+        <span class="text-dim text-[11px]">Progreso del Handshake:</span>
+        <div class="flex items-center gap-1">
+          <button
+            type="button"
+            id="btn-step-1"
+            class="step-btn px-2.5 py-1 rounded text-[11px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40 cursor-pointer"
+            data-step="1"
+          >
+            Paso 1: SYN
+          </button>
+          <button
+            type="button"
+            id="btn-step-2"
+            class="step-btn px-2.5 py-1 rounded text-[11px] font-medium text-dim hover:text-ink hover:bg-surface-2 border border-transparent cursor-pointer"
+            data-step="2"
+          >
+            Paso 2: SYN-ACK
+          </button>
+          <button
+            type="button"
+            id="btn-step-3"
+            class="step-btn px-2.5 py-1 rounded text-[11px] font-medium text-dim hover:text-ink hover:bg-surface-2 border border-transparent cursor-pointer"
+            data-step="3"
+          >
+            Paso 3: ACK & Conexión
+          </button>
+        </div>
+      </div>
 
-  <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-    <div class="rounded-md border border-white/8 bg-black/20 px-3 py-2">
-      <p class="font-mono text-[10px] text-ink/90">Control de flujo (rwnd)</p>
-      <p class="mt-0.5 text-[10px] text-dim">
-        El receptor limita cuántos bytes sin ACK acepta para no desbordar su buffer.
-      </p>
+      <div class="text-[11px] text-emerald-400 font-mono flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="handshake-status-text">1 RTT requerido antes del primer byte HTTP</span>
+      </div>
     </div>
-    <div class="rounded-md border border-white/8 bg-black/20 px-3 py-2">
-      <p class="font-mono text-[10px] text-ink/90">Control de congestión (cwnd)</p>
-      <p class="mt-0.5 text-[10px] text-dim">
-        El emisor arranca en Slow Start y frena si la red intermedia descarta paquetes.
-      </p>
+
+    <!-- MAIN SVG SEQUENCE CANVAS -->
+    <div class="rounded-2xl border border-line/80 bg-surface-1/90 p-4 shadow-xl backdrop-blur-md">
+      <div class="w-full overflow-x-auto py-2">
+        <svg viewBox="0 0 800 360" class="w-full min-w-[620px] h-auto font-mono select-none" id="handshake-svg">
+          <defs>
+            <!-- Marker Arrows -->
+            <marker id="arrow-right" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#c084fc" />
+            </marker>
+            <marker id="arrow-left" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#34d399" />
+            </marker>
+            <marker id="arrow-ack" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#818cf8" />
+            </marker>
+          </defs>
+
+          <!-- Host Columns Background Header -->
+          <rect x="50" y="15" width="220" height="42" rx="8" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.5" />
+          <text x="160" y="34" fill="#e0e7ff" font-size="12" font-weight="bold" text-anchor="middle">Cliente (Navegador)</text>
+          <text x="160" y="48" fill="#a5b4fc" font-size="9.5" text-anchor="middle">192.168.1.15 : Puerto 54320</text>
+
+          <rect x="530" y="15" width="220" height="42" rx="8" fill="#064e3b" stroke="#34d399" stroke-width="1.5" />
+          <text x="640" y="34" fill="#ecfdf5" font-size="12" font-weight="bold" text-anchor="middle">Servidor (Nginx / API)</text>
+          <text x="640" y="48" fill="#a7f3d0" font-size="9.5" text-anchor="middle">142.250.200.14 : Puerto 443</text>
+
+          <!-- Timelines (Vertical) -->
+          <line x1="160" y1="65" x2="160" y2="340" stroke="#475569" stroke-width="2" stroke-dasharray="4 4" />
+          <line x1="640" y1="65" x2="640" y2="340" stroke="#475569" stroke-width="2" stroke-dasharray="4 4" />
+
+          <!-- Time arrow -->
+          <line x1="20" y1="80" x2="20" y2="320" stroke="#334155" stroke-width="1.5" />
+          <polygon points="20,330 16,318 24,318" fill="#64748b" />
+          <text x="18" y="200" fill="#64748b" font-size="10" transform="rotate(-90 18 200)" text-anchor="middle">Tiempo (t)</text>
+
+          <!-- STATES BADGES: CLIENT -->
+          <rect id="state-client-1" x="65" y="80" width="85" height="22" rx="4" fill="#0f172a" stroke="#64748b" stroke-width="1" />
+          <text id="text-client-1" x="107" y="95" fill="#94a3b8" font-size="10" text-anchor="middle">CLOSED</text>
+
+          <rect id="state-client-2" x="60" y="145" width="95" height="22" rx="4" fill="#1e1b4b" stroke="#c084fc" stroke-width="1.2" />
+          <text id="text-client-2" x="107" y="160" fill="#e9d5ff" font-size="10" font-weight="bold" text-anchor="middle">SYN-SENT</text>
+
+          <rect id="state-client-3" x="55" y="275" width="105" height="24" rx="4" fill="#064e3b" stroke="#10b981" stroke-width="1.5" />
+          <text id="text-client-3" x="107" y="291" fill="#a7f3d0" font-size="10.5" font-weight="bold" text-anchor="middle">ESTABLISHED</text>
+
+          <!-- STATES BADGES: SERVER -->
+          <rect id="state-server-1" x="650" y="80" width="85" height="22" rx="4" fill="#0f172a" stroke="#64748b" stroke-width="1" />
+          <text id="text-server-1" x="692" y="95" fill="#94a3b8" font-size="10" text-anchor="middle">LISTEN</text>
+
+          <rect id="state-server-2" x="645" y="195" width="95" height="22" rx="4" fill="#1e1b4b" stroke="#c084fc" stroke-width="1.2" />
+          <text id="text-server-2" x="692" y="210" fill="#e9d5ff" font-size="9.5" font-weight="bold" text-anchor="middle">SYN-RECEIVED</text>
+
+          <rect id="state-server-3" x="640" y="305" width="105" height="24" rx="4" fill="#064e3b" stroke="#10b981" stroke-width="1.5" />
+          <text id="text-server-3" x="692" y="321" fill="#a7f3d0" font-size="10.5" font-weight="bold" text-anchor="middle">ESTABLISHED</text>
+
+          <!-- 1. SYN ARROW (Client -> Server) -->
+          <g id="svg-arrow-step-1" class="transition-opacity duration-300">
+            <line x1="160" y1="110" x2="635" y2="175" stroke="#c084fc" stroke-width="2.5" marker-end="url(#arrow-right)" />
+            <rect x="330" y="125" width="140" height="26" rx="5" fill="#1e1b4b" stroke="#a855f7" stroke-width="1.2" />
+            <text x="400" y="142" fill="#f3e8ff" font-size="11" font-weight="bold" text-anchor="middle">1. SYN (seq = 1000)</text>
+          </g>
+
+          <!-- 2. SYN-ACK ARROW (Server -> Client) -->
+          <g id="svg-arrow-step-2" class="transition-opacity duration-300">
+            <line x1="640" y1="190" x2="165" y2="255" stroke="#34d399" stroke-width="2.5" marker-end="url(#arrow-left)" />
+            <rect x="300" y="205" width="200" height="26" rx="5" fill="#064e3b" stroke="#10b981" stroke-width="1.2" />
+            <text x="400" y="222" fill="#ecfdf5" font-size="11" font-weight="bold" text-anchor="middle">2. SYN-ACK (seq=5000, ack=1001)</text>
+          </g>
+
+          <!-- 3. ACK ARROW (Client -> Server) -->
+          <g id="svg-arrow-step-3" class="transition-opacity duration-300">
+            <line x1="160" y1="270" x2="635" y2="310" stroke="#818cf8" stroke-width="2.5" marker-end="url(#arrow-ack)" />
+            <rect x="310" y="275" width="180" height="26" rx="5" fill="#1e1b4b" stroke="#6366f1" stroke-width="1.2" />
+            <text x="400" y="292" fill="#e0e7ff" font-size="11" font-weight="bold" text-anchor="middle">3. ACK (seq=1001, ack=5001)</text>
+          </g>
+        </svg>
+      </div>
+
+      <!-- Explanatory Details for Active Step -->
+      <div id="step-detail-card" class="mt-3 p-3.5 rounded-xl border border-line bg-surface-2 text-xs leading-relaxed">
+        <div class="flex items-center justify-between text-purple-300 font-bold mb-1">
+          <span id="step-title">Paso 1: Cliente envía SYN (Synchronize Sequence Number)</span>
+          <span class="text-[10px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono">Estado: SYN-SENT</span>
+        </div>
+        <p id="step-desc" class="text-dim text-[11px] font-sans">
+          El cliente elige aleatoriamente un Número de Secuencia Inicial (ISN = 1000) por motivos de seguridad. El paquete no lleva payload de datos, pero consume 1 número de secuencia.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW 2: SLIDING WINDOW BUFFER VISUALIZER -->
+  <div id="view-window" class="space-y-4 hidden">
+    <div class="p-4 rounded-xl border border-line bg-surface-1 space-y-3">
+      <div class="flex items-center justify-between border-b border-line/60 pb-2">
+        <div>
+          <span class="font-bold text-sm text-cyan-300">Control de Flujo: Ventana Deslizante (Sliding Window)</span>
+          <p class="text-dim text-[11px] font-sans">
+            El receptor anuncia su espacio de buffer libre (<code class="text-ink">rwnd</code>). El emisor solo puede transmitir lo que quepa dentro de esa ventana sin esperar ACKs.
+          </p>
+        </div>
+        <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+          rwnd = 4 KB
+        </span>
+      </div>
+
+      <!-- Interactive SVG Sliding Window Buffer -->
+      <div class="w-full overflow-x-auto py-3">
+        <svg viewBox="0 0 850 160" class="w-full min-w-[700px] h-auto font-mono select-none">
+          <!-- Byte stream axis -->
+          <line x1="30" y1="90" x2="820" y2="90" stroke="#334155" stroke-width="2" />
+
+          <!-- Byte blocks -->
+          <!-- 1. Sent & ACKed (0..3) -->
+          <g>
+            <rect x="40" y="45" width="180" height="50" rx="4" fill="#064e3b" stroke="#10b981" stroke-width="1.5" />
+            <text x="130" y="68" fill="#a7f3d0" font-size="11" font-weight="bold" text-anchor="middle">Bytes 1 - 3000</text>
+            <text x="130" y="85" fill="#34d399" font-size="9" text-anchor="middle">✓ Enviados y Confirmados (ACK)</text>
+          </g>
+
+          <!-- 2. Sent but NOT ACKed (4..6) -->
+          <g>
+            <rect x="230" y="45" width="200" height="50" rx="4" fill="#78350f" stroke="#f59e0b" stroke-width="1.5" />
+            <text x="330" y="68" fill="#fde68a" font-size="11" font-weight="bold" text-anchor="middle">Bytes 3001 - 5000</text>
+            <text x="330" y="85" fill="#fbbf24" font-size="9" text-anchor="middle">✈️ En vuelo (No confirmados)</text>
+          </g>
+
+          <!-- 3. Usable Window (Can send immediately) (7..8) -->
+          <g>
+            <rect x="440" y="45" width="180" height="50" rx="4" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.5" />
+            <text x="530" y="68" fill="#c7d2fe" font-size="11" font-weight="bold" text-anchor="middle">Bytes 5001 - 7000</text>
+            <text x="530" y="85" fill="#a5b4fc" font-size="9" text-anchor="middle">⚡ Listos para Enviar (En ventana)</text>
+          </g>
+
+          <!-- 4. Outside Window (Cannot send yet) -->
+          <g opacity="0.6">
+            <rect x="630" y="45" width="180" height="50" rx="4" fill="#1e293b" stroke="#475569" stroke-width="1.2" stroke-dasharray="3 3" />
+            <text x="720" y="68" fill="#94a3b8" font-size="11" text-anchor="middle">Bytes 7001+</text>
+            <text x="720" y="85" fill="#64748b" font-size="9" text-anchor="middle">⛔ Bloqueado (Espera ACK)</text>
+          </g>
+
+          <!-- Sliding Window Bracket -->
+          <path d="M 230 35 L 230 20 L 620 20 L 620 35" stroke="#38bdf8" stroke-width="2.5" fill="none" />
+          <text x="425" y="14" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">
+            Ventana del Emisor (Usable + En vuelo = rwnd 4000 Bytes)
+          </text>
+
+          <!-- Window Slide Direction -->
+          <text x="425" y="125" fill="#94a3b8" font-size="10" text-anchor="middle">
+            Conforme llegan ACKs de los bytes 3001-5000, la ventana se desplaza hacia la derecha ──▶
+          </text>
+        </svg>
+      </div>
+
+      <!-- Difference between Flow Control & Congestion Control -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px] pt-1">
+        <div class="p-3 rounded-lg bg-surface-2 border border-cyan-500/30">
+          <span class="text-cyan-300 font-bold block mb-1">Control de Flujo (rwnd - Receive Window)</span>
+          <p class="text-dim text-[10px] leading-relaxed font-sans">
+            Mecanismo <strong>extremo a extremo</strong>. Protege al receptor: si el servidor lee lento de su socket, anuncia un <code class="text-ink">rwnd = 0</code> (Zero Window Probe) para ordenar al cliente que deje de transmitir.
+          </p>
+        </div>
+        <div class="p-3 rounded-lg bg-surface-2 border border-purple-500/30">
+          <span class="text-purple-300 font-bold block mb-1">Control de Congestión (cwnd - Congestion Window)</span>
+          <p class="text-dim text-[10px] leading-relaxed font-sans">
+            Mecanismo para <strong>proteger la red de routers intermedia</strong>. Arranca con <em>Slow Start</em> (duplicando paquetes por RTT) y ante pérdida de paquetes reduce drásticamente el ritmo para evitar el colapso de la red.
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 </div>
+
+<script>
+  function initTcpExplorer() {
+    const root = document.getElementById('tcp-explorer-root');
+    if (!root) return;
+
+    // 1. Tab switching (Handshake vs Window)
+    const btnHandshake = root.querySelector('#btn-tcp-handshake');
+    const btnWindow = root.querySelector('#btn-tcp-window');
+    const viewHandshake = root.querySelector('#view-handshake');
+    const viewWindow = root.querySelector('#view-window');
+
+    function switchView(mode: 'handshake' | 'window') {
+      if (mode === 'handshake') {
+        viewHandshake?.classList.remove('hidden');
+        viewWindow?.classList.add('hidden');
+        btnHandshake?.classList.add('active-tab', 'text-white', 'bg-purple-600', 'border-purple-400', 'shadow-md', 'shadow-purple-500/25');
+        btnHandshake?.classList.remove('text-dim', 'border-transparent');
+        btnWindow?.classList.remove('active-tab', 'text-white', 'bg-purple-600', 'border-purple-400', 'shadow-md', 'shadow-purple-500/25');
+        btnWindow?.classList.add('text-dim', 'border-transparent');
+      } else {
+        viewHandshake?.classList.add('hidden');
+        viewWindow?.classList.remove('hidden');
+        btnWindow?.classList.add('active-tab', 'text-white', 'bg-purple-600', 'border-purple-400', 'shadow-md', 'shadow-purple-500/25');
+        btnWindow?.classList.remove('text-dim', 'border-transparent');
+        btnHandshake?.classList.remove('active-tab', 'text-white', 'bg-purple-600', 'border-purple-400', 'shadow-md', 'shadow-purple-500/25');
+        btnHandshake?.classList.add('text-dim', 'border-transparent');
+      }
+    }
+
+    btnHandshake?.addEventListener('click', () => switchView('handshake'));
+    btnWindow?.addEventListener('click', () => switchView('window'));
+
+    // 2. Step by Step Handshake Animator
+    const stepBtns = root.querySelectorAll<HTMLButtonElement>('.step-btn');
+    const arrow1 = root.querySelector('#svg-arrow-step-1');
+    const arrow2 = root.querySelector('#svg-arrow-step-2');
+    const arrow3 = root.querySelector('#svg-arrow-step-3');
+
+    const stepTitle = root.querySelector('#step-title');
+    const stepDesc = root.querySelector('#step-desc');
+    const statusText = root.querySelector('#handshake-status-text');
+
+    const stepData = {
+      1: {
+        title: 'Paso 1: Cliente envía SYN (Synchronize Sequence Number)',
+        desc: 'El cliente elige aleatoriamente un Número de Secuencia Inicial (ISN = 1000) por motivos de seguridad. El paquete no lleva payload de datos, pero consume 1 número de secuencia.',
+        status: 'RTT / 2 transcurrido · Servidor recibe petición',
+      },
+      2: {
+        title: 'Paso 2: Servidor responde SYN-ACK (Confirma y Sincroniza)',
+        desc: 'El servidor confirma la secuencia del cliente solicitando la siguiente (ack = 1001) y elige su propio ISN independiente (seq = 5000). El socket pasa al estado SYN-RECEIVED.',
+        status: '1 RTT completo · Cliente ya puede enviar datos',
+      },
+      3: {
+        title: 'Paso 3: Cliente confirma con ACK (Ambos en ESTABLISHED)',
+        desc: 'El cliente confirma la secuencia del servidor (ack = 5001). Ambos sockets quedan en estado ESTABLISHED. Este paquete ACK ya puede transportar los primeros bytes del payload HTTP.',
+        status: '✓ Conexión 100% establecida · Tráfico full-duplex activo',
+      },
+    };
+
+    function renderStep(step: 1 | 2 | 3) {
+      stepBtns.forEach((b) => {
+        const s = Number(b.getAttribute('data-step'));
+        if (s === step) {
+          b.classList.add('bg-purple-500/20', 'text-purple-300', 'border-purple-500/40', 'font-bold');
+          b.classList.remove('text-dim', 'border-transparent');
+        } else {
+          b.classList.remove('bg-purple-500/20', 'text-purple-300', 'border-purple-500/40', 'font-bold');
+          b.classList.add('text-dim', 'border-transparent');
+        }
+      });
+
+      if (arrow1) arrow1.setAttribute('opacity', step >= 1 ? '1' : '0.15');
+      if (arrow2) arrow2.setAttribute('opacity', step >= 2 ? '1' : '0.15');
+      if (arrow3) arrow3.setAttribute('opacity', step >= 3 ? '1' : '0.15');
+
+      const info = stepData[step];
+      if (stepTitle) stepTitle.textContent = info.title;
+      if (stepDesc) stepDesc.textContent = info.desc;
+      if (statusText) statusText.textContent = info.status;
+    }
+
+    stepBtns.forEach((b) => {
+      b.addEventListener('click', () => {
+        const s = Number(b.getAttribute('data-step')) as 1 | 2 | 3;
+        renderStep(s);
+      });
+    });
+
+    // Default to Step 1
+    renderStep(1);
+  }
+
+  initTcpExplorer();
+  document.addEventListener('astro:page-load', initTcpExplorer);
+</script>

@@ -1,0 +1,420 @@
+---
+// SubnetCalculator.astro
+// Interactive CIDR Subnet Calculator & NAT/PAT Translation Simulator
+// Features a dynamic 32-bit vector bar, instant calculation of network/broadcast/usable hosts,
+// and an animated NAT state translation table.
+---
+
+<div class="subnet-widget rounded-2xl border border-line/80 bg-surface-1/90 p-4 sm:p-5 shadow-xl font-mono text-xs select-none" id="subnet-calculator-root">
+  <!-- Header & Mode Selector -->
+  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line/60 pb-3">
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 flex items-center justify-center font-bold text-sm shadow-sm">
+        🌐
+      </div>
+      <div>
+        <h4 class="font-bold text-sm text-ink flex items-center gap-2">
+          Calculadora de Subredes CIDR & Simulador NAT
+          <span class="text-[10px] px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+            IPv4 & PAT
+          </span>
+        </h4>
+        <p class="text-[11px] text-dim font-sans">
+          División de bits [Red | Host], direccionamiento RFC 1918 y traducción de puertos NAT
+        </p>
+      </div>
+    </div>
+
+    <!-- Mode Tabs -->
+    <div class="flex items-center gap-1.5 p-1 bg-surface-2 rounded-xl border border-line/70">
+      <button
+        type="button"
+        id="tab-btn-cidr"
+        class="subnet-tab-btn active-tab px-3 py-1.5 rounded-lg font-bold text-white bg-cyan-600 border border-cyan-400 shadow-md shadow-cyan-500/25 transition-all text-xs cursor-pointer flex items-center gap-1.5"
+        data-target="panel-cidr"
+      >
+        <span>📏 Calculadora CIDR</span>
+      </button>
+      <button
+        type="button"
+        id="tab-btn-nat"
+        class="subnet-tab-btn px-3 py-1.5 rounded-lg font-medium text-dim hover:text-ink hover:bg-surface-3 border border-transparent transition-all text-xs cursor-pointer flex items-center gap-1.5"
+        data-target="panel-nat"
+      >
+        <span>🔄 Simulador NAT / PAT</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- PANEL 1: CALCULADORA CIDR -->
+  <div id="panel-cidr" class="space-y-4 pt-3">
+    <!-- Presets bar -->
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="text-dim text-[11px]">Plantillas Típicas:</span>
+      <button type="button" class="preset-btn px-2.5 py-1 rounded-md text-[11px] font-semibold bg-surface-2 border border-line hover:border-cyan-500/40 transition-colors" data-ip="192.168.1.0" data-cidr="24">
+        LAN Hogar (192.168.1.0/24)
+      </button>
+      <button type="button" class="preset-btn px-2.5 py-1 rounded-md text-[11px] font-semibold bg-surface-2 border border-line hover:border-cyan-500/40 transition-colors" data-ip="10.244.0.0" data-cidr="16">
+        Cluster K8s (10.244.0.0/16)
+      </button>
+      <button type="button" class="preset-btn px-2.5 py-1 rounded-md text-[11px] font-semibold bg-surface-2 border border-line hover:border-cyan-500/40 transition-colors" data-ip="172.16.0.0" data-cidr="20">
+        VPC Cloud (172.16.0.0/20)
+      </button>
+      <button type="button" class="preset-btn px-2.5 py-1 rounded-md text-[11px] font-semibold bg-surface-2 border border-line hover:border-cyan-500/40 transition-colors" data-ip="10.0.0.0" data-cidr="30">
+        Punto a Punto (10.0.0.0/30)
+      </button>
+    </div>
+
+    <!-- Controls: IP input & CIDR Slider -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 p-3.5 rounded-xl bg-surface-2 border border-line/70">
+      <div class="space-y-1">
+        <label for="input-ip" class="block text-[11px] text-dim">Dirección IP Base:</label>
+        <input
+          type="text"
+          id="input-ip"
+          value="192.168.1.0"
+          class="w-full px-3 py-1.5 rounded-lg bg-surface-1 border border-line text-ink font-mono text-xs focus:outline-none focus:border-cyan-400"
+          placeholder="Ej: 192.168.1.0"
+        />
+      </div>
+
+      <div class="md:col-span-2 space-y-1">
+        <div class="flex justify-between text-[11px]">
+          <label for="slider-cidr" class="text-dim">Máscara de Prefijo CIDR:</label>
+          <span class="font-bold text-cyan-300 font-mono" id="label-cidr-val">/24 (255.255.255.0)</span>
+        </div>
+        <input
+          type="range"
+          id="slider-cidr"
+          min="8"
+          max="30"
+          value="24"
+          class="w-full accent-cyan-500 cursor-pointer"
+        />
+        <div class="flex justify-between text-[9px] text-dim px-0.5">
+          <span>/8 (16.7M hosts)</span>
+          <span>/16 (65K hosts)</span>
+          <span>/24 (254 hosts)</span>
+          <span>/30 (2 hosts)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 32-BIT VISUAL VECTOR BAR (SVG) -->
+    <div class="p-3.5 rounded-xl bg-surface-2 border border-line/70 space-y-2">
+      <div class="flex items-center justify-between text-[11px]">
+        <span class="text-dim">Distribución de los 32 bits de la dirección IPv4:</span>
+        <div class="flex items-center gap-3 text-[10px]">
+          <span class="flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-sm bg-cyan-500"></span>
+            <span id="label-net-bits" class="text-cyan-300 font-bold">24 bits de Red</span>
+          </span>
+          <span class="flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span>
+            <span id="label-host-bits" class="text-emerald-300 font-bold">8 bits de Host</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- SVG 32-bit bar -->
+      <div class="w-full overflow-x-auto py-1">
+        <svg viewBox="0 0 640 46" class="w-full min-w-[500px] h-auto select-none" id="bit-bar-svg">
+          <!-- 32 bit boxes generated dynamically by JS -->
+        </svg>
+      </div>
+    </div>
+
+    <!-- CALCULATION RESULTS GRID -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-[11px]">
+      <div class="p-2.5 rounded-xl bg-surface-2 border border-line">
+        <span class="text-dim block text-[10px]">Dirección de Red (ID)</span>
+        <span class="text-cyan-300 font-bold font-mono text-xs" id="calc-net-ip">192.168.1.0</span>
+        <span class="text-dim block text-[9px] mt-0.5">Identifica la subred completa</span>
+      </div>
+
+      <div class="p-2.5 rounded-xl bg-surface-2 border border-line">
+        <span class="text-dim block text-[10px]">Rango de Hosts Útiles</span>
+        <span class="text-emerald-300 font-bold font-mono text-xs" id="calc-range">192.168.1.1 - .254</span>
+        <span class="text-dim block text-[9px] mt-0.5">Asignables a clientes y servidores</span>
+      </div>
+
+      <div class="p-2.5 rounded-xl bg-surface-2 border border-line">
+        <span class="text-dim block text-[10px]">Dirección de Broadcast</span>
+        <span class="text-amber-300 font-bold font-mono text-xs" id="calc-bcast">192.168.1.255</span>
+        <span class="text-dim block text-[9px] mt-0.5">Envía a todos en la subred</span>
+      </div>
+
+      <div class="p-2.5 rounded-xl bg-surface-2 border border-line">
+        <span class="text-dim block text-[10px]">Total Hosts Utilizables</span>
+        <span class="text-indigo-300 font-bold font-mono text-xs" id="calc-hosts">254</span>
+        <span class="text-dim block text-[9px] mt-0.5">Fórmula: 2^(32 - prefijo) - 2</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 2: SIMULADOR NAT / PAT -->
+  <div id="panel-nat" class="space-y-4 pt-3 hidden">
+    <div class="p-3.5 rounded-xl bg-surface-2 border border-line/70 space-y-3">
+      <div class="flex items-center justify-between border-b border-line/60 pb-2">
+        <div>
+          <span class="font-bold text-sm text-cyan-300">PAT (Port Address Translation / NAPT)</span>
+          <p class="text-dim text-[11px] font-sans">
+            Múltiples máquinas con IPs privadas RFC 1918 comparten una única IP pública externa reescribiendo los puertos de transporte.
+          </p>
+        </div>
+        <button
+          type="button"
+          id="btn-simulate-packet"
+          class="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 border border-indigo-400 shadow-md cursor-pointer flex items-center gap-1.5"
+        >
+          <span>🚀 Enviar Petición HTTP</span>
+        </button>
+      </div>
+
+      <!-- Network Topology Diagram in SVG -->
+      <div class="w-full overflow-x-auto py-2">
+        <svg viewBox="0 0 760 160" class="w-full min-w-[600px] h-auto select-none font-mono">
+          <!-- LAN Zone -->
+          <rect x="10" y="10" width="220" height="140" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1.2" />
+          <text x="120" y="30" fill="#94a3b8" font-size="11" font-weight="bold" text-anchor="middle">Red Local (LAN Privada)</text>
+
+          <!-- Client A -->
+          <rect x="25" y="45" width="190" height="26" rx="4" fill="#1e293b" stroke="#38bdf8" stroke-width="1" />
+          <text x="120" y="62" fill="#bae6fd" font-size="10" text-anchor="middle">PC Ada: 192.168.1.15 :52410</text>
+
+          <!-- Client B -->
+          <rect x="25" y="80" width="190" height="26" rx="4" fill="#1e293b" stroke="#38bdf8" stroke-width="1" />
+          <text x="120" y="97" fill="#bae6fd" font-size="10" text-anchor="middle">Móvil: 192.168.1.20 :49152</text>
+
+          <!-- Client C -->
+          <rect x="25" y="115" width="190" height="26" rx="4" fill="#1e293b" stroke="#38bdf8" stroke-width="1" />
+          <text x="120" y="132" fill="#bae6fd" font-size="10" text-anchor="middle">Servidor NAS: 192.168.1.50 :8080</text>
+
+          <!-- Connection Link LAN -> Router -->
+          <line x1="230" y1="80" x2="310" y2="80" stroke="#38bdf8" stroke-width="2" stroke-dasharray="3 3" />
+
+          <!-- ROUTER NAT -->
+          <rect x="310" y="25" width="160" height="110" rx="8" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.8" />
+          <text x="390" y="50" fill="#e0e7ff" font-size="12" font-weight="bold" text-anchor="middle">Router Doméstico</text>
+          <text x="390" y="70" fill="#a5b4fc" font-size="9" text-anchor="middle">IP LAN: 192.168.1.1</text>
+          <line x1="320" y1="80" x2="460" y2="80" stroke="#475569" stroke-width="1" />
+          <text x="390" y="98" fill="#38bdf8" font-size="10" font-weight="bold" text-anchor="middle">IP WAN Pública:</text>
+          <text x="390" y="115" fill="#38bdf8" font-size="11" text-anchor="middle">82.10.45.19</text>
+
+          <!-- Connection Link Router -> WAN -->
+          <line x1="470" y1="80" x2="550" y2="80" stroke="#10b981" stroke-width="2" />
+
+          <!-- WAN Internet Server -->
+          <rect x="550" y="25" width="200" height="110" rx="8" fill="#064e3b" stroke="#10b981" stroke-width="1.8" />
+          <text x="650" y="55" fill="#ecfdf5" font-size="12" font-weight="bold" text-anchor="middle">Servidor Web en Internet</text>
+          <text x="650" y="75" fill="#a7f3d0" font-size="10.5" text-anchor="middle">142.250.200.14 :443</text>
+          <text x="650" y="100" fill="#34d399" font-size="9.5" text-anchor="middle">(google.com / API)</text>
+        </svg>
+      </div>
+
+      <!-- Live NAT Translation Table -->
+      <div class="space-y-1.5">
+        <span class="text-dim text-[11px] font-bold">Tabla de Estados de Traducción NAT (En RAM del Router):</span>
+        <div class="overflow-x-auto rounded-lg border border-line bg-surface-1">
+          <table class="w-full text-left text-[11px] font-mono">
+            <thead class="bg-surface-2 text-ink border-b border-line">
+              <tr>
+                <th class="p-2">IP:Puerto Privado (Origen)</th>
+                <th class="p-2 text-cyan-300">IP:Puerto Público Mapeado</th>
+                <th class="p-2 text-emerald-300">IP:Puerto Destino Remoto</th>
+                <th class="p-2 text-right">Estado</th>
+              </tr>
+            </thead>
+            <tbody id="nat-table-body" class="divide-y divide-line/40 text-dim">
+              <tr>
+                <td class="p-2 text-ink">192.168.1.15 :52410</td>
+                <td class="p-2 text-cyan-300 font-bold">82.10.45.19 :61002</td>
+                <td class="p-2 text-emerald-300">142.250.200.14 :443</td>
+                <td class="p-2 text-right text-emerald-400">ESTABLISHED</td>
+              </tr>
+              <tr>
+                <td class="p-2 text-ink">192.168.1.20 :49152</td>
+                <td class="p-2 text-cyan-300 font-bold">82.10.45.19 :61003</td>
+                <td class="p-2 text-emerald-300">104.21.55.2 :443</td>
+                <td class="p-2 text-right text-emerald-400">ESTABLISHED</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function initSubnetCalculator() {
+    const root = document.getElementById('subnet-calculator-root');
+    if (!root) return;
+
+    // 1. Tab Switching (CIDR vs NAT)
+    const tabCidr = root.querySelector('#tab-btn-cidr');
+    const tabNat = root.querySelector('#tab-btn-nat');
+    const panelCidr = root.querySelector('#panel-cidr');
+    const panelNat = root.querySelector('#panel-nat');
+
+    function switchSubnetTab(target: 'cidr' | 'nat') {
+      if (target === 'cidr') {
+        panelCidr?.classList.remove('hidden');
+        panelNat?.classList.add('hidden');
+        tabCidr?.classList.add('active-tab', 'text-white', 'bg-cyan-600', 'border-cyan-400', 'shadow-md', 'shadow-cyan-500/25');
+        tabCidr?.classList.remove('text-dim', 'border-transparent');
+        tabNat?.classList.remove('active-tab', 'text-white', 'bg-cyan-600', 'border-cyan-400', 'shadow-md', 'shadow-cyan-500/25');
+        tabNat?.classList.add('text-dim', 'border-transparent');
+      } else {
+        panelCidr?.classList.add('hidden');
+        panelNat?.classList.remove('hidden');
+        tabNat?.classList.add('active-tab', 'text-white', 'bg-cyan-600', 'border-cyan-400', 'shadow-md', 'shadow-cyan-500/25');
+        tabNat?.classList.remove('text-dim', 'border-transparent');
+        tabCidr?.classList.remove('active-tab', 'text-white', 'bg-cyan-600', 'border-cyan-400', 'shadow-md', 'shadow-cyan-500/25');
+        tabCidr?.classList.add('text-dim', 'border-transparent');
+      }
+    }
+
+    tabCidr?.addEventListener('click', () => switchSubnetTab('cidr'));
+    tabNat?.addEventListener('click', () => switchSubnetTab('nat'));
+
+    // 2. CIDR Calculation Logic
+    const inputIp = root.querySelector<HTMLInputElement>('#input-ip');
+    const sliderCidr = root.querySelector<HTMLInputElement>('#slider-cidr');
+    const labelCidrVal = root.querySelector('#label-cidr-val');
+    const labelNetBits = root.querySelector('#label-net-bits');
+    const labelHostBits = root.querySelector('#label-host-bits');
+    const bitBarSvg = root.querySelector<SVGSVGElement>('#bit-bar-svg');
+
+    const calcNetIp = root.querySelector('#calc-net-ip');
+    const calcRange = root.querySelector('#calc-range');
+    const calcBcast = root.querySelector('#calc-bcast');
+    const calcHosts = root.querySelector('#calc-hosts');
+
+    function ipToInt(ip: string): number {
+      const parts = ip.trim().split('.').map(Number);
+      if (parts.length !== 4 || parts.some((p) => isNaN(p) || p < 0 || p > 255)) {
+        return (192 << 24) | (168 << 16) | (1 << 8) | 0;
+      }
+      return ((parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3]) >>> 0;
+    }
+
+    function intToIp(int: number): string {
+      return [
+        (int >>> 24) & 255,
+        (int >>> 16) & 255,
+        (int >>> 8) & 255,
+        int & 255,
+      ].join('.');
+    }
+
+    function cidrToMaskInt(cidr: number): number {
+      return cidr === 0 ? 0 : (~0 << (32 - cidr)) >>> 0;
+    }
+
+    function updateCalculations() {
+      if (!inputIp || !sliderCidr) return;
+
+      const rawIp = inputIp.value;
+      const cidr = Number(sliderCidr.value);
+      const hostBits = 32 - cidr;
+
+      const maskInt = cidrToMaskInt(cidr);
+      const maskStr = intToIp(maskInt);
+      const ipInt = ipToInt(rawIp);
+
+      const netInt = (ipInt & maskInt) >>> 0;
+      const bcastInt = (netInt | ~maskInt) >>> 0;
+
+      const firstHostInt = cidr <= 30 ? netInt + 1 : netInt;
+      const lastHostInt = cidr <= 30 ? bcastInt - 1 : bcastInt;
+      const totalHosts = cidr <= 30 ? Math.max(0, Math.pow(2, hostBits) - 2) : 2;
+
+      // Update Labels
+      if (labelCidrVal) labelCidrVal.textContent = `/${cidr} (${maskStr})`;
+      if (labelNetBits) labelNetBits.textContent = `${cidr} bits de Red`;
+      if (labelHostBits) labelHostBits.textContent = `${hostBits} bits de Host`;
+
+      if (calcNetIp) calcNetIp.textContent = intToIp(netInt);
+      if (calcBcast) calcBcast.textContent = intToIp(bcastInt);
+      if (calcRange) calcRange.textContent = `${intToIp(firstHostInt)} - ${intToIp(lastHostInt)}`;
+      if (calcHosts) calcHosts.textContent = totalHosts.toLocaleString();
+
+      // Render 32-bit SVG Bar
+      if (bitBarSvg) {
+        bitBarSvg.innerHTML = '';
+        const boxWidth = 18;
+        const boxGap = 2;
+        const octetGap = 6;
+
+        for (let i = 0; i < 32; i++) {
+          const octet = Math.floor(i / 8);
+          const x = i * (boxWidth + boxGap) + octet * octetGap + 4;
+          const isNet = i < cidr;
+
+          const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          rect.setAttribute('x', x.toString());
+          rect.setAttribute('y', '8');
+          rect.setAttribute('width', boxWidth.toString());
+          rect.setAttribute('height', '26');
+          rect.setAttribute('rx', '3');
+          rect.setAttribute('fill', isNet ? '#06b6d4' : '#10b981');
+          rect.setAttribute('fill-opacity', isNet ? '0.85' : '0.75');
+          rect.setAttribute('stroke', isNet ? '#22d3ee' : '#34d399');
+          rect.setAttribute('stroke-width', '1');
+          bitBarSvg.appendChild(rect);
+
+          const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          text.setAttribute('x', (x + boxWidth / 2).toString());
+          text.setAttribute('y', '24');
+          text.setAttribute('fill', '#ffffff');
+          text.setAttribute('font-size', '9');
+          text.setAttribute('font-weight', 'bold');
+          text.setAttribute('text-anchor', 'middle');
+          text.textContent = isNet ? '1' : '0';
+          bitBarSvg.appendChild(text);
+        }
+      }
+    }
+
+    inputIp?.addEventListener('input', updateCalculations);
+    sliderCidr?.addEventListener('input', updateCalculations);
+
+    // Presets
+    const presets = root.querySelectorAll<HTMLButtonElement>('.preset-btn');
+    presets.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const ip = btn.getAttribute('data-ip');
+        const cidr = btn.getAttribute('data-cidr');
+        if (ip && inputIp) inputIp.value = ip;
+        if (cidr && sliderCidr) sliderCidr.value = cidr;
+        updateCalculations();
+      });
+    });
+
+    updateCalculations();
+
+    // 3. NAT Simulation Button
+    const btnSimulate = root.querySelector('#btn-simulate-packet');
+    const natTableBody = root.querySelector('#nat-table-body');
+    let simCount = 61004;
+
+    btnSimulate?.addEventListener('click', () => {
+      if (!natTableBody) return;
+      const port = Math.floor(Math.random() * 10000) + 49152;
+      const newRow = document.createElement('tr');
+      newRow.className = 'bg-cyan-500/10 transition-colors animate-pulse';
+      newRow.innerHTML = `
+        <td class="p-2 text-ink">192.168.1.50 :${port}</td>
+        <td class="p-2 text-cyan-300 font-bold">82.10.45.19 :${simCount++}</td>
+        <td class="p-2 text-emerald-300">142.250.200.14 :443</td>
+        <td class="p-2 text-right text-emerald-400">SYN_SENT</td>
+      `;
+      natTableBody.prepend(newRow);
+      setTimeout(() => newRow.classList.remove('animate-pulse'), 1200);
+    });
+  }
+
+  initSubnetCalculator();
+  document.addEventListener('astro:page-load', initSubnetCalculator);
+</script>

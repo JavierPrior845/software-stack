@@ -43,6 +43,7 @@ export const WIDGET_IDS = [
   'graph-traversal',
   'knapsack-solver',
   'sorting-visualizer',
+  'subnet-calculator',
 ] as const;
 
 export type WidgetId = (typeof WIDGET_IDS)[number];

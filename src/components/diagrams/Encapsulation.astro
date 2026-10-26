@@ -1,54 +1,510 @@
 ---
-const layers = [
-  { label: 'Ethernet II', detail: 'MAC origen/destino · 14 B', hue: 250 },
-  { label: 'IPv4', detail: 'IPs · TTL · protocolo · 20 B', hue: 250 },
-  { label: 'TCP', detail: 'puertos · secuencia · flags · 20 B', hue: 250 },
-];
+// Encapsulation.astro
+// Interactive SVG-driven Protocol Stack & Packet Dissector for Layer 3 (Redes y Seguridad)
+// Combines an authentic on-the-wire SVG Frame layout with interactive byte-field dissection,
+// Encapsulation/Decapsulation flow, and a visual OSI (7) vs TCP/IP (4) SVG mapping.
 ---
 
-<div class="space-y-4">
-  <div class="rounded-lg border border-white/10 bg-black/20 p-3">
-    <div class="mb-2 flex items-center justify-between font-mono text-[10px] text-dim">
-      <span>trama en el cable</span>
-      <span>MTU Ethernet: 1500 B</span>
+<div class="protocol-stack-explorer select-none my-4 space-y-4 font-mono text-xs" id="encapsulation-root">
+  <!-- Top Navigation & View Controls -->
+  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line/60 pb-3">
+    <div class="flex items-center gap-2">
+      <div class="w-7 h-7 rounded-lg bg-indigo-500/20 border border-indigo-500/40 text-indigo-400 flex items-center justify-center font-bold text-sm shadow-sm">
+        📡
+      </div>
+      <div>
+        <h4 class="font-bold text-sm text-ink flex items-center gap-2">
+          Anatomía de la Trama y Pila de Protocolos
+          <span class="text-[10px] px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+            MTU: 1500 B
+          </span>
+        </h4>
+        <p class="text-[11px] text-dim font-sans">
+          Estructura de bytes en el cable, encapsulación PDU y correspondencia OSI vs TCP/IP
+        </p>
+      </div>
     </div>
 
-    <div class="space-y-2">
-      {
-        layers.map((layer, index) => (
-          <div
-            class="rounded-md border p-2.5"
-            style={`border-color: color-mix(in oklab, var(--layer) ${55 - index * 10}%, transparent); background: color-mix(in oklab, var(--layer) ${7 - index}%, transparent)`}
-          >
-            <div class="flex flex-wrap items-baseline justify-between gap-2">
-              <span class="font-mono text-[11px] text-ink/90">
-                <span class="text-dim">[{index + 1}]</span> {layer.label}
-              </span>
-              <span class="font-mono text-[9px] text-dim">{layer.detail}</span>
-            </div>
-            <div class="mt-2">
-              {
-                index === layers.length - 1 ? (
-                  <div class="rounded-sm border border-dashed border-white/15 bg-black/20 px-3 py-4 text-center">
-                    <p class="font-mono text-[10px] text-muted">payload TCP</p>
-                    <p class="mt-1 font-mono text-[11px] text-ink/80">
-                      {'{ "accion": "comprar", "id": 42 }'}
-                    </p>
-                  </div>
-                ) : (
-                  <div class="h-7 rounded-sm border border-dashed border-white/10 bg-black/10" />
-                )
-              }
-            </div>
-          </div>
-        ))
-      }
+    <!-- Mode Buttons -->
+    <div class="flex items-center gap-1.5 p-1 bg-surface-2 rounded-xl border border-line/70">
+      <button
+        type="button"
+        id="btn-tab-dissector"
+        class="tab-btn active-tab px-3 py-1.5 rounded-lg font-bold text-white bg-indigo-600 border border-indigo-400 shadow-md shadow-indigo-500/25 transition-all text-xs cursor-pointer flex items-center gap-1.5"
+        data-target="view-dissector"
+      >
+        <span>📦 Trama en el Cable (SVG)</span>
+      </button>
+      <button
+        type="button"
+        id="btn-tab-osi"
+        class="tab-btn px-3 py-1.5 rounded-lg font-medium text-dim hover:text-ink hover:bg-surface-3 border border-transparent transition-all text-xs cursor-pointer flex items-center gap-1.5"
+        data-target="view-osi"
+      >
+        <span>🗺️ OSI (7) vs TCP/IP (4)</span>
+      </button>
     </div>
   </div>
 
-  <p class="text-[10px] leading-relaxed text-dim">
-    Cada capa añade metadatos y trata todo lo anterior como opaco. En destino se retiran en orden
-    inverso. Si el payload supera la MTU, IP fragmenta o descarta: el coste se paga al final del
-    camino, no en la capa que añadió la cabecera.
-  </p>
+  <!-- VIEW 1: TRAMA EN EL CABLE Y DISECCIONADOR DE CABECERAS (SVG) -->
+  <div id="view-dissector" class="space-y-4">
+    <!-- Flow Direction Control -->
+    <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-surface-1 border border-line/70">
+      <div class="flex items-center gap-2 text-[11px]">
+        <span class="text-dim">Dirección del Flujo:</span>
+        <button
+          type="button"
+          id="btn-flow-encap"
+          class="flow-btn active-flow px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 transition-all cursor-pointer flex items-center gap-1"
+          data-flow="encap"
+        >
+          <span>⬇️ Emisor (Encapsulación)</span>
+        </button>
+        <button
+          type="button"
+          id="btn-flow-decap"
+          class="flow-btn px-2.5 py-1 rounded-md text-[11px] font-medium text-dim hover:text-ink hover:bg-surface-2 border border-transparent transition-all cursor-pointer flex items-center gap-1"
+          data-flow="decap"
+        >
+          <span>⬆️ Receptor (Desencapsulación)</span>
+        </button>
+      </div>
+
+      <div class="text-[11px] text-dim flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="flow-hint" class="font-sans">El JSON desciende: cada capa añade su sobre sin mirar el interior.</span>
+      </div>
+    </div>
+
+    <!-- MAIN SVG PACKET ON THE WIRE -->
+    <div class="rounded-2xl border border-line/80 bg-surface-1/80 p-4 shadow-xl backdrop-blur-md">
+      <div class="flex items-center justify-between text-[11px] text-dim mb-2 font-mono">
+        <span class="flex items-center gap-1.5">
+          <span class="text-indigo-400 font-bold">BITSTREAM</span> ──▶ Señal eléctrica / óptica en el medio físico
+        </span>
+        <span class="text-amber-400/90 font-medium">Tamaño Total: 1518 Bytes (Trama Ethernet Max)</span>
+      </div>
+
+      <!-- Interactive SVG Packet Layout -->
+      <div class="w-full overflow-x-auto py-2">
+        <svg viewBox="0 0 900 120" class="w-full min-w-[700px] h-auto font-mono select-none" id="packet-svg">
+          <defs>
+            <linearGradient id="grad-eth" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.35" />
+              <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.2" />
+            </linearGradient>
+            <linearGradient id="grad-ip" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.35" />
+              <stop offset="100%" stop-color="#0e7490" stop-opacity="0.2" />
+            </linearGradient>
+            <linearGradient id="grad-tcp" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.35" />
+              <stop offset="100%" stop-color="#6d28d9" stop-opacity="0.2" />
+            </linearGradient>
+            <linearGradient id="grad-payload" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#10b981" stop-opacity="0.35" />
+              <stop offset="100%" stop-color="#047857" stop-opacity="0.2" />
+            </linearGradient>
+            <linearGradient id="grad-fcs" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.35" />
+              <stop offset="100%" stop-color="#b45309" stop-opacity="0.2" />
+            </linearGradient>
+
+            <filter id="glow-selected" x="-10%" y="-10%" width="120%" height="120%">
+              <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#6366f1" flood-opacity="0.6" />
+            </filter>
+          </defs>
+
+          <!-- Background container -->
+          <rect x="5" y="15" width="890" height="90" rx="10" fill="#090d16" stroke="#252d3d" stroke-width="1.5" />
+
+          <!-- 1. Ethernet Header (14 Bytes) -->
+          <g class="packet-block cursor-pointer transition-all duration-200" data-layer="eth" id="svg-block-eth">
+            <rect x="15" y="25" width="130" height="70" rx="6" fill="url(#grad-eth)" stroke="#3b82f6" stroke-width="1.8" />
+            <text x="80" y="52" fill="#93c5fd" font-size="12" font-weight="bold" text-anchor="middle">Ethernet II</text>
+            <text x="80" y="70" fill="#bfdbfe" font-size="10" text-anchor="middle">Cabecera (14 B)</text>
+            <text x="80" y="85" fill="#60a5fa" font-size="9" opacity="0.8" text-anchor="middle">MACs + EtherType</text>
+          </g>
+
+          <!-- Bracket connection -->
+          <path d="M 148 60 L 158 60" stroke="#475569" stroke-width="2" stroke-dasharray="2 2" />
+
+          <!-- 2. IPv4 Header (20 Bytes) -->
+          <g class="packet-block cursor-pointer transition-all duration-200" data-layer="ip" id="svg-block-ip">
+            <rect x="160" y="25" width="145" height="70" rx="6" fill="url(#grad-ip)" stroke="#06b6d4" stroke-width="1.8" />
+            <text x="232" y="52" fill="#67e8f9" font-size="12" font-weight="bold" text-anchor="middle">IPv4 Header</text>
+            <text x="232" y="70" fill="#a5f3fc" font-size="10" text-anchor="middle">Red (20 Bytes)</text>
+            <text x="232" y="85" fill="#22d3ee" font-size="9" opacity="0.8" text-anchor="middle">IP Origen / Destino</text>
+          </g>
+
+          <!-- Bracket connection -->
+          <path d="M 308 60 L 318 60" stroke="#475569" stroke-width="2" stroke-dasharray="2 2" />
+
+          <!-- 3. TCP Header (20 Bytes) -->
+          <g class="packet-block cursor-pointer transition-all duration-200" data-layer="tcp" id="svg-block-tcp">
+            <rect x="320" y="25" width="150" height="70" rx="6" fill="url(#grad-tcp)" stroke="#8b5cf6" stroke-width="1.8" />
+            <text x="395" y="52" fill="#c4b5fd" font-size="12" font-weight="bold" text-anchor="middle">TCP Segment</text>
+            <text x="395" y="70" fill="#ddd6fe" font-size="10" text-anchor="middle">Transporte (20 B)</text>
+            <text x="395" y="85" fill="#a78bfa" font-size="9" opacity="0.8" text-anchor="middle">Puertos + Seq / Ack</text>
+          </g>
+
+          <!-- Bracket connection -->
+          <path d="M 473 60 L 483 60" stroke="#475569" stroke-width="2" stroke-dasharray="2 2" />
+
+          <!-- 4. Application Payload (HTTP / JSON) -->
+          <g class="packet-block cursor-pointer transition-all duration-200" data-layer="payload" id="svg-block-payload">
+            <rect x="485" y="25" width="310" height="70" rx="6" fill="url(#grad-payload)" stroke="#10b981" stroke-width="1.8" />
+            <text x="640" y="50" fill="#6ee7b7" font-size="12" font-weight="bold" text-anchor="middle">Payload de Aplicación (HTTP Data)</text>
+            <text x="640" y="68" fill="#a7f3d0" font-size="10" text-anchor="middle">{'{ "usuario": "ada", "accion": "checkout" }'}</text>
+            <text x="640" y="85" fill="#34d399" font-size="9" opacity="0.8" text-anchor="middle">Datos de Usuario Útiles (~1460 Bytes)</text>
+          </g>
+
+          <!-- Bracket connection -->
+          <path d="M 798 60 L 808 60" stroke="#475569" stroke-width="2" stroke-dasharray="2 2" />
+
+          <!-- 5. Ethernet FCS / Trailer (4 Bytes) -->
+          <g class="packet-block cursor-pointer transition-all duration-200" data-layer="fcs" id="svg-block-fcs">
+            <rect x="810" y="25" width="75" height="70" rx="6" fill="url(#grad-fcs)" stroke="#f59e0b" stroke-width="1.8" />
+            <text x="847" y="52" fill="#fde68a" font-size="11" font-weight="bold" text-anchor="middle">FCS</text>
+            <text x="847" y="70" fill="#fef3c7" font-size="10" text-anchor="middle">(4 B)</text>
+            <text x="847" y="85" fill="#fbbf24" font-size="8.5" opacity="0.8" text-anchor="middle">CRC32</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="mt-2 flex items-center justify-between text-[10px] text-dim px-2">
+        <span>💡 Haz clic en cualquier cabecera del SVG para inspeccionar sus campos de bits reales</span>
+        <span class="font-mono text-cyan-400">Overhead de cabeceras: 54 Bytes mínimos</span>
+      </div>
+    </div>
+
+    <!-- DETAIL PANEL: CABECERA SELECCIONADA -->
+    <div id="layer-detail-container" class="rounded-xl border border-line bg-surface-2 p-4 transition-all">
+      <!-- Ethernet Detail -->
+      <div id="detail-eth" class="layer-detail space-y-3">
+        <div class="flex items-center justify-between border-b border-line/60 pb-2">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+            <span class="font-bold text-sm text-blue-300">Capa 2 (Enlace de Datos): Cabecera Ethernet II (14 Bytes)</span>
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">PDU: Trama (Frame)</span>
+        </div>
+        <p class="text-dim text-xs leading-relaxed font-sans">
+          Opera exclusivamente en el ámbito local (mismo switch o segmento Wi-Fi). Identifica las tarjetas físicas mediante direcciones MAC de 48 bits (6 bytes).
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-[11px]">
+          <div class="p-2.5 rounded-lg bg-surface-1 border border-line">
+            <span class="text-dim block text-[10px]">MAC Destino (6 Bytes)</span>
+            <span class="text-ink font-bold font-mono">00:1A:2B:3C:4D:5E</span>
+            <span class="text-dim block text-[9px] mt-0.5">Switch local o Gateway</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-surface-1 border border-line">
+            <span class="text-dim block text-[10px]">MAC Origen (6 Bytes)</span>
+            <span class="text-ink font-bold font-mono">B4:2E:99:A1:C8:42</span>
+            <span class="text-dim block text-[9px] mt-0.5">Tu tarjeta de red física</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-surface-1 border border-line">
+            <span class="text-dim block text-[10px]">EtherType (2 Bytes)</span>
+            <span class="text-blue-400 font-bold font-mono">0x0800 (IPv4)</span>
+            <span class="text-dim block text-[9px] mt-0.5">Indica qué protocolo encapsula</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- IPv4 Detail (Default Hidden) -->
+      <div id="detail-ip" class="layer-detail space-y-3 hidden">
+        <div class="flex items-center justify-between border-b border-line/60 pb-2">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-cyan-500"></span>
+            <span class="font-bold text-sm text-cyan-300">Capa 3 (Red / Internet): Cabecera IPv4 (20 Bytes sin opciones)</span>
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">PDU: Paquete (Packet)</span>
+        </div>
+        <p class="text-dim text-xs leading-relaxed font-sans">
+          Proporciona direccionamiento lógico global y enrutamiento salto a salto (hop-by-hop) a través de routers intermedios sin conexión previa.
+        </p>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+          <div class="p-2 rounded-lg bg-surface-1 border border-line">
+            <span class="text-dim block text-[10px]">TTL (Time-to-Live)</span>
+            <span class="text-cyan-300 font-bold font-mono">64</span>
+            <span class="text-dim block text-[9px]">Decrementa en cada router</span>
+          </div>
+          <div class="p-2 rounded-lg bg-surface-1 border border-line">
+            <span class="text-dim block text-[10px]">Protocolo Superior</span>
+            <span class="text-cyan-300 font-bold font-mono">6 (TCP) / 17 (UDP)</span>
+            <span class="text-dim block text-[9px]">Demux a capa 4</span>
+          </div>
+          <div class="p-2 rounded-lg bg-surface-1 border border-line">
+            <span class="text-dim block text-[10px]">IP Origen (32 bits)</span>
+            <span class="text-ink font-bold font-mono">192.168.1.15</span>
+            <span class="text-dim block text-[9px]">Tu IP en red local</span>
+          </div>
+          <div class="p-2 rounded-lg bg-surface-1 border border-line">
+            <span class="text-dim block text-[10px]">IP Destino (32 bits)</span>
+            <span class="text-ink font-bold font-mono">142.250.200.14</span>
+            <span class="text-dim block text-[9px]">Servidor en Internet</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TCP Detail (Default Hidden) -->
+      <div id="detail-tcp" class="layer-detail space-y-3 hidden">
+        <div class="flex items-center justify-between border-b border-line/60 pb-2">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-purple-500"></span>
+            <span class="font-bold text-sm text-purple-300">Capa 4 (Transporte): Cabecera TCP (20 Bytes)</span>
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">PDU: Segmento (Segment)</span>
+        </div>
+        <p class="text-dim text-xs leading-relaxed font-sans">
+          Conecta procesos específicos dentro de las máquinas. Garantiza entrega fiable, ordenada, sin duplicados y con control de flujo y congestión.
+        </p>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+          <div class="p-2 rounded-lg bg-surface-1 border border-line">
+            <span class="text-dim block text-[10px]">Puerto Origen</span>
+            <span class="text-purple-300 font-bold font-mono">54320 (Efímero)</span>
+            <span class="text-dim block text-[9px]">Asignado por el SO</span>
+          </div>
+          <div class="p-2 rounded-lg bg-surface-1 border border-line">
+            <span class="text-dim block text-[10px]">Puerto Destino</span>
+            <span class="text-purple-300 font-bold font-mono">443 (HTTPS)</span>
+            <span class="text-dim block text-[9px]">Servicio estándar</span>
+          </div>
+          <div class="p-2 rounded-lg bg-surface-1 border border-line">
+            <span class="text-dim block text-[10px]">Flags de Control</span>
+            <span class="text-emerald-300 font-bold font-mono">ACK, PSH</span>
+            <span class="text-dim block text-[9px]">SYN, FIN, RST, ACK</span>
+          </div>
+          <div class="p-2 rounded-lg bg-surface-1 border border-line">
+            <span class="text-dim block text-[10px]">Receive Window (rwnd)</span>
+            <span class="text-purple-300 font-bold font-mono">65,535 Bytes</span>
+            <span class="text-dim block text-[9px]">Control de flujo receptor</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payload Detail (Default Hidden) -->
+      <div id="detail-payload" class="layer-detail space-y-3 hidden">
+        <div class="flex items-center justify-between border-b border-line/60 pb-2">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+            <span class="font-bold text-sm text-emerald-300">Capa 5-7 (Aplicación): Payload de Usuario</span>
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">PDU: Datos / Mensaje</span>
+        </div>
+        <p class="text-dim text-xs leading-relaxed font-sans">
+          Son los datos reales que el software genera y consume. Para las capas inferiores es una caja negra opaca (secuencia de bytes indistinguible).
+        </p>
+        <div class="p-3 rounded-lg bg-surface-1 border border-emerald-500/30 font-mono text-[11px] text-ink overflow-x-auto">
+          <div class="text-dim text-[10px] mb-1">// Petición HTTP/1.1 dentro del segmento TCP:</div>
+          <div class="text-emerald-400">POST /api/v1/orders HTTP/1.1</div>
+          <div class="text-dim">Host: api.tienda.com</div>
+          <div class="text-dim">Content-Type: application/json</div>
+          <div class="text-dim">Authorization: Bearer eyJhbGciOiJIUzI1...</div>
+          <div class="text-ink mt-2">{`{ "item_id": 9942, "qty": 1, "currency": "EUR" }`}</div>
+        </div>
+      </div>
+
+      <!-- FCS Detail (Default Hidden) -->
+      <div id="detail-fcs" class="layer-detail space-y-3 hidden">
+        <div class="flex items-center justify-between border-b border-line/60 pb-2">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+            <span class="font-bold text-sm text-amber-300">Frame Check Sequence (FCS) / Trailer (4 Bytes)</span>
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">Detección de Errores</span>
+        </div>
+        <p class="text-dim text-xs leading-relaxed font-sans">
+          Código de Redundancia Cíclica (CRC-32) calculado por el hardware de la tarjeta emisora sobre todos los bits de la trama. El receptor recalcula el CRC: si no coincide exactamente, la trama entera se <strong>descarta silenciosamente</strong> a nivel hardware sin notificar al software.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW 2: MAPEO VISUAL OSI (7) VS TCP/IP (4) EN SVG -->
+  <div id="view-osi" class="space-y-4 hidden">
+    <div class="p-4 rounded-xl border border-line bg-surface-1">
+      <div class="text-xs text-dim mb-3 font-sans">
+        El modelo <strong>OSI es el mapa conceptual académico</strong> de 7 niveles; <strong>TCP/IP es el estándar real de Internet</strong> de 4 capas. Observa cómo las tres capas superiores de OSI colapsan en la capa de Aplicación de TCP/IP:
+      </div>
+
+      <!-- SVG Mapping Diagram -->
+      <div class="w-full overflow-x-auto py-2">
+        <svg viewBox="0 0 850 320" class="w-full min-w-[650px] h-auto font-mono select-none">
+          <!-- Column Titles -->
+          <text x="180" y="25" fill="#94a3b8" font-size="13" font-weight="bold" text-anchor="middle">Modelo OSI (7 Capas Teóricas)</text>
+          <text x="440" y="25" fill="#cbd5e1" font-size="13" font-weight="bold" text-anchor="middle">Unidad (PDU)</text>
+          <text x="700" y="25" fill="#93c5fd" font-size="13" font-weight="bold" text-anchor="middle">Pila TCP/IP (4 Capas Prácticas)</text>
+
+          <!-- OSI Layers -->
+          <!-- 7. Aplicación -->
+          <rect x="50" y="45" width="260" height="32" rx="5" fill="#1e1b4b" stroke="#6366f1" stroke-width="1.2" />
+          <text x="65" y="66" fill="#c7d2fe" font-size="11">7. Aplicación (HTTP, DNS)</text>
+
+          <!-- 6. Presentación -->
+          <rect x="50" y="82" width="260" height="32" rx="5" fill="#1e1b4b" stroke="#6366f1" stroke-width="1.2" />
+          <text x="65" y="103" fill="#c7d2fe" font-size="11">6. Presentación (TLS, JSON)</text>
+
+          <!-- 5. Sesión -->
+          <rect x="50" y="119" width="260" height="32" rx="5" fill="#1e1b4b" stroke="#6366f1" stroke-width="1.2" />
+          <text x="65" y="140" fill="#c7d2fe" font-size="11">5. Sesión (Sockets, RPC)</text>
+
+          <!-- 4. Transporte -->
+          <rect x="50" y="160" width="260" height="40" rx="5" fill="#3b0764" stroke="#a855f7" stroke-width="1.2" />
+          <text x="65" y="185" fill="#e9d5ff" font-size="11">4. Transporte (TCP, UDP)</text>
+
+          <!-- 3. Red -->
+          <rect x="50" y="205" width="260" height="40" rx="5" fill="#083344" stroke="#06b6d4" stroke-width="1.2" />
+          <text x="65" y="230" fill="#cffafe" font-size="11">3. Red (IP, ICMP, ARP)</text>
+
+          <!-- 2 & 1 Enlace y Física -->
+          <rect x="50" y="250" width="260" height="30" rx="5" fill="#172554" stroke="#3b82f6" stroke-width="1.2" />
+          <text x="65" y="270" fill="#dbeafe" font-size="10.5">2. Enlace de Datos (Ethernet, Wi-Fi)</text>
+
+          <rect x="50" y="285" width="260" height="30" rx="5" fill="#0f172a" stroke="#475569" stroke-width="1.2" />
+          <text x="65" y="305" fill="#cbd5e1" font-size="10.5">1. Física (Cables, Fibra, Ondas)</text>
+
+          <!-- PDUs (Middle) -->
+          <text x="440" y="105" fill="#10b981" font-size="11" font-weight="bold" text-anchor="middle">Datos / Mensaje</text>
+          <text x="440" y="185" fill="#c084fc" font-size="11" font-weight="bold" text-anchor="middle">Segmento (TCP) / Datagrama</text>
+          <text x="440" y="230" fill="#22d3ee" font-size="11" font-weight="bold" text-anchor="middle">Paquete (Packet)</text>
+          <text x="440" y="270" fill="#60a5fa" font-size="11" font-weight="bold" text-anchor="middle">Trama (Frame)</text>
+          <text x="440" y="305" fill="#94a3b8" font-size="11" font-weight="bold" text-anchor="middle">Bits</text>
+
+          <!-- TCP/IP Layers (Right) -->
+          <!-- 4. Aplicación (Colapso 7, 6, 5) -->
+          <rect x="570" y="45" width="260" height="106" rx="8" fill="#1e1b4b" stroke="#818cf8" stroke-width="2" />
+          <text x="700" y="90" fill="#e0e7ff" font-size="13" font-weight="bold" text-anchor="middle">4. Capa de Aplicación</text>
+          <text x="700" y="112" fill="#a5b4fc" font-size="10" text-anchor="middle">HTTP, HTTPS, DNS, SSH, DHCP</text>
+          <text x="700" y="130" fill="#6366f1" font-size="9" text-anchor="middle">(Colapsa Aplicación + Presentación + Sesión)</text>
+
+          <!-- 3. Transporte -->
+          <rect x="570" y="160" width="260" height="40" rx="8" fill="#3b0764" stroke="#c084fc" stroke-width="2" />
+          <text x="700" y="185" fill="#f3e8ff" font-size="12" font-weight="bold" text-anchor="middle">3. Capa de Transporte (TCP / UDP)</text>
+
+          <!-- 2. Internet -->
+          <rect x="570" y="205" width="260" height="40" rx="8" fill="#083344" stroke="#22d3ee" stroke-width="2" />
+          <text x="700" y="230" fill="#ecfeff" font-size="12" font-weight="bold" text-anchor="middle">2. Capa de Internet (IP / ICMP)</text>
+
+          <!-- 1. Enlace / Acceso a Red -->
+          <rect x="570" y="250" width="260" height="65" rx="8" fill="#172554" stroke="#60a5fa" stroke-width="2" />
+          <text x="700" y="280" fill="#eff6ff" font-size="12" font-weight="bold" text-anchor="middle">1. Acceso a Red (Enlace + Física)</text>
+          <text x="700" y="300" fill="#bfdbfe" font-size="9.5" text-anchor="middle">Ethernet, Wi-Fi, MAC, Señales físicas</text>
+
+          <!-- Connecting Lines -->
+          <!-- OSI 7-5 to TCP/IP App -->
+          <path d="M 315 100 C 400 100, 480 100, 565 100" stroke="#818cf8" stroke-width="1.8" stroke-dasharray="3 3" fill="none" opacity="0.6" />
+          <!-- OSI 4 to TCP/IP Transport -->
+          <path d="M 315 180 C 400 180, 480 180, 565 180" stroke="#c084fc" stroke-width="1.8" stroke-dasharray="3 3" fill="none" opacity="0.6" />
+          <!-- OSI 3 to TCP/IP Internet -->
+          <path d="M 315 225 C 400 225, 480 225, 565 225" stroke="#22d3ee" stroke-width="1.8" stroke-dasharray="3 3" fill="none" opacity="0.6" />
+          <!-- OSI 2-1 to TCP/IP Link -->
+          <path d="M 315 280 C 400 280, 480 280, 565 280" stroke="#60a5fa" stroke-width="1.8" stroke-dasharray="3 3" fill="none" opacity="0.6" />
+        </svg>
+      </div>
+    </div>
+  </div>
 </div>
+
+<script>
+  function initProtocolStackExplorer() {
+    const root = document.getElementById('encapsulation-root');
+    if (!root) return;
+
+    // 1. Tab switching (Dissector vs OSI)
+    const btnDissector = root.querySelector('#btn-tab-dissector');
+    const btnOsi = root.querySelector('#btn-tab-osi');
+    const viewDissector = root.querySelector('#view-dissector');
+    const viewOsi = root.querySelector('#view-osi');
+
+    function switchTab(view: 'dissector' | 'osi') {
+      if (view === 'dissector') {
+        viewDissector?.classList.remove('hidden');
+        viewOsi?.classList.add('hidden');
+        btnDissector?.classList.add('active-tab', 'text-white', 'bg-indigo-600', 'border-indigo-400', 'shadow-md', 'shadow-indigo-500/25');
+        btnDissector?.classList.remove('text-dim', 'border-transparent');
+        btnOsi?.classList.remove('active-tab', 'text-white', 'bg-indigo-600', 'border-indigo-400', 'shadow-md', 'shadow-indigo-500/25');
+        btnOsi?.classList.add('text-dim', 'border-transparent');
+      } else {
+        viewDissector?.classList.add('hidden');
+        viewOsi?.classList.remove('hidden');
+        btnOsi?.classList.add('active-tab', 'text-white', 'bg-indigo-600', 'border-indigo-400', 'shadow-md', 'shadow-indigo-500/25');
+        btnOsi?.classList.remove('text-dim', 'border-transparent');
+        btnDissector?.classList.remove('active-tab', 'text-white', 'bg-indigo-600', 'border-indigo-400', 'shadow-md', 'shadow-indigo-500/25');
+        btnDissector?.classList.add('text-dim', 'border-transparent');
+      }
+    }
+
+    btnDissector?.addEventListener('click', () => switchTab('dissector'));
+    btnOsi?.addEventListener('click', () => switchTab('osi'));
+
+    // 2. Packet Block Selection & Detail Inspection in SVG
+    const blocks = root.querySelectorAll<SVGGElement>('.packet-block');
+    const details = root.querySelectorAll<HTMLElement>('.layer-detail');
+
+    function selectLayer(layerId: string) {
+      blocks.forEach((b) => {
+        const rect = b.querySelector('rect');
+        if (b.getAttribute('data-layer') === layerId) {
+          b.setAttribute('filter', 'url(#glow-selected)');
+          if (rect) rect.setAttribute('stroke-width', '2.8');
+        } else {
+          b.removeAttribute('filter');
+          if (rect) rect.setAttribute('stroke-width', '1.8');
+        }
+      });
+
+      details.forEach((d) => {
+        if (d.id === `detail-${layerId}`) {
+          d.classList.remove('hidden');
+        } else {
+          d.classList.add('hidden');
+        }
+      });
+    }
+
+    blocks.forEach((block) => {
+      block.addEventListener('click', () => {
+        const layer = block.getAttribute('data-layer');
+        if (layer) selectLayer(layer);
+      });
+    });
+
+    // Default select Ethernet
+    selectLayer('eth');
+
+    // 3. Flow Direction (Encapsulation vs Decapsulation)
+    const btnEncap = root.querySelector('#btn-flow-encap');
+    const btnDecap = root.querySelector('#btn-flow-decap');
+    const flowHint = root.querySelector('#flow-hint');
+
+    btnEncap?.addEventListener('click', () => {
+      btnEncap.classList.add('active-flow', 'bg-emerald-500/20', 'text-emerald-300', 'border-emerald-500/40');
+      btnEncap.classList.remove('text-dim', 'border-transparent');
+      btnDecap?.classList.remove('active-flow', 'bg-emerald-500/20', 'text-emerald-300', 'border-emerald-500/40');
+      btnDecap?.classList.add('text-dim', 'border-transparent');
+      if (flowHint) {
+        flowHint.textContent = 'El JSON desciende: cada capa añade su sobre sin mirar el interior.';
+      }
+    });
+
+    btnDecap?.addEventListener('click', () => {
+      btnDecap.classList.add('active-flow', 'bg-emerald-500/20', 'text-emerald-300', 'border-emerald-500/40');
+      btnDecap.classList.remove('text-dim', 'border-transparent');
+      btnEncap?.classList.remove('active-flow', 'bg-emerald-500/20', 'text-emerald-300', 'border-emerald-500/40');
+      btnEncap?.classList.add('text-dim', 'border-transparent');
+      if (flowHint) {
+        flowHint.textContent = 'El paquete sube: el receptor retira y valida cada cabecera en orden inverso.';
+      }
+    });
+  }
+
+  initProtocolStackExplorer();
+  document.addEventListener('astro:page-load', initProtocolStackExplorer);
+</script>
+
+<style>
+  .packet-block:hover rect {
+    filter: brightness(1.2);
+  }
+</style>

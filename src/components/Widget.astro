@@ -10,6 +10,7 @@ import LogicGates from './widgets/LogicGates.astro';
 import GraphTraversal from './widgets/GraphTraversal.astro';
 import KnapsackSolver from './widgets/KnapsackSolver.astro';
 import SortingVisualizer from './widgets/SortingVisualizer.astro';
+import SubnetCalculator from './widgets/SubnetCalculator.astro';
 
 interface Props {
   id: WidgetId;
@@ -28,6 +29,7 @@ const registry = {
   'graph-traversal': GraphTraversal,
   'knapsack-solver': KnapsackSolver,
   'sorting-visualizer': SortingVisualizer,
+  'subnet-calculator': SubnetCalculator,
 } satisfies Record<WidgetId, unknown>;
 
 const Widget = registry[id];

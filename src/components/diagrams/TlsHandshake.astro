@@ -1,49 +1,213 @@
 ---
-const steps = [
-  { dir: 'right' as const, label: 'ClientHello', detail: 'versión · suites · SNI · key share' },
-  { dir: 'left' as const, label: 'ServerHello + Certificate', detail: 'certificado X.509 firmado por CA · key share' },
-  { dir: 'right' as const, label: 'Finished', detail: 'clave de sesión derivada (ECDHE)' },
-];
+// TlsHandshake.astro
+// Interactive SVG-driven TLS 1.3 Handshake & Cryptographic Tunnel Visualizer
+// Demonstrates 1-RTT key exchange (ECDHE), X.509 Certificate Chain, and symmetric AES-GCM encryption.
 ---
 
-<div class="space-y-4">
-  <div class="grid grid-cols-2 gap-4 text-center">
-    <div class="rounded-md border border-white/10 bg-black/20 px-3 py-1.5 font-mono text-[10px] text-muted">
-      cliente
+<div class="tls-explorer select-none my-4 space-y-4 font-mono text-xs" id="tls-explorer-root">
+  <!-- Header / Controls -->
+  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line/60 pb-3">
+    <div class="flex items-center gap-2">
+      <div class="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center font-bold text-sm shadow-sm">
+        🔒
+      </div>
+      <div>
+        <h4 class="font-bold text-sm text-ink flex items-center gap-2">
+          TLS 1.3: Handshake Criptográfico & Túnel Seguro
+          <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+            1-RTT Handshake (RFC 8446)
+          </span>
+        </h4>
+        <p class="text-[11px] text-dim font-sans">
+          Intercambio asimétrico ECDHE, autenticación X.509 y cifrado simétrico AES-GCM
+        </p>
+      </div>
     </div>
-    <div class="rounded-md border border-white/10 bg-black/20 px-3 py-1.5 font-mono text-[10px] text-muted">
-      servidor
+
+    <!-- Mode Selector -->
+    <div class="flex items-center gap-1.5 p-1 bg-surface-2 rounded-xl border border-line/70">
+      <button
+        type="button"
+        id="btn-tls-sequence"
+        class="tls-tab-btn active-tab px-3 py-1.5 rounded-lg font-bold text-white bg-emerald-600 border border-emerald-400 shadow-md shadow-emerald-500/25 transition-all text-xs cursor-pointer flex items-center gap-1.5"
+        data-target="view-tls-seq"
+      >
+        <span>⚡ Secuencia 1-RTT (SVG)</span>
+      </button>
+      <button
+        type="button"
+        id="btn-tls-crypto"
+        class="tls-tab-btn px-3 py-1.5 rounded-lg font-medium text-dim hover:text-ink hover:bg-surface-3 border border-transparent transition-all text-xs cursor-pointer flex items-center gap-1.5"
+        data-target="view-tls-crypto"
+      >
+        <span>🔑 Asimétrico vs Simétrico</span>
+      </button>
     </div>
   </div>
 
-  <ol class="space-y-3">
-    {
-      steps.map((step, index) => (
-        <li class="relative rounded-md border border-white/8 bg-white/[0.015] px-3 py-2.5">
-          <div class="flex items-center gap-2">
-            <span
-              class:list={[
-                'font-mono text-sm',
-                step.dir === 'right' ? 'text-amber-200/90' : 'text-emerald-200/90',
-              ]}
-            >
-              {step.dir === 'right' ? '──▶' : '◀──'}
-            </span>
-            <span class="font-mono text-[11px] text-ink/90">
-              {index + 1}. {step.label}
-            </span>
-          </div>
-          <p class="mt-1 pl-8 text-[10px] leading-relaxed text-dim">{step.detail}</p>
-        </li>
-      ))
-    }
-  </ol>
+  <!-- VIEW 1: SVG 1-RTT SEQUENCE DIAGRAM -->
+  <div id="view-tls-seq" class="space-y-4">
+    <!-- SVG Canvas -->
+    <div class="rounded-2xl border border-line/80 bg-surface-1/90 p-4 shadow-xl backdrop-blur-md">
+      <div class="w-full overflow-x-auto py-2">
+        <svg viewBox="0 0 800 340" class="w-full min-w-[620px] h-auto font-mono select-none" id="tls-svg">
+          <defs>
+            <marker id="tls-arrow-right" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" />
+            </marker>
+            <marker id="tls-arrow-left" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#34d399" />
+            </marker>
+            <marker id="tls-arrow-secure" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#10b981" />
+            </marker>
+          </defs>
 
-  <div class="rounded-md border border-emerald-400/30 bg-emerald-400/5 px-3 py-2.5">
-    <p class="font-mono text-[10px] text-emerald-200/90">1 RTT · handshake completo (TLS 1.3)</p>
-    <p class="mt-1 text-[10px] leading-relaxed text-dim">
-      A partir de aquí, todo el HTTP viaja cifrado con AES simétrico. El certificado autentica al
-      servidor; ECDHE aporta forward secrecy.
-    </p>
+          <!-- Host Headers -->
+          <rect x="50" y="15" width="220" height="42" rx="8" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5" />
+          <text x="160" y="34" fill="#f0f9ff" font-size="12" font-weight="bold" text-anchor="middle">Cliente Web</text>
+          <text x="160" y="48" fill="#7dd3fc" font-size="9.5" text-anchor="middle">Genera par efímero ECDHE (Priv/Pub)</text>
+
+          <rect x="530" y="15" width="220" height="42" rx="8" fill="#0f172a" stroke="#34d399" stroke-width="1.5" />
+          <text x="640" y="34" fill="#f0fdf4" font-size="12" font-weight="bold" text-anchor="middle">Servidor HTTPS (banco.com)</text>
+          <text x="640" y="48" fill="#86efac" font-size="9.5" text-anchor="middle">Posee Certificado X.509 + Par ECDHE</text>
+
+          <!-- Timelines -->
+          <line x1="160" y1="65" x2="160" y2="330" stroke="#475569" stroke-width="2" stroke-dasharray="4 4" />
+          <line x1="640" y1="65" x2="640" y2="330" stroke="#475569" stroke-width="2" stroke-dasharray="4 4" />
+
+          <!-- Phase 1: Insecure Handshake in the Clear -->
+          <rect x="30" y="85" width="740" height="110" rx="8" fill="#f59e0b" fill-opacity="0.05" stroke="#f59e0b" stroke-opacity="0.25" stroke-dasharray="3 3" />
+          <text x="45" y="103" fill="#fbbf24" font-size="10" font-weight="bold">Fase 1: Negociación Inicial en Claro (1 RTT)</text>
+
+          <!-- 1. ClientHello -->
+          <line x1="160" y1="120" x2="635" y2="155" stroke="#38bdf8" stroke-width="2" marker-end="url(#tls-arrow-right)" />
+          <rect x="250" y="110" width="300" height="24" rx="4" fill="#0f172a" stroke="#38bdf8" stroke-width="1" />
+          <text x="400" y="126" fill="#bae6fd" font-size="10.5" text-anchor="middle">1. ClientHello + Key Share (ECDHE) + Ciphers</text>
+
+          <!-- 2. ServerHello -->
+          <line x1="640" y1="165" x2="165" y2="200" stroke="#34d399" stroke-width="2" marker-end="url(#tls-arrow-left)" />
+          <rect x="230" y="155" width="340" height="24" rx="4" fill="#0f172a" stroke="#34d399" stroke-width="1" />
+          <text x="400" y="171" fill="#bbf7d0" font-size="10.5" text-anchor="middle">{'2. ServerHello + Key Share + {Certificado + Finished}*'}</text>
+
+          <!-- Divider: Symmetric Key Derived -->
+          <line x1="120" y1="220" x2="680" y2="220" stroke="#10b981" stroke-width="1.5" />
+          <circle cx="400" cy="220" r="14" fill="#064e3b" stroke="#10b981" stroke-width="2" />
+          <text x="400" y="225" fill="#34d399" font-size="13" text-anchor="middle">🔑</text>
+          <text x="400" y="246" fill="#6ee7b7" font-size="10" font-weight="bold" text-anchor="middle">
+            Ambos derivan la Clave de Sesión Simétrica Secreta en RAM (Forward Secrecy)
+          </text>
+
+          <!-- Phase 2: Encrypted Tunnel -->
+          <rect x="30" y="258" width="740" height="70" rx="8" fill="#10b981" fill-opacity="0.08" stroke="#10b981" stroke-opacity="0.4" />
+          <text x="45" y="275" fill="#34d399" font-size="10" font-weight="bold">Fase 2: Túnel Cifrado de Datos Simétrico (AES-256-GCM)</text>
+
+          <!-- 3. Encrypted Application Data -->
+          <line x1="160" y1="295" x2="635" y2="295" stroke="#10b981" stroke-width="2.5" marker-end="url(#tls-arrow-secure)" />
+          <rect x="280" y="283" width="240" height="24" rx="4" fill="#064e3b" stroke="#10b981" stroke-width="1.2" />
+          <text x="400" y="299" fill="#a7f3d0" font-size="10.5" font-weight="bold" text-anchor="middle">
+            🔒 GET /api/v1/cuentas (Cifrado AES)
+          </text>
+        </svg>
+      </div>
+
+      <div class="mt-2 text-[11px] text-dim font-sans leading-relaxed">
+        <strong>TLS 1.3 vs TLS 1.2:</strong> TLS 1.3 redujo el handshake de <strong>2 RTT a solo 1 RTT</strong> al enviar el <em>Key Share</em> especulativo en el primer paquete <code class="text-ink">ClientHello</code>. Además, prohíbe algoritmos obsoletos como RSA estático o CBC, garantizando <em>Forward Secrecy</em> total (si roban la clave privada del servidor mañana, no pueden descifrar el tráfico grabado hoy).
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW 2: CRIPTOGRAFÍA EN RED (ASIMÉTRICO VS SIMÉTRICO) -->
+  <div id="view-tls-crypto" class="space-y-4 hidden">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+      <!-- Asimétrico -->
+      <div class="p-4 rounded-xl border border-purple-500/30 bg-purple-500/5 space-y-2.5">
+        <div class="flex items-center justify-between text-purple-300 font-bold">
+          <span>1. Cifrado Asimétrico (ECDHE / RSA)</span>
+          <span class="text-[10px] px-2 py-0.5 rounded bg-purple-500/20 border border-purple-500/40">Acuerdo & Firma</span>
+        </div>
+        <p class="text-dim text-[11px] font-sans leading-relaxed">
+          Usa un <strong>par de claves matemáticamente vinculadas</strong> (Pública y Privada).
+        </p>
+        <ul class="space-y-1.5 text-[11px] text-ink/90 font-mono">
+          <li>• <span class="text-purple-400">Clave Pública:</span> La conoce cualquiera; cifra datos o verifica firmas.</li>
+          <li>• <span class="text-purple-400">Clave Privada:</span> Secreta en el servidor; descifra o genera firmas.</li>
+          <li>• <strong class="text-rose-400">Coste:</strong> Computacionalmente muy pesado (100-1000× más lento que AES). Solo se usa durante el apretón de manos inicial.</li>
+        </ul>
+      </div>
+
+      <!-- Simétrico -->
+      <div class="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5 space-y-2.5">
+        <div class="flex items-center justify-between text-emerald-300 font-bold">
+          <span>2. Cifrado Simétrico (AES-256-GCM)</span>
+          <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/40">Datos Masivos</span>
+        </div>
+        <p class="text-dim text-[11px] font-sans leading-relaxed">
+          Usa la <strong>misma clave secreta efímera</strong> para cifrar y descifrar el flujo de datos.
+        </p>
+        <ul class="space-y-1.5 text-[11px] text-ink/90 font-mono">
+          <li>• <span class="text-emerald-400">Velocidad Extrema:</span> Acelerado nativamente por hardware en CPUs modernas (instrucciones AES-NI).</li>
+          <li>• <span class="text-emerald-400">Autenticación (GCM):</span> Añade un tag de autenticación (MAC) que detecta si alguien alteró un solo bit del paquete en tránsito.</li>
+          <li>• <strong class="text-emerald-300">Uso:</strong> Toda la transmisión HTTP posterior viaja bajo este canal.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Cadena de Confianza X.509 -->
+    <div class="p-4 rounded-xl border border-line bg-surface-1 space-y-2 text-xs">
+      <div class="text-ink font-bold flex items-center gap-2">
+        <span>📜 La Cadena de Confianza X.509 (Certificados Digitales)</span>
+      </div>
+      <p class="text-dim text-[11px] font-sans leading-relaxed">
+        ¿Cómo sabe tu navegador que <code class="text-ink">142.250.200.14</code> es verdaderamente Google y no un atacante haciendo spoofing?
+      </p>
+      <div class="p-3 rounded-lg bg-surface-2 border border-line font-mono text-[11px] space-y-1.5">
+        <div class="flex items-center gap-2 text-emerald-300">
+          <span>[Root CA preinstalada en el SO]</span> ──(Firma digitalmente a)──▶
+        </div>
+        <div class="flex items-center gap-2 text-cyan-300 pl-4">
+          <span>[Intermediate CA (Let's Encrypt / DigiCert)]</span> ──(Firma digitalmente a)──▶
+        </div>
+        <div class="flex items-center gap-2 text-purple-300 pl-8">
+          <span>[Certificado Servidor: *.banco.com]</span>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
+
+<script>
+  function initTlsExplorer() {
+    const root = document.getElementById('tls-explorer-root');
+    if (!root) return;
+
+    const btnSeq = root.querySelector('#btn-tls-sequence');
+    const btnCrypto = root.querySelector('#btn-tls-crypto');
+    const viewSeq = root.querySelector('#view-tls-seq');
+    const viewCrypto = root.querySelector('#view-tls-crypto');
+
+    function switchTlsTab(mode: 'seq' | 'crypto') {
+      if (mode === 'seq') {
+        viewSeq?.classList.remove('hidden');
+        viewCrypto?.classList.add('hidden');
+        btnSeq?.classList.add('active-tab', 'text-white', 'bg-emerald-600', 'border-emerald-400', 'shadow-md', 'shadow-emerald-500/25');
+        btnSeq?.classList.remove('text-dim', 'border-transparent');
+        btnCrypto?.classList.remove('active-tab', 'text-white', 'bg-emerald-600', 'border-emerald-400', 'shadow-md', 'shadow-emerald-500/25');
+        btnCrypto?.classList.add('text-dim', 'border-transparent');
+      } else {
+        viewSeq?.classList.add('hidden');
+        viewCrypto?.classList.remove('hidden');
+        btnCrypto?.classList.add('active-tab', 'text-white', 'bg-emerald-600', 'border-emerald-400', 'shadow-md', 'shadow-emerald-500/25');
+        btnCrypto?.classList.remove('text-dim', 'border-transparent');
+        btnSeq?.classList.remove('active-tab', 'text-white', 'bg-emerald-600', 'border-emerald-400', 'shadow-md', 'shadow-emerald-500/25');
+        btnSeq?.classList.add('text-dim', 'border-transparent');
+      }
+    }
+
+    btnSeq?.addEventListener('click', () => switchTlsTab('seq'));
+    btnCrypto?.addEventListener('click', () => switchTlsTab('crypto'));
+  }
+
+  initTlsExplorer();
+  document.addEventListener('astro:page-load', initTlsExplorer);
+</script>
