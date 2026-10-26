@@ -216,6 +216,555 @@ const styles = [
               <p class="text-xs text-foreground/90 mt-2 leading-relaxed font-sans">{s.desc}</p>
             </div>
 
+            <!-- DIAGRAMA VISUAL VECTORIAL SVG DE LA ARQUITECTURA -->
+            <div class="p-4 rounded-xl border border-border/80 bg-black/40 space-y-2">
+              <div class="flex items-center justify-between text-xs font-mono pb-1 border-b border-border/40">
+                <span class="font-bold text-cyan-300 flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                  Topología y Conectores Vectoriales: {s.name}
+                </span>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-secondary/60 text-muted-foreground border border-border/60">
+                  {s.badge}
+                </span>
+              </div>
+
+              <div class="w-full overflow-x-auto py-2 flex justify-center">
+                <!-- 1. CAPAS (LAYERED) -->
+                {s.id === 'layered' && (
+                  <svg viewBox="0 0 760 230" class="w-full max-w-[760px] h-auto select-none font-mono" style="min-width: 620px;">
+                    <defs>
+                      <marker id="lay-arrow-down" viewBox="0 0 10 10" refX="5" refY="6" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M 0 0 L 5 6 L 10 0 z" fill="#38bdf8" />
+                      </marker>
+                    </defs>
+
+                    <!-- Capa 1: Presentación -->
+                    <g transform="translate(40, 15)">
+                      <rect width="680" height="38" rx="8" fill="#1e1b4b" stroke="#6366f1" stroke-width="1.8" />
+                      <text x="20" y="24" fill="#c7d2fe" font-size="11.5" font-weight="bold">1. Capa de Presentación (UI / HTTP Controllers / Views)</text>
+                      <text x="660" y="24" fill="#818cf8" font-size="9" text-anchor="end">Captura HTTP, CLI, Web, Mobile</text>
+                    </g>
+
+                    <!-- Flecha Invocación 1 -> 2 -->
+                    <line x1="380" y1="53" x2="380" y2="69" stroke="#38bdf8" stroke-width="2" marker-end="url(#lay-arrow-down)" />
+                    <text x="395" y="64" fill="#38bdf8" font-size="8.5">Invocación síncrona en memoria (N ──▶ N-1)</text>
+
+                    <!-- Capa 2: Aplicación / Casos de Uso -->
+                    <g transform="translate(40, 70)">
+                      <rect width="680" height="38" rx="8" fill="#0c4a6e" stroke="#0284c7" stroke-width="1.8" />
+                      <text x="20" y="24" fill="#bae6fd" font-size="11.5" font-weight="bold">2. Capa de Lógica de Negocio / Aplicación (Casos de Uso &amp; Servicios)</text>
+                      <text x="660" y="24" fill="#38bdf8" font-size="9" text-anchor="end">Orquesta transacciones y reglas del dominio</text>
+                    </g>
+
+                    <!-- Flecha Invocación 2 -> 3 -->
+                    <line x1="380" y1="108" x2="380" y2="124" stroke="#38bdf8" stroke-width="2" marker-end="url(#lay-arrow-down)" />
+                    <text x="395" y="119" fill="#38bdf8" font-size="8.5">Invocación a interfaces de repositorio</text>
+
+                    <!-- Capa 3: Persistencia / Acceso a Datos -->
+                    <g transform="translate(40, 125)">
+                      <rect width="680" height="38" rx="8" fill="#064e3b" stroke="#10b981" stroke-width="1.8" />
+                      <text x="20" y="24" fill="#a7f3d0" font-size="11.5" font-weight="bold">3. Capa de Acceso a Datos / Persistencia (DAOs / Repositorios / ORM)</text>
+                      <text x="660" y="24" fill="#34d399" font-size="9" text-anchor="end">JPA, Hibernate, Prisma, Mappers</text>
+                    </g>
+
+                    <!-- Flecha Conexión 3 -> 4 -->
+                    <line x1="380" y1="163" x2="380" y2="179" stroke="#10b981" stroke-width="2" marker-end="url(#lay-arrow-down)" />
+                    <text x="395" y="174" fill="#10b981" font-size="8.5">Sentencias SQL transaccionales sobre TCP</text>
+
+                    <!-- Capa 4: Base de Datos Relacional -->
+                    <g transform="translate(40, 180)">
+                      <rect width="680" height="36" rx="8" fill="#1e293b" stroke="#64748b" stroke-width="1.8" />
+                      <text x="20" y="23" fill="#f8fafc" font-size="11.5" font-weight="bold">4. Almacén de Persistencia Física (PostgreSQL / MySQL / Oracle)</text>
+                      <text x="660" y="23" fill="#94a3b8" font-size="9" text-anchor="end">Garantías ACID estrictas</text>
+                    </g>
+                  </svg>
+                )}
+
+                <!-- 2. HEXAGONAL (PORTS & ADAPTERS) -->
+                {s.id === 'hexagonal' && (
+                  <svg viewBox="0 0 760 210" class="w-full max-w-[760px] h-auto select-none font-mono" style="min-width: 620px;">
+                    <defs>
+                      <marker id="hex-arrow-in" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#10b981" />
+                      </marker>
+                      <marker id="hex-arrow-dip" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 8 1.5 L 0 5 L 8 8.5 z" fill="#38bdf8" />
+                      </marker>
+                    </defs>
+
+                    <!-- Adaptadores Primarios (Driving) -->
+                    <g transform="translate(15, 20)">
+                      <rect width="175" height="170" rx="10" fill="#064e3b" fill-opacity="0.25" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4 3" />
+                      <text x="87" y="22" fill="#34d399" font-size="10" font-weight="bold" text-anchor="middle">Adaptadores Driving</text>
+                      <text x="87" y="34" fill="#a7f3d0" font-size="8" text-anchor="middle">(Inician el flujo de entrada)</text>
+
+                      <rect x="12" y="44" width="150" height="32" rx="6" fill="#064e3b" stroke="#10b981" />
+                      <text x="87" y="64" fill="#ffffff" font-size="9.5" text-anchor="middle">REST Controller HTTP</text>
+
+                      <rect x="12" y="86" width="150" height="32" rx="6" fill="#064e3b" stroke="#10b981" />
+                      <text x="87" y="106" fill="#ffffff" font-size="9.5" text-anchor="middle">CLI / Terminal Console</text>
+
+                      <rect x="12" y="128" width="150" height="32" rx="6" fill="#064e3b" stroke="#10b981" />
+                      <text x="87" y="148" fill="#ffffff" font-size="9.5" text-anchor="middle">Message Subscriber</text>
+                    </g>
+
+                    <!-- Flecha Entrada hacia Puertos Driving -->
+                    <path d="M 190 105 L 240 105" stroke="#10b981" stroke-width="2.5" marker-end="url(#hex-arrow-in)" />
+                    <text x="215" y="95" fill="#34d399" font-size="8.5" text-anchor="middle">Invocan</text>
+
+                    <!-- Núcleo Hexagonal (Clean Core) -->
+                    <g transform="translate(245, 15)">
+                      <rect width="270" height="180" rx="16" fill="#022c22" stroke="#10b981" stroke-width="2.5" />
+                      <rect x="0" y="0" width="270" height="28" rx="16" fill="#047857" />
+                      <text x="135" y="18" fill="#ffffff" font-size="11.5" font-weight="bold" text-anchor="middle">NÚCLEO HEXAGONAL (Core)</text>
+
+                      <!-- Puertos Driving -->
+                      <rect x="10" y="42" width="115" height="34" rx="6" fill="#064e3b" stroke="#34d399" />
+                      <text x="67" y="56" fill="#a7f3d0" font-size="8" font-weight="bold" text-anchor="middle">&lt;&lt;Puerto Entrada&gt;&gt;</text>
+                      <text x="67" y="68" fill="#ffffff" font-size="8.5" text-anchor="middle">ICrearPedidoUseCase</text>
+
+                      <!-- Puertos Driven -->
+                      <rect x="145" y="42" width="115" height="34" rx="6" fill="#0c4a6e" stroke="#38bdf8" />
+                      <text x="202" y="56" fill="#bae6fd" font-size="8" font-weight="bold" text-anchor="middle">&lt;&lt;Puerto Salida&gt;&gt;</text>
+                      <text x="202" y="68" fill="#ffffff" font-size="8.5" text-anchor="middle">IPedidoRepository</text>
+
+                      <!-- Dominio Puro -->
+                      <rect x="15" y="90" width="240" height="78" rx="10" fill="#0f172a" stroke="#10b981" stroke-width="1" />
+                      <text x="135" y="110" fill="#34d399" font-size="10.5" font-weight="bold" text-anchor="middle">LÓGICA DE DOMINIO PURO</text>
+                      <text x="135" y="128" fill="#e2e8f0" font-size="9" text-anchor="middle">• Entidades &amp; Value Objects</text>
+                      <text x="135" y="144" fill="#e2e8f0" font-size="9" text-anchor="middle">• Reglas &amp; Servicios de Negocio</text>
+                      <text x="135" y="160" fill="#6ee7b7" font-size="8" text-anchor="middle">0 dependencias técnicas ni frameworks</text>
+                    </g>
+
+                    <!-- Flecha Salida con Inversión de Dependencias DIP -->
+                    <path d="M 570 105 L 515 105" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#hex-arrow-dip)" />
+                    <text x="542" y="95" fill="#38bdf8" font-size="8.5" text-anchor="middle">DIP (Inversión)</text>
+
+                    <!-- Adaptadores Secundarios (Driven) -->
+                    <g transform="translate(570, 20)">
+                      <rect width="175" height="170" rx="10" fill="#082f49" fill-opacity="0.25" stroke="#0284c7" stroke-width="1.5" stroke-dasharray="4 3" />
+                      <text x="87" y="22" fill="#38bdf8" font-size="10" font-weight="bold" text-anchor="middle">Adaptadores Driven</text>
+                      <text x="87" y="34" fill="#bae6fd" font-size="8" text-anchor="middle">(Implementan puertos del Core)</text>
+
+                      <rect x="12" y="44" width="150" height="32" rx="6" fill="#0c4a6e" stroke="#0284c7" />
+                      <text x="87" y="64" fill="#ffffff" font-size="9.5" text-anchor="middle">PostgreSQL / JPA Adapter</text>
+
+                      <rect x="12" y="86" width="150" height="32" rx="6" fill="#0c4a6e" stroke="#0284c7" />
+                      <text x="87" y="106" fill="#ffffff" font-size="9.5" text-anchor="middle">Stripe Gateway Adapter</text>
+
+                      <rect x="12" y="128" width="150" height="32" rx="6" fill="#0c4a6e" stroke="#0284c7" />
+                      <text x="87" y="148" fill="#ffffff" font-size="9.5" text-anchor="middle">Kafka Producer Adapter</text>
+                    </g>
+                  </svg>
+                )}
+
+                <!-- 3. MICROKERNEL (PLUGIN-BASED) -->
+                {s.id === 'microkernel' && (
+                  <svg viewBox="0 0 760 210" class="w-full max-w-[760px] h-auto select-none font-mono" style="min-width: 620px;">
+                    <!-- Core Microkernel en el centro -->
+                    <g transform="translate(230, 25)">
+                      <rect width="300" height="160" rx="14" fill="#2e1065" stroke="#a855f7" stroke-width="2.5" />
+                      <rect x="0" y="0" width="300" height="30" rx="14" fill="#581c87" />
+                      <text x="150" y="20" fill="#f3e8ff" font-size="12" font-weight="bold" text-anchor="middle">MICROKERNEL CORE (Minimalista)</text>
+
+                      <rect x="20" y="45" width="260" height="30" rx="6" fill="#3b0764" stroke="#c084fc" />
+                      <text x="150" y="64" fill="#e9d5ff" font-size="9.5" text-anchor="middle">Plugin Registry &amp; Lifecycle Manager</text>
+
+                      <rect x="20" y="85" width="260" height="30" rx="6" fill="#3b0764" stroke="#c084fc" />
+                      <text x="150" y="104" fill="#e9d5ff" font-size="9.5" text-anchor="middle">Standardized Extension SPI / Contract</text>
+
+                      <rect x="20" y="125" width="260" height="24" rx="4" fill="#1e1b4b" />
+                      <text x="150" y="141" fill="#c084fc" font-size="8.5" text-anchor="middle">Shared Event Bus &amp; Memory Space</text>
+                    </g>
+
+                    <!-- Plugins a la izquierda -->
+                    <g transform="translate(20, 35)">
+                      <rect width="170" height="60" rx="8" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.5" />
+                      <text x="85" y="26" fill="#c7d2fe" font-size="10.5" font-weight="bold" text-anchor="middle">Plugin Git / VCS</text>
+                      <text x="85" y="44" fill="#818cf8" font-size="8.5" text-anchor="middle">Diffs, commits, branches</text>
+                      <line x1="170" y1="30" x2="230" y2="55" stroke="#818cf8" stroke-width="2" stroke-dasharray="3 3" />
+                      <circle cx="230" cy="55" r="4" fill="#a855f7" />
+                    </g>
+
+                    <g transform="translate(20, 115)">
+                      <rect width="170" height="60" rx="8" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.5" />
+                      <text x="85" y="26" fill="#c7d2fe" font-size="10.5" font-weight="bold" text-anchor="middle">Plugin Markdown Editor</text>
+                      <text x="85" y="44" fill="#818cf8" font-size="8.5" text-anchor="middle">Preview KaTeX, tablas, TOC</text>
+                      <line x1="170" y1="30" x2="230" y2="105" stroke="#818cf8" stroke-width="2" stroke-dasharray="3 3" />
+                      <circle cx="230" cy="105" r="4" fill="#a855f7" />
+                    </g>
+
+                    <!-- Plugins a la derecha -->
+                    <g transform="translate(570, 35)">
+                      <rect width="170" height="60" rx="8" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.5" />
+                      <text x="85" y="26" fill="#c7d2fe" font-size="10.5" font-weight="bold" text-anchor="middle">Plugin Linter / Sonar</text>
+                      <text x="85" y="44" fill="#818cf8" font-size="8.5" text-anchor="middle">AST check, reglas de estilo</text>
+                      <line x1="0" y1="30" x2="-40" y2="55" stroke="#818cf8" stroke-width="2" stroke-dasharray="3 3" />
+                      <circle cx="530" cy="90" r="4" fill="#a855f7" />
+                    </g>
+
+                    <g transform="translate(570, 115)">
+                      <rect width="170" height="60" rx="8" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.5" />
+                      <text x="85" y="26" fill="#c7d2fe" font-size="10.5" font-weight="bold" text-anchor="middle">Plugin Depurador C++</text>
+                      <text x="85" y="44" fill="#818cf8" font-size="8.5" text-anchor="middle">GDB adapter, breakpoints</text>
+                      <line x1="0" y1="30" x2="-40" y2="105" stroke="#818cf8" stroke-width="2" stroke-dasharray="3 3" />
+                      <circle cx="530" cy="145" r="4" fill="#a855f7" />
+                    </g>
+                  </svg>
+                )}
+
+                <!-- 4. COLAS DE MENSAJES (QUEUES P2P) -->
+                {s.id === 'queues' && (
+                  <svg viewBox="0 0 760 210" class="w-full max-w-[760px] h-auto select-none font-mono" style="min-width: 620px;">
+                    <defs>
+                      <marker id="q-arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#f59e0b" />
+                      </marker>
+                    </defs>
+
+                    <!-- Productor -->
+                    <g transform="translate(20, 60)">
+                      <rect width="170" height="90" rx="10" fill="#451a03" stroke="#f59e0b" stroke-width="1.8" />
+                      <rect x="0" y="0" width="170" height="26" rx="10" fill="#78350f" />
+                      <text x="85" y="17" fill="#fef3c7" font-size="11" font-weight="bold" text-anchor="middle">Productor (Web Server)</text>
+                      <text x="15" y="48" fill="#fde68a" font-size="9.5">API REST / Checkout</text>
+                      <text x="15" y="66" fill="#fcd34d" font-size="8.5">Genera tareas asíncronas</text>
+                      <rect x="15" y="72" width="140" height="12" rx="3" fill="#1c1917" />
+                      <text x="85" y="81" fill="#f59e0b" font-size="8" text-anchor="middle">push(tarea) modo Fire &amp; Forget</text>
+                    </g>
+
+                    <!-- Flecha Productor -> Cola -->
+                    <path d="M 190 105 L 245 105" stroke="#f59e0b" stroke-width="2.5" marker-end="url(#q-arrow)" />
+                    <text x="218" y="95" fill="#fcd34d" font-size="8.5" text-anchor="middle">Enqueue</text>
+
+                    <!-- Broker: Cola FIFO -->
+                    <g transform="translate(250, 45)">
+                      <rect width="260" height="120" rx="12" fill="#18181b" stroke="#f59e0b" stroke-width="2" />
+                      <rect x="0" y="0" width="260" height="26" rx="12" fill="#27272a" />
+                      <text x="130" y="17" fill="#fbbf24" font-size="11" font-weight="bold" text-anchor="middle">BROKER: COLA FIFO (P2P)</text>
+
+                      <!-- Ranuras de Mensajes en la Cola -->
+                      <g transform="translate(15, 38)">
+                        <rect x="0" y="0" width="68" height="42" rx="6" fill="#78350f" stroke="#f59e0b" />
+                        <text x="34" y="18" fill="#ffffff" font-size="9" font-weight="bold" text-anchor="middle">Msg #3</text>
+                        <text x="34" y="32" fill="#fde68a" font-size="7.5" text-anchor="middle">PDF Factura</text>
+
+                        <rect x="78" y="0" width="68" height="42" rx="6" fill="#78350f" stroke="#f59e0b" />
+                        <text x="112" y="18" fill="#ffffff" font-size="9" font-weight="bold" text-anchor="middle">Msg #2</text>
+                        <text x="112" y="32" fill="#fde68a" font-size="7.5" text-anchor="middle">Resize Img</text>
+
+                        <rect x="156" y="0" width="68" height="42" rx="6" fill="#b45309" stroke="#fbbf24" stroke-width="1.8" />
+                        <text x="190" y="18" fill="#ffffff" font-size="9" font-weight="bold" text-anchor="middle">Msg #1</text>
+                        <text x="190" y="32" fill="#fef3c7" font-size="7.5" text-anchor="middle">Send Email</text>
+                      </g>
+
+                      <text x="130" y="102" fill="#a1a1aa" font-size="8.5" text-anchor="middle">Buffer temporal: amortigua picos (Load Leveling)</text>
+                    </g>
+
+                    <!-- Flechas hacia Consumidores (Pull) -->
+                    <path d="M 510 85 L 560 55" stroke="#f59e0b" stroke-width="2" marker-end="url(#q-arrow)" />
+                    <path d="M 510 125 L 560 155" stroke="#f59e0b" stroke-width="2" marker-end="url(#q-arrow)" />
+
+                    <!-- Consumidores en modo Pull (Competing Consumers) -->
+                    <g transform="translate(565, 25)">
+                      <rect width="175" height="70" rx="8" fill="#064e3b" stroke="#10b981" stroke-width="1.5" />
+                      <text x="87" y="22" fill="#34d399" font-size="10.5" font-weight="bold" text-anchor="middle">Consumidor 1 (Worker)</text>
+                      <text x="87" y="40" fill="#a7f3d0" font-size="8.5" text-anchor="middle">Pull: procesa Msg #1</text>
+                      <text x="87" y="56" fill="#6ee7b7" font-size="8" text-anchor="middle">ACK ➔ borra mensaje de cola</text>
+                    </g>
+
+                    <g transform="translate(565, 115)">
+                      <rect width="175" height="70" rx="8" fill="#064e3b" stroke="#10b981" stroke-width="1.5" />
+                      <text x="87" y="22" fill="#34d399" font-size="10.5" font-weight="bold" text-anchor="middle">Consumidor 2 (Worker)</text>
+                      <text x="87" y="40" fill="#a7f3d0" font-size="8.5" text-anchor="middle">Pull: procesa Msg #2</text>
+                      <text x="87" y="56" fill="#6ee7b7" font-size="8" text-anchor="middle">Competencia justa de carga</text>
+                    </g>
+                  </svg>
+                )}
+
+                <!-- 5. PUBLICAR / SUSCRIBIR (PUB-SUB) -->
+                {s.id === 'pubsub' && (
+                  <svg viewBox="0 0 760 210" class="w-full max-w-[760px] h-auto select-none font-mono" style="min-width: 620px;">
+                    <defs>
+                      <marker id="ps-arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#f97316" />
+                      </marker>
+                    </defs>
+
+                    <!-- Publicador -->
+                    <g transform="translate(20, 60)">
+                      <rect width="170" height="90" rx="10" fill="#431407" stroke="#ea580c" stroke-width="1.8" />
+                      <rect x="0" y="0" width="170" height="26" rx="10" fill="#7c2d12" />
+                      <text x="85" y="17" fill="#ffedd5" font-size="11" font-weight="bold" text-anchor="middle">Publicador (Order Service)</text>
+                      <text x="15" y="48" fill="#fed7aa" font-size="9.5">Evento: PedidoPagado</text>
+                      <text x="15" y="66" fill="#fdba74" font-size="8.5">Desconoce a los suscriptores</text>
+                      <rect x="15" y="72" width="140" height="12" rx="3" fill="#1c1917" />
+                      <text x="85" y="81" fill="#ea580c" font-size="8" text-anchor="middle">publish("pedidos.pagados")</text>
+                    </g>
+
+                    <!-- Flecha Publicador -> Topic -->
+                    <path d="M 190 105 L 245 105" stroke="#f97316" stroke-width="2.5" marker-end="url(#ps-arrow)" />
+                    <text x="218" y="95" fill="#fdba74" font-size="8.5" text-anchor="middle">Publish</text>
+
+                    <!-- Broker de Tópicos (1-a-N) -->
+                    <g transform="translate(250, 35)">
+                      <rect width="250" height="140" rx="14" fill="#1c1917" stroke="#ea580c" stroke-width="2.2" />
+                      <rect x="0" y="0" width="250" height="28" rx="14" fill="#431407" />
+                      <text x="125" y="18" fill="#ffedd5" font-size="11.5" font-weight="bold" text-anchor="middle">TÓPICO / BUS (Fan-Out 1 a N)</text>
+
+                      <rect x="15" y="40" width="220" height="36" rx="6" fill="#7c2d12" stroke="#f97316" />
+                      <text x="125" y="56" fill="#ffffff" font-size="9.5" font-weight="bold" text-anchor="middle">Topic: "pedidos.pagados"</text>
+                      <text x="125" y="68" fill="#fed7aa" font-size="8" text-anchor="middle">(Apache Kafka / RabbitMQ Exchange)</text>
+
+                      <text x="125" y="98" fill="#fed7aa" font-size="8.5" text-anchor="middle">Entrega push a todos los suscriptores</text>
+                      <text x="125" y="116" fill="#a1a1aa" font-size="8" text-anchor="middle">Desacoplamiento temporal y espacial total</text>
+                    </g>
+
+                    <!-- Flechas Fan-out -->
+                    <path d="M 500 70 L 555 45" stroke="#f97316" stroke-width="2" marker-end="url(#ps-arrow)" />
+                    <path d="M 500 105 L 555 105" stroke="#f97316" stroke-width="2" marker-end="url(#ps-arrow)" />
+                    <path d="M 500 140 L 555 165" stroke="#f97316" stroke-width="2" marker-end="url(#ps-arrow)" />
+
+                    <!-- Suscriptores Independientes -->
+                    <g transform="translate(560, 20)">
+                      <rect width="180" height="48" rx="8" fill="#1e1b4b" stroke="#6366f1" stroke-width="1.5" />
+                      <text x="90" y="20" fill="#c7d2fe" font-size="9.5" font-weight="bold" text-anchor="middle">1. Servicio Facturación</text>
+                      <text x="90" y="36" fill="#818cf8" font-size="8" text-anchor="middle">Genera factura PDF legal</text>
+                    </g>
+
+                    <g transform="translate(560, 80)">
+                      <rect width="180" height="48" rx="8" fill="#1e1b4b" stroke="#6366f1" stroke-width="1.5" />
+                      <text x="90" y="20" fill="#c7d2fe" font-size="9.5" font-weight="bold" text-anchor="middle">2. Servicio Notificaciones</text>
+                      <text x="90" y="36" fill="#818cf8" font-size="8" text-anchor="middle">Envía SMS / WhatsApp al cliente</text>
+                    </g>
+
+                    <g transform="translate(560, 140)">
+                      <rect width="180" height="48" rx="8" fill="#1e1b4b" stroke="#6366f1" stroke-width="1.5" />
+                      <text x="90" y="20" fill="#c7d2fe" font-size="9.5" font-weight="bold" text-anchor="middle">3. Servicio Almacén &amp; Envíos</text>
+                      <text x="90" y="36" fill="#818cf8" font-size="8" text-anchor="middle">Reserva stock en inventario físico</text>
+                    </g>
+                  </svg>
+                )}
+
+                <!-- 6. PIPES AND FILTERS -->
+                {s.id === 'pipes' && (
+                  <svg viewBox="0 0 760 190" class="w-full max-w-[760px] h-auto select-none font-mono" style="min-width: 620px;">
+                    <defs>
+                      <marker id="pipe-arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#06b6d4" />
+                      </marker>
+                    </defs>
+
+                    <!-- Fuente de Datos -->
+                    <g transform="translate(15, 60)">
+                      <rect width="110" height="70" rx="8" fill="#164e63" stroke="#06b6d4" stroke-width="1.5" />
+                      <text x="55" y="30" fill="#cffafe" font-size="10" font-weight="bold" text-anchor="middle">Data Source</text>
+                      <text x="55" y="48" fill="#67e8f9" font-size="8" text-anchor="middle">Logs CSV / JSON</text>
+                    </g>
+
+                    <!-- Pipe 1 -->
+                    <path d="M 125 95 L 165 95" stroke="#06b6d4" stroke-width="4" marker-end="url(#pipe-arrow)" />
+                    <text x="145" y="84" fill="#67e8f9" font-size="7.5" text-anchor="middle">Pipe 1</text>
+
+                    <!-- Filtro 1: Ingesta y Parser -->
+                    <g transform="translate(170, 50)">
+                      <rect width="140" height="90" rx="10" fill="#082f49" stroke="#0284c7" stroke-width="2" />
+                      <rect x="0" y="0" width="140" height="24" rx="10" fill="#0369a1" />
+                      <text x="70" y="16" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">Filtro 1: Parser</text>
+                      <text x="10" y="44" fill="#bae6fd" font-size="8.5">• Lee stream binario</text>
+                      <text x="10" y="60" fill="#bae6fd" font-size="8.5">• Descarta corruptos</text>
+                      <text x="10" y="76" fill="#7dd3fc" font-size="7.5">cat logs.raw</text>
+                    </g>
+
+                    <!-- Pipe 2 -->
+                    <path d="M 310 95 L 350 95" stroke="#06b6d4" stroke-width="4" marker-end="url(#pipe-arrow)" />
+                    <text x="330" y="84" fill="#67e8f9" font-size="7.5" text-anchor="middle">Pipe 2</text>
+
+                    <!-- Filtro 2: Transformador y Normalizador -->
+                    <g transform="translate(355, 50)">
+                      <rect width="145" height="90" rx="10" fill="#082f49" stroke="#0284c7" stroke-width="2" />
+                      <rect x="0" y="0" width="145" height="24" rx="10" fill="#0369a1" />
+                      <text x="72" y="16" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">Filtro 2: Transform</text>
+                      <text x="10" y="44" fill="#bae6fd" font-size="8.5">• Normaliza fechas UTC</text>
+                      <text x="10" y="60" fill="#bae6fd" font-size="8.5">• Anonimiza IPs / PII</text>
+                      <text x="10" y="76" fill="#7dd3fc" font-size="7.5">grep "ERROR"</text>
+                    </g>
+
+                    <!-- Pipe 3 -->
+                    <path d="M 500 95 L 540 95" stroke="#06b6d4" stroke-width="4" marker-end="url(#pipe-arrow)" />
+                    <text x="520" y="84" fill="#67e8f9" font-size="7.5" text-anchor="middle">Pipe 3</text>
+
+                    <!-- Filtro 3: Agregador y Validador -->
+                    <g transform="translate(545, 50)">
+                      <rect width="140" height="90" rx="10" fill="#082f49" stroke="#0284c7" stroke-width="2" />
+                      <rect x="0" y="0" width="140" height="24" rx="10" fill="#0369a1" />
+                      <text x="70" y="16" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">Filtro 3: Agregador</text>
+                      <text x="10" y="44" fill="#bae6fd" font-size="8.5">• Sumariza contadores</text>
+                      <text x="10" y="60" fill="#bae6fd" font-size="8.5">• Enriquecer con GeoIP</text>
+                      <text x="10" y="76" fill="#7dd3fc" font-size="7.5">sort | uniq -c</text>
+                    </g>
+
+                    <!-- Pipe 4 -->
+                    <path d="M 685 95 L 710 95" stroke="#06b6d4" stroke-width="4" marker-end="url(#pipe-arrow)" />
+
+                    <!-- Sumidero (Sink) -->
+                    <g transform="translate(712, 60)">
+                      <rect width="36" height="70" rx="6" fill="#164e63" stroke="#06b6d4" stroke-width="1.5" />
+                      <text x="18" y="40" fill="#cffafe" font-size="8.5" font-weight="bold" transform="rotate(90 18 40)" text-anchor="middle">Data Sink</text>
+                    </g>
+                  </svg>
+                )}
+
+                <!-- 7. CLIENTE - SERVIDOR -->
+                {s.id === 'client-server' && (
+                  <svg viewBox="0 0 760 210" class="w-full max-w-[760px] h-auto select-none font-mono" style="min-width: 620px;">
+                    <defs>
+                      <marker id="cs-arrow-r" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#6366f1" />
+                      </marker>
+                      <marker id="cs-arrow-g" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#10b981" />
+                      </marker>
+                    </defs>
+
+                    <!-- Clientes -->
+                    <g transform="translate(20, 20)">
+                      <rect width="180" height="170" rx="10" fill="#1e1b4b" fill-opacity="0.25" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="4 3" />
+                      <text x="90" y="22" fill="#c7d2fe" font-size="10" font-weight="bold" text-anchor="middle">Múltiples Clientes</text>
+                      <text x="90" y="34" fill="#818cf8" font-size="8" text-anchor="middle">(Inician la conexión)</text>
+
+                      <rect x="12" y="44" width="156" height="32" rx="6" fill="#312e81" stroke="#6366f1" />
+                      <text x="90" y="64" fill="#ffffff" font-size="9.5" text-anchor="middle">Navegador Web (SPA)</text>
+
+                      <rect x="12" y="86" width="156" height="32" rx="6" fill="#312e81" stroke="#6366f1" />
+                      <text x="90" y="106" fill="#ffffff" font-size="9.5" text-anchor="middle">App Móvil (iOS / Android)</text>
+
+                      <rect x="12" y="128" width="156" height="32" rx="6" fill="#312e81" stroke="#6366f1" />
+                      <text x="90" y="148" fill="#ffffff" font-size="9.5" text-anchor="middle">Terminal CLI / API Client</text>
+                    </g>
+
+                    <!-- Canal de Comunicación Request-Reply -->
+                    <g transform="translate(205, 75)">
+                      <path d="M 0 15 L 145 15" stroke="#6366f1" stroke-width="2" marker-end="url(#cs-arrow-r)" />
+                      <text x="72" y="8" fill="#a5b4fc" font-size="8.5" text-anchor="middle">HTTP Request ──▶</text>
+
+                      <path d="M 145 45 L 0 45" stroke="#10b981" stroke-width="2" marker-end="url(#cs-arrow-g)" />
+                      <text x="72" y="60" fill="#34d399" font-size="8.5" text-anchor="middle">◀── JSON Response</text>
+                    </g>
+
+                    <!-- Servidor Central -->
+                    <g transform="translate(365, 30)">
+                      <rect width="210" height="150" rx="12" fill="#1e1b4b" stroke="#6366f1" stroke-width="2.2" />
+                      <rect x="0" y="0" width="210" height="28" rx="12" fill="#312e81" />
+                      <text x="105" y="18" fill="#ffffff" font-size="11.5" font-weight="bold" text-anchor="middle">SERVIDOR CENTRAL (API)</text>
+
+                      <text x="15" y="52" fill="#c7d2fe" font-size="9.5">✓ Autenticación (JWT / OAuth)</text>
+                      <text x="15" y="72" fill="#c7d2fe" font-size="9.5">✓ Validación de Negocio</text>
+                      <text x="15" y="92" fill="#c7d2fe" font-size="9.5">✓ Control de Concurrencia</text>
+                      <text x="15" y="112" fill="#c7d2fe" font-size="9.5">✓ Seguridad &amp; Rate Limiting</text>
+                      <rect x="15" y="122" width="180" height="18" rx="4" fill="#0f172a" />
+                      <text x="105" y="134" fill="#818cf8" font-size="8" text-anchor="middle">Punto centralizado de gestión</text>
+                    </g>
+
+                    <!-- Flecha Servidor -> Base de Datos -->
+                    <path d="M 575 105 L 615 105" stroke="#64748b" stroke-width="2" />
+
+                    <!-- Base de Datos Centralizada -->
+                    <g transform="translate(620, 50)">
+                      <rect width="115" height="110" rx="10" fill="#1e293b" stroke="#64748b" stroke-width="1.5" />
+                      <path d="M 15 22 C 15 14, 100 14, 100 22 C 100 30, 15 30, 15 22 Z" fill="#334155" stroke="#94a3b8" />
+                      <path d="M 15 50 C 15 42, 100 42, 100 50" fill="none" stroke="#64748b" />
+                      <path d="M 15 78 C 15 70, 100 70, 100 78" fill="none" stroke="#64748b" />
+                      <text x="57" y="98" fill="#94a3b8" font-size="9" font-weight="bold" text-anchor="middle">BD Central</text>
+                    </g>
+                  </svg>
+                )}
+
+                <!-- 8. MICROSERVICIOS (CON API GATEWAY / ENRUTADOR) -->
+                {s.id === 'microservices' && (
+                  <svg viewBox="0 0 760 220" class="w-full max-w-[760px] h-auto select-none font-mono" style="min-width: 620px;">
+                    <defs>
+                      <marker id="ms-arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#f43f5e" />
+                      </marker>
+                    </defs>
+
+                    <!-- Clientes externos -->
+                    <g transform="translate(15, 75)">
+                      <rect width="110" height="70" rx="8" fill="#1e1b4b" stroke="#6366f1" stroke-width="1.5" />
+                      <text x="55" y="30" fill="#c7d2fe" font-size="9.5" font-weight="bold" text-anchor="middle">Clientes</text>
+                      <text x="55" y="48" fill="#818cf8" font-size="8" text-anchor="middle">Web / Mobile / IoT</text>
+                    </g>
+
+                    <!-- Flecha Cliente -> Gateway -->
+                    <path d="M 125 110 L 165 110" stroke="#f43f5e" stroke-width="2" marker-end="url(#ms-arrow)" />
+
+                    <!-- API GATEWAY / ENRUTADOR -->
+                    <g transform="translate(170, 35)">
+                      <rect width="150" height="150" rx="12" fill="#4c0519" stroke="#f43f5e" stroke-width="2.2" />
+                      <rect x="0" y="0" width="150" height="26" rx="12" fill="#881337" />
+                      <text x="75" y="17" fill="#ffffff" font-size="10.5" font-weight="bold" text-anchor="middle">API GATEWAY</text>
+                      <text x="75" y="28" fill="#fecdd3" font-size="7.5" text-anchor="middle">(Enrutador Central)</text>
+
+                      <text x="12" y="52" fill="#fda4af" font-size="8.5">• Reverse Proxy</text>
+                      <text x="12" y="70" fill="#fda4af" font-size="8.5">• Enrutamiento dinámico</text>
+                      <text x="12" y="88" fill="#fda4af" font-size="8.5">• Auth &amp; Rate Limiting</text>
+                      <text x="12" y="106" fill="#fda4af" font-size="8.5">• SSL Termination</text>
+                      <rect x="10" y="118" width="130" height="20" rx="4" fill="#0f172a" />
+                      <text x="75" y="131" fill="#f43f5e" font-size="7.5" text-anchor="middle">Desacopla clientes de red</text>
+                    </g>
+
+                    <!-- Flechas de Enrutamiento hacia cada Microservicio -->
+                    <path d="M 320 80 L 365 50" stroke="#f43f5e" stroke-width="2" marker-end="url(#ms-arrow)" />
+                    <path d="M 320 110 L 365 110" stroke="#f43f5e" stroke-width="2" marker-end="url(#ms-arrow)" />
+                    <path d="M 320 140 L 365 170" stroke="#f43f5e" stroke-width="2" marker-end="url(#ms-arrow)" />
+
+                    <!-- Microservicio 1: Usuarios -->
+                    <g transform="translate(370, 20)">
+                      <rect width="190" height="52" rx="8" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5" />
+                      <text x="95" y="20" fill="#e0f2fe" font-size="10" font-weight="bold" text-anchor="middle">MS Usuarios (Port 8001)</text>
+                      <text x="95" y="36" fill="#7dd3fc" font-size="8" text-anchor="middle">Gestión de cuentas y perfiles</text>
+                    </g>
+                    <!-- BD Usuarios (Database per Service) -->
+                    <g transform="translate(580, 20)">
+                      <rect width="165" height="52" rx="8" fill="#0f172a" stroke="#64748b" stroke-width="1.2" />
+                      <text x="82" y="24" fill="#94a3b8" font-size="9" font-weight="bold" text-anchor="middle">BD Usuarios (PostgreSQL)</text>
+                      <text x="82" y="40" fill="#64748b" font-size="7.5" text-anchor="middle">Autonomía de esquema 100%</text>
+                    </g>
+                    <line x1="560" y1="46" x2="580" y2="46" stroke="#64748b" stroke-width="2" />
+
+                    <!-- Microservicio 2: Catálogo -->
+                    <g transform="translate(370, 84)">
+                      <rect width="190" height="52" rx="8" fill="#1e293b" stroke="#34d399" stroke-width="1.5" />
+                      <text x="95" y="20" fill="#ecfdf5" font-size="10" font-weight="bold" text-anchor="middle">MS Catálogo (Port 8002)</text>
+                      <text x="95" y="36" fill="#6ee7b7" font-size="8" text-anchor="middle">Búsqueda y stock de productos</text>
+                    </g>
+                    <!-- BD Catálogo -->
+                    <g transform="translate(580, 84)">
+                      <rect width="165" height="52" rx="8" fill="#0f172a" stroke="#64748b" stroke-width="1.2" />
+                      <text x="82" y="24" fill="#94a3b8" font-size="9" font-weight="bold" text-anchor="middle">BD Catálogo (MongoDB)</text>
+                      <text x="82" y="40" fill="#64748b" font-size="7.5" text-anchor="middle">Esquema flexible NoSQL</text>
+                    </g>
+                    <line x1="560" y1="110" x2="580" y2="110" stroke="#64748b" stroke-width="2" />
+
+                    <!-- Microservicio 3: Pagos -->
+                    <g transform="translate(370, 148)">
+                      <rect width="190" height="52" rx="8" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5" />
+                      <text x="95" y="20" fill="#fffbeb" font-size="10" font-weight="bold" text-anchor="middle">MS Pagos (Port 8003)</text>
+                      <text x="95" y="36" fill="#fcd34d" font-size="8" text-anchor="middle">Cobros con Stripe / PayPal</text>
+                    </g>
+                    <!-- BD Pagos -->
+                    <g transform="translate(580, 148)">
+                      <rect width="165" height="52" rx="8" fill="#0f172a" stroke="#64748b" stroke-width="1.2" />
+                      <text x="82" y="24" fill="#94a3b8" font-size="9" font-weight="bold" text-anchor="middle">BD Pagos (PostgreSQL)</text>
+                      <text x="82" y="40" fill="#64748b" font-size="7.5" text-anchor="middle">Ledger ACID transaccional</text>
+                    </g>
+                    <line x1="560" y1="174" x2="580" y2="174" stroke="#64748b" stroke-width="2" />
+                  </svg>
+                )}
+              </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
               <div class="p-3.5 rounded-xl border border-border/70 bg-card/60 space-y-2">
                 <span class="text-cyan-300 font-bold flex items-center gap-1.5">
