@@ -276,9 +276,9 @@ PDS complementa el diseño centrándose en **el ciclo de vida completo de la ing
 
 ---
 
-### 2.1 Requisitos, Casos de Uso y Modelado de Dominio
+### 2.1 Requisitos de Software (PDS Tema 2)
 
-La ingeniería de requisitos transforma las necesidades ambiguas de los usuarios en especificaciones verificables y contrastables.
+La ingeniería de requisitos transforma las necesidades ambiguas y dispersas de los usuarios en especificaciones verificables y contrastables.
 
 #### Factores de Calidad del Software (PDS Tema 1)
 - **Factores Externos (visibles para el usuario/cliente en producción):**
@@ -294,67 +294,189 @@ La ingeniería de requisitos transforma las necesidades ambiguas de los usuarios
   - *Reutilización:* Capacidad de aprovechar componentes en proyectos futuros.
 
 #### Tipos y Criterios de Calidad de los Requisitos
-- **Requisitos Funcionales (FR):** Servicios que el sistema debe proveer, transformaciones de datos, entradas y salidas esperadas.
+- **Requisitos Funcionales (FR):** Servicios que el sistema debe proveer, transformaciones de datos, entradas y salidas esperadas bajo un modelo de caja negra.
 - **Requisitos No Funcionales (NFR / Atributos de Calidad):** Restricciones de rendimiento, disponibilidad (ej. 99.95%), latencia (ej. $p99 < 150\text{ ms}$), seguridad física (*safety*) y de datos (*security*), o normativas legales (RGPD). **Regla de oro:** Todo NFR debe incluir una métrica cuantificable y un procedimiento de verificación objetivo; de lo contrario, no es un requisito, es un deseo.
 - **Criterios de Calidad Individuales:** Necesario, libre de detalles de implementación tecnológica, no ambiguo, consistente, completo, singular, viable, trazable y verificable.
 
-#### Casos de Uso (CdU) vs Historias de Usuario
-- **Casos de Uso (Modelo Formal):**
-  - *Estructura:* Actor Principal (inicia el objetivo), Actores Secundarios (sistemas externos colaboradores), Precondiciones, Flujo Básico (*Happy Path*) y Flujos Alternativos (errores y variantes condicionales).
-  - *Relaciones UML de Casos de Uso:*
-    - **Generalización (`──▷`):** Un CdU hereda el comportamiento y los actores de otro CdU abstracto.
-    - **Inclusión (`<<include>>`):** El CdU base incorpora **obligatoriamente** el comportamiento de otro CdU para factorizar flujos compartidos (ej. *Realizar Pago* incluye *Autenticar Usuario*).
-    - **Extensión (`<<extend>>`):** Un CdU auxiliar añade comportamiento **opcional o condicional** al CdU base únicamente si se cumple una condición explícita en un *Punto de Extensión* (ej. *Contratar Seguro Adicional* extiende *Alquilar Vehículo*).
-- **Historias de Usuario (Ágiles):** Enfoque centrado en valor de usuario (`"Como [rol] quiero [acción] para [beneficio]"`), complementado con criterios de aceptación ejecutables (*Given-When-Then*).
+#### Especificación Formal: Casos de Uso vs Historias de Usuario
 
-#### Modelado de Dominio: Taxonomía y Ciclo de Vida de Relaciones UML
+```mermaid
+graph TD
+    REQ["Especificación de Requisitos"]
+    REQ --> CDU["Casos de Uso (CdU)\n(Formal · Caja Negra · Orientado al Sistema)"]
+    REQ --> US["Historias de Usuario (User Stories)\n(Ágil · Valor de Usuario · BDD Given-When-Then)"]
 
-El Modelo de Dominio representa visualmente los conceptos del negocio. La distinción entre sus relaciones gobierna la gestión de memoria y el ciclo de vida de los objetos:
+    CDU --> INC["<<include>> (Obligatorio/Compartido)"]
+    CDU --> EXT["<<extend>> (Opcional en Punto de Extensión)"]
+    CDU --> GEN["Generalización (Herencia de CdU)"]
+```
 
-| Tipo de Relación | Notación UML | Semántica | Ciclo de Vida de las Partes | Representación Típica en Código (C++ / Java / TS) |
-| :--- | :---: | :--- | :--- | :--- |
-| **Dependencia** | `- - - >` | *"Usa un"* efímero | Ninguno. No hay propiedad estructural. | Parámetro en método o variable local temporal dentro de una función. |
-| **Asociación** | `──>` | *"Conoce a"* | Independiente. Ambas entidades existen por separado en memoria. | Puntero, referencia o ID foráneo como atributo de instancia (`Cliente*`). |
-| **Agregación** | `◇──` | *"Tiene un"* (Todo-Parte débil) | **Independiente:** Si el todo se destruye, las partes **sobreviven**. | Referencia externa compartida (`std::shared_ptr`, array de punteros a objetos preexistentes). |
-| **Composición** | `◆──` | *"Formado por"* (Todo-Parte fuerte) | **Dependiente:** Si el todo se destruye, las partes **se destruyen con él**. | Instancia por valor directo dentro del contenedor o puntero exclusivo (`std::unique_ptr`) liberado en el destructor. |
-| **Generalización**| `──▷` | *"Es un"* (Herencia) | Subclase comparte al 100% la estructura e identidad de la base. | Herencia estática (`class Coche extends Vehiculo`). |
-| **Realización** | `- - ▷` | *"Implementa contrato"* | La clase concreta garantiza el contrato de la interfaz abstracta. | Implementación de interfaz (`implements IRepository`). |
+##### 1. Estructura y Plantilla Canónica de un Caso de Uso (CdU)
+Un Caso de Uso describe una secuencia de interacciones entre un actor y el sistema para entregar un resultado observable de valor bajo un modelo estricto de caja negra.
 
-*Ejemplo canónico (Coche y Concesionario):*
-- El `Concesionario` **agrega (`◇──`)** `Coche`: Si el concesionario cierra, los coches siguen existiendo físicamente y pueden trasladarse a otro lugar.
-- El `Coche` está **compuesto (`◆──`)** por su `Motor` y su `Chasis`: Si el coche se destruye en el desguace, su motor y chasis mueren con él como unidad cohesiva.
+| Campo de Plantilla | Definición | Ejemplo Canónico (CdU-01: Alquilar Vehículo) |
+| :--- | :--- | :--- |
+| **ID & Nombre** | Identificador único y verbo en infinitivo | **CdU-01:** Alquilar Vehículo |
+| **Actor Principal** | Quien inicia y persigue el objetivo | Cliente Registrado |
+| **Actores Secundarios** | Sistemas de apoyo necesarios | Pasarela de Pago (Stripe), Servicio Notificaciones Email |
+| **Precondición** | Estado exigido antes de iniciar | Cliente autenticado en el sistema y con carnet de conducir validado. |
+| **Flujo Básico (Happy Path)** | Secuencia principal numerada de éxito | 1. Cliente selecciona categoría de vehículo y rango de fechas.<br/>2. Sistema comprueba disponibilidad y calcula tarifa desglosada.<br/>3. Sistema **incluye** `CdU-04 (Autenticar y Cobrar Fianza)`.<br/>4. Sistema bloquea el vehículo en flota y emite localizador.<br/>5. Sistema envía confirmación por email. |
+| **Flujos Alternativos** | Excepciones o bifurcaciones condicionales | **2a. Sin flota disponible:**<br/>&nbsp;&nbsp;2a.1 Sistema informa de indisponibilidad y ofrece modelos similares de categoría superior.<br/>**3a. Pago rechazado por la pasarela:**<br/>&nbsp;&nbsp;3a.1 Sistema notifica error bancario y solicita tarjeta alternativa. |
+| **Postcondición** | Estado garantizado al terminar con éxito | Vehículo reservado en BD, fianza retenida en pasarela y contrato emitido. |
+
+##### 2. Estructura y Plantilla de una Historia de Usuario (User Story)
+Enfoque conversacional propio de metodologías ágiles (Scrum/Kanban) centrado en el valor para el usuario:
+- **Estructura Clásica:**
+  $$\text{"Como } [\text{rol/actor}], \text{ quiero } [\text{capacidad/acción}], \text{ para } [\text{beneficio de negocio}].\text{"}$$
+- **Criterios de Aceptación (BDD — Given / When / Then):**
+  - **Dado que (*Given*):** El contexto o estado inicial previo.
+  - **Cuando (*When*):** La acción ejecutada por el usuario.
+  - **Entonces (*Then*):** El resultado observable esperado.
+- *Ejemplo:*
+  > **Como** conductor registrado,  
+  > **quiero** recibir el contrato de alquiler en formato PDF firmado en mi email,  
+  > **para** tener constancia legal en mi móvil sin tener que imprimir hojas físicas.  
+  >  
+  > **Criterios de Aceptación:**  
+  > • *Dado que* la fianza del alquiler ha sido autorizada correctamente,  
+  > • *Cuando* el sistema confirma la reserva,  
+  > • *Entonces* se genera el PDF criptográficamente firmado y se envía por SMTP en menos de 10 segundos.
+
+##### 3. Tabla Comparativa de Diferencias: Casos de Uso vs Historias de Usuario
+
+| Criterio | Caso de Uso (CdU) | Historia de Usuario (US) |
+| :--- | :--- | :--- |
+| **Enfoque Principal** | Orientado al sistema y al contrato funcional global. | Orientado al usuario y al valor directo de negocio. |
+| **Nivel de Formalidad** | Alto (plantilla estructurada, flujos alternativos exhaustivos). | Ligero y conversacional (tarjeta de conversación + criterios). |
+| **Granularidad** | Media-Alta (cubre un proceso de negocio de principio a fin). | Fina (planificable para completarse en un único sprint de 1-2 semanas). |
+| **Relaciones Formales** | Posee relaciones UML nativas (`<<include>>`, `<<extend>>`, herencia). | No tiene relaciones formales (se organizan por Épicas y Temas). |
+| **Criterios de Validación** | Flujos alternativos y postcondiciones del contrato. | Criterios de Aceptación ejecutables (Cucumber / BDD). |
+
+##### 4. Relaciones entre Casos de Uso (UML)
+- **Inclusión (`<<include>>`):** El caso de uso base incorpora **obligatoriamente** el comportamiento del caso incluido. Si el caso incluido falla, el caso base no puede completarse. Se utiliza para factorizar secuencias repetitivas comunes (ej. *Realizar Transferencia* `<<include>>` *Verificar Saldo*).
+- **Extensión (`<<extend>>`):** El caso de uso auxiliar incorpora comportamiento **opcional o condicional** al caso base en puntos específicos llamados *Puntos de Extensión*. El caso base no depende del extendido y puede completarse sin él (ej. *Contratar Conductor Adicional* `<<extend>>` *Alquilar Coche*).
+- **Generalización (`──▷`):** Permite que un caso de uso hijo herede los pasos y actores de un caso de uso abstracto padre, sobreescribiendo o especializando partes del flujo.
 
 ---
 
-### 2.2 Catálogo de Estilos Arquitectónicos y Diseño de APIs REST
+### 2.2 Modelado de Software y Modelo de Dominio (PDS Tema 3)
+
+El Modelo de Dominio es una representación visual de las clases conceptuales u objetos del mundo real en el problema de interés (**no son clases de software ni esquemas de base de datos**). El modelado de software se separa conceptualmente de la fase de requisitos para capturar la semántica pura del dominio antes de abordar la arquitectura del sistema.
+
+##### Componentes del Modelo Conceptual
+1. **Clases Conceptuales:** Representan entidades del dominio real. Poseen *Símbolo* (gráfico en la caja), *Intensión* (definición de sus propiedades) y *Extensión* (conjunto de todas sus instancias).
+2. **Atributos:** Datos primitivos necesarios. **Regla de Oro UMU:** *Nunca se modelan atributos como claves ajenas (FKs) ni punteros técnicos*. Las relaciones entre conceptos se modelan exclusivamente mediante líneas de asociación.
+3. **Multiplicidades:** Definen cuántas instancias pueden relacionarse ($1$, $0..1$, $*$, $1..*$).
+
+##### Cómo se Dibuja Cada Relación UML y su Semántica de Ciclo de Vida
+
+```mermaid
+classDiagram
+    direction LR
+    class IVehiculo {
+        <<interface>>
+        +mover()*
+    }
+    class Motor
+    class Conductor
+    class GPSNavigationService {
+        +fijarRuta()
+    }
+    class Coche {
+        -motor: Motor
+        -conductor: Conductor*
+        +navegarHacia(gps)
+    }
+
+    IVehiculo <|.. Coche : Realización (- - ▷)
+    Coche *-- Motor : Composición (◆──)
+    Coche o-- Conductor : Agregación (◇──)
+    Coche ..> GPSNavigationService : Dependencia (- - >)
+```
+
+| Tipo de Relación | Símbolo Gráfico UML | Semántica | Ciclo de Vida de las Partes | Representación en Memoria (C++ / Java / TS) |
+| :--- | :---: | :--- | :--- | :--- |
+| **Dependencia** | `- - - >`<br/>(Flecha discontinua) | *"Usa un"* efímero | Ninguno. No hay propiedad estructural. | Parámetro formal en la firma de un método o variable local temporal. |
+| **Asociación** | `──>`<br/>(Línea continua) | *"Conoce a"* / colabora | Independiente. Ambas entidades existen y se gestionan por separado. | Referencia o puntero de instancia como atributo de clase (`Cliente*`). |
+| **Agregación** | `◇──`<br/>(Rombo blanco en el todo) | *"Tiene un"*<br/>(Todo-Parte débil) | **Independiente:** Si el todo se destruye, las partes **sobreviven**. | Puntero compartido (`std::shared_ptr`) o referencias a objetos externos. |
+| **Composición** | `◆──`<br/>(Rombo negro en el todo) | *"Formado por"*<br/>(Todo-Parte fuerte) | **Dependiente:** Si el todo se destruye, las partes **se destruyen con él**. | Instancia por valor directo dentro del contenedor o puntero único (`std::unique_ptr`) liberado en destructor. |
+| **Generalización** | `──▷`<br/>(Triángulo hueco continuo) | *"Es un"* (Herencia) | Subclase comparte 100% de la identidad y estructura de la superclase. | Herencia estática (`class Coche extends Vehiculo`). |
+| **Realización** | `- - ▷`<br/>(Triángulo hueco discontinuo)| *"Implementa contrato"* | La clase concreta garantiza los contratos de la interfaz abstracta. | Implementación de interfaz (`class Coche implements IVehiculo`). |
+
+##### Ejemplo Canónico Unificado en Código (Coche y Dominio Automovilístico)
+
+```cpp
+// 1. REALIZACIÓN (- - ▷): Interfaz pura sin implementación
+class IVehiculo {
+public:
+    virtual void mover() = 0;
+    virtual ~IVehiculo() = default;
+};
+
+// 2. COMPOSICIÓN (◆──): Motor ligado de por vida al Coche
+class Motor {
+public:
+    void arrancar() { /* inyecta combustible */ }
+};
+
+// 3. AGREGACIÓN (◇──): Conductor existe independientemente de si conduce este coche
+class Conductor {
+private:
+    string nombre;
+public:
+    Conductor(const string& n) : nombre(n) {}
+};
+
+// SERVICIO EXTERNO (Para Dependencia)
+class GPSNavigationService {
+public:
+    void fijarRuta(const string& destino) { /* calcula satélite */ }
+};
+
+// CLASE PRINCIPAL QUE INTEGRA LAS 4 RELACIONES:
+class Coche : public IVehiculo { // Realización
+private:
+    Motor motor;                  // COMPOSICIÓN: por valor (si Coche muere en el desguace, motor muere con él)
+    Conductor* conductorAsignado; // AGREGACIÓN: puntero no exclusivo (si Coche explota, el conductor sobrevive)
+
+public:
+    Coche() : conductorAsignado(nullptr) {}
+
+    void asignarConductor(Conductor* c) {
+        this->conductorAsignado = c;
+    }
+
+    // DEPENDENCIA (- - >): GPS solo se recibe como parámetro puntual en este método; no es atributo de Coche
+    void navegarHacia(GPSNavigationService& gps, const string& destino) {
+        gps.fijarRuta(destino); // "Usa un" servicio temporalmente
+    }
+
+    void mover() override {
+        motor.arrancar();
+    }
+};
+```
+
+---
+
+### 2.3 Arquitectura y Diseño de Software: TODOS los Estilos Arquitectónicos Juntos (PDS Tema 4)
 
 Un estilo arquitectónico define una familia de sistemas en términos de un patrón de organización estructural: componentes, conectores y restricciones de interacción.
 
-#### Los 7 Estilos Arquitectónicos Fundamentales (PDS Tema 4)
+#### Tabla Comparativa Exhaustiva de Estilos Arquitectónicos (PDS UMU)
 
-1. **Arquitectura en Capas (Layered / N-Tier):**
-   - *Organización:* Presentación $\to$ Lógica de Negocio $\to$ Acceso a Datos.
-   - *Restricción:* Cada capa solo puede invocar a la capa inmediatamente inferior (capas estrictas) o a capas inferiores (capas flexibles).
-   - *Riesgo:* Fugas de abstracción si las entidades de base de datos cruzan hacia la UI.
-2. **Arquitectura Hexagonal (Ports & Adapters / Clean Architecture):**
-   - *Núcleo (Core):* Dominio puro y casos de uso con **cero imports** de librerías externas o frameworks.
-   - *Puertos:* Interfaces abstractas. Se dividen en **Puertos de Entrada** (Use Cases invocados desde fuera) y **Puertos de Salida** (contratos de repositorios o gateways requeridos por el dominio).
-   - *Adaptadores Primarios (Driving):* Inician la ejecución (controladores REST/FastAPI, interfaz CLI, consumidores de colas).
-   - *Adaptadores Secundarios (Driven):* Reaccionan a las peticiones del dominio (implementaciones PostgreSQL con JPA/SQLAlchemy, cliente Stripe, broker Kafka).
-   - *Regla de Oro:* Las dependencias en tiempo de compilación siempre apuntan **hacia el centro**.
-3. **Microkernel (Núcleo + Plugins):**
-   - *Estructura:* Un núcleo estable y minimalista que provee el ciclo de vida básico y se extiende dinámicamente mediante plug-ins independientes (ej. VS Code, Obsidian, kernels de SO, Eclipse).
-4. **Pipes and Filters (Tuberías y Filtros):**
-   - *Estructura:* Filtros autónomos que procesan y transforman un flujo unidireccional de datos recibidos a través de tuberías (pipes).
-   - *Trade-off:* Ningún filtro conoce al siguiente; el rendimiento global está acotado por el filtro más lento (cuello de botella del pipeline).
-5. **Cliente-Servidor:**
-   - Comunicación asimétrica síncrona o asíncrona mediante peticiones (*Request*) y respuestas (*Reply*).
-6. **Arquitecturas Asíncronas Orientadas a Eventos:**
-   - **Colas de Mensajes (Point-to-Point):** Modo *pull*, entrega garantizada y ordenada. Un solo consumidor procesa cada mensaje. Absorbe picos masivos de tráfico (*Load Leveling*).
-   - **Publicar/Suscribir (Pub/Sub):** Modo *push* desacoplado organizado por *topics*. El broker emite copias del evento a todos los suscriptores activos en tiempo real (ej. Kafka, Redis Streams).
-7. **Monolito vs Microservicios:**
-   - **Monolito Modular:** Un solo proceso ejecutable en memoria. Llamadas a métodos en RAM (nanosegundos), transacciones ACID locales sencillas, despliegue unificado.
-   - **Microservicios:** Conjunto de servicios con propósito único desplegados en procesos y máquinas independientes, comunicados mediante APIs de red (HTTP/gRPC/mensajería). Facilitan la autonomía de equipos y el escalado horizontal independiente, pero introducen latencia de red, serialización, consistencia eventual y necesidad de tracing distribuido.
+| Estilo Arquitectónico | Descripción & Filosofía | Componentes | Conectores | Ventajas Principales | Desventajas / Riesgos | Casos de Uso Clásicos |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **1. Capas (Layered / N-Tier)** | Estructura jerárquica donde cada capa ofrece servicios a la superior y posee una responsabilidad única (UI -> Dominio -> Datos). | Capas lógicas cerradas/abiertas y módulos internos. | Llamadas a procedimientos/métodos síncronos en memoria. | Reutilización, estandarización y reducción de dependencias. | Acoplamiento en cascada ante cambios y pasarelas ociosas (*Sinkhole anti-pattern*). | Aplicaciones empresariales clásicas, MVC. |
+| **2. Hexagonal (Puertos & Adaptadores)** | Aísla el núcleo de negocio de la tecnología exterior. Dominio declara Puertos; infraestructura implementa Adaptadores. | Dominio puro, Casos de Uso, Puertos de Entrada/Salida, Adaptadores Driving/Driven. | Invocación polimórfica mediante Inversión de Dependencias (DIP). | Testeabilidad 100% aislada en memoria; frameworks y BD intercambiables. | Mayor número de clases, mapeos explícitos DTO/Entidad e indirección. | Microservicios con lógica de negocio rica, DDD, finanzas. |
+| **3. Microkernel (Basado en Plugins)** | Núcleo minimalista y estable que provee el ciclo de vida básico y se extiende dinámicamente mediante plug-ins independientes. | Núcleo central (Microkernel) y Plug-ins (extensiones). | APIs internas de plug-ins, eventos o memoria compartida. | Alta modularidad, extensibilidad en tiempo de ejecución y aislamiento de fallos. | El núcleo debe ser ultra estable; complejidad en coordinación de plugins. | Visual Studio Code, Obsidian, Eclipse, kernels de SO. |
+| **4. Eventos: Colas de Mensajes** | Arquitectura orientada a mensajes punto a punto con entrega ordenada en modo *pull*. Un solo consumidor por mensaje. | Productores, Consumidores y Colas en el broker. | Mensajería asíncrona (AMQP, Redis Queues, AWS SQS). | Desacoplamiento temporal y espacial total; absorción de picos (*load leveling*). | Complejidad operativa; consistencia eventual y necesidad de idempotencia. | Procesamiento asíncrono pesado (vídeos, emails, webhooks). |
+| **5. Eventos: Publicar/Suscribir (Pub/Sub)** | Desacopla la comunicación emitiendo eventos en modo *push* sobre topics. Múltiples suscriptores independientes reciben copias. | Publicadores, Broker de eventos/topics y múltiples Suscriptores. | Protocolos de eventos en streaming (Apache Kafka, AWS SNS, NATS). | Escalabilidad horizontal extrema; comunicación reactiva 1 a N en tiempo real. | Dificultad para trazar el flujo global; orden garantizado solo por partición. | Telemetría IoT, sistemas reactivos (EDA), analítica en streaming. |
+| **6. Pipes and Filters (Tuberías y Filtros)** | Procesamiento en flujo unidireccional de datos donde una serie de filtros autónomos transforman datos recibidos por tuberías. | Filtros (nodos de cómputo y transformación sin estado global). | Tuberías / Pipes (canales unidireccionales que enlazan salida con entrada). | Composición funcional sencilla, alta reutilización y paralelismo natural. | El rendimiento global queda acotado por el filtro más lento (cuello de botella). | Compiladores (Léxico -> Sintáctico -> Semántico), pipelines ETL, Unix bash. |
+| **7. Cliente - Servidor** | Comunicación asimétrica síncrona/asíncrona donde clientes localizan al servidor y solicitan recursos; el servidor responde. | Clientes ligeros/pesados y Servidor centralizado. | Peticiones (*Request*) y Respuestas (*Reply*) sobre TCP/HTTP. | Centralización de datos y seguridad; mantenimiento y evolución sencilla. | Servidor como punto único de fallo; cuello de botella ante sobrecarga. | Web tradicional, APIs REST estándar, bases de datos relacionales. |
+| **8. Microservicios vs Monolito Modular** | Monolito: único proceso ejecutable en memoria.<br/>Microservicios: servicios autónomos desplegados en procesos y máquinas independientes. | Servicios independientes con Bounded Context frente al proceso único del monolito. | APIs de red ligeras (REST, gRPC) y brokers de mensajería. | Autonomía de despliegue por equipo; escalado horizontal selectivo y tolerancia a fallos. | Latencia de red, serialización, fallos parciales, consistencia eventual y coste DevOps. | Monolito para equipos pequeños; Microservicios para organizaciones grandes maduras. |
+
+---
 
 #### Diseño de APIs REST, Idempotencia y Modelo de Madurez de Richardson
 
@@ -376,7 +498,7 @@ Un estilo arquitectónico define una familia de sistemas en términos de un patr
 
 ---
 
-### 2.3 Verificación, Validación y Testing Industrial (V&V)
+### 2.4 Verificación, Validación y Testing Industrial (V&V) (PDS Tema 5)
 
 - **Verificación vs Validación:**
   - *Verificación:* "¿Estamos construyendo el producto **correctamente**?" (Alineación con la especificación técnica y las normas de diseño).
@@ -420,7 +542,7 @@ graph TD
 
 ---
 
-### 2.4 Persistencia, Ciclo de Vida JPA y SQL vs NoSQL
+### 2.5 Persistencia, Ciclo de Vida JPA y SQL vs NoSQL (PDS Tema 6)
 
 #### El Desfase Objeto-Relacional (Impedance Mismatch)
 Surge de las diferencias ontológicas entre el paradigma OO y el relacional:
